@@ -1,8 +1,8 @@
 # Compiler
-CXX = g++
+CXX = ccache g++
 
 # Compiler flags
-CXXFLAGS = -Wall -std=c++17 -O3
+CXXFLAGS = -Wall -std=c++17 -O3 -MMD -MP -march=native
 
 # Target executable
 TARGET = main
@@ -11,10 +11,7 @@ TARGET = main
 OBJ_DIR = ./../tmp
 
 # Source files with relative paths
-SOURCES = ./../../sequence/seq.cpp ./../../energy_model.cpp ./../../partition/forward.cpp ./../../partition/backward.cpp ./main.cpp
-
-# Header files
-HEADERS = ./../../partition/partition.hpp
+SOURCES = ./../../sequence/seq.cpp ./../../energy_model.cpp ./../../partition/partition.cpp ./../../partition/forward.cpp ./../../partition/backward.cpp ./main.cpp
 
 # Create object file paths in the temporary directory
 OBJECTS = $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SOURCES)))

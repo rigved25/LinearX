@@ -2,7 +2,7 @@
 #define MULTI_SEQ_HPP
 
 #include <vector>
-#include "Seq.hpp"
+#include "./seq.hpp"
 
 
 class MultiSeq {
@@ -20,6 +20,10 @@ public:
     Seq& operator[](size_t index);
     const Seq& operator[](size_t index) const;
 
+    // access a sequence with bounds checking
+    Seq& at(size_t index);
+    const Seq& at(size_t index) const;
+
     // get all sequences
     const std::vector<Seq>& get_sequences() const;
 
@@ -35,6 +39,13 @@ public:
     // Read and Write functions
     bool read_fasta(const std::string& filepath);
     bool write_fasta(const std::string& filepath) const;
+
+    // Iterator support for range-based for loops
+    inline std::vector<Seq>::iterator begin() { return sequences_.begin(); }
+    inline std::vector<Seq>::iterator end() { return sequences_.end(); }
+
+    inline std::vector<Seq>::const_iterator begin() const { return sequences_.begin(); }
+    inline std::vector<Seq>::const_iterator end() const { return sequences_.end(); }
 
 private:
     std::vector<Seq> sequences_;

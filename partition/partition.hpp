@@ -5,6 +5,7 @@
 #include "./../sequence/seq.hpp"
 #include "./../utility/log_math.hpp"
 #include "./../utility/utility.hpp"
+#include "./../shared.hpp"
 #include <iostream> // [DEBUG] for debugging, remove later
 #include <unordered_map>
 #include <vector>
@@ -23,7 +24,6 @@ enum StateType {
     M,
     C,
 };
-
 
 enum InsideMode {
     MFE,
@@ -63,7 +63,6 @@ struct HEdge {
     }
 };
 
-
 class Partition {
 
     inline const static StateType state_types[6] = {H, Multi, P, M2, M, C};
@@ -74,145 +73,127 @@ class Partition {
     std::unordered_map<int, State> *bestM;
     std::unordered_map<int, State> *bestM2;
     std::unordered_map<int, State> *bestMulti;
-    // State *bestC;
     std::unordered_map<int, State> bestC;
+
+    std::unordered_map<int, float> *bpp;
+    State *viterbi = nullptr;
 
     std::vector<int> next_pair[5];
     std::vector<int> prev_pair[5];
 
-    const std::vector<int> seq;
+    const Seq *sequence; // pointer to actual Seq object
+    const std::vector<int> *seq; // pointer to encoded sequence in Seq object
+    
     EnergyModel *energy_model;
     InsideMode mode;
+
     const int beam_size;
     bool allow_sharp_turn;
+    bool verbose_output;
 
-    int num_alpha_updates = 0;
-    int num_beta_updates = 0;
+    float inside_execution_time = 0.0;
+    float outside_execution_time = 0.0;
 
-    Partition(const Seq &sequence, EnergyModel &energy_model, const InsideMode mode, const int beam_size = 100,
-              bool allow_sharp_turn = false)
-        : seq(Seq::encode(sequence, nuc_encoding_scheme)), energy_model(&energy_model), mode(mode),
-          beam_size(beam_size), allow_sharp_turn(allow_sharp_turn) {
+    ProbAccm prob_accm;
 
-        bestH = new std::unordered_map<int, State>[seq.size()];
-        bestP = new std::unordered_map<int, State>[seq.size()];
-        bestM = new std::unordered_map<int, State>[seq.size()];
-        bestM2 = new std::unordered_map<int, State>[seq.size()];
-        bestMulti = new std::unordered_map<int, State>[seq.size()];
+    Partition(const Seq *sequence, EnergyModel &energy_model, const InsideMode mode, const int beam_size = 100,
+              bool allow_sharp_turn = false, bool verbose_output = true)
+        : sequence(sequence), seq(&sequence->enc_seq), energy_model(&energy_model), mode(mode),
+          beam_size(beam_size), allow_sharp_turn(allow_sharp_turn), verbose_output(verbose_output) {
+
+        bestH = new std::unordered_map<int, State>[seq->size()];
+        bestP = new std::unordered_map<int, State>[seq->size()];
+        bestM = new std::unordered_map<int, State>[seq->size()];
+        bestM2 = new std::unordered_map<int, State>[seq->size()];
+        bestMulti = new std::unordered_map<int, State>[seq->size()];
         // bestC = new State[seq.size()];
 
+        bpp = nullptr; // initialize later if required
+
         for (int nuc = 1; nuc < 5; ++nuc) {
-            prev_pair[nuc].resize(seq.size(), -1);
-            next_pair[nuc].resize(seq.size(), seq.size());
+            prev_pair[nuc].resize(seq->size(), -1);
+            next_pair[nuc].resize(seq->size(), seq->size());
 
             int prev = -1;
-            int next = seq.size();
+            int next = seq->size();
 
-            for (int j = 0; j < seq.size(); ++j) {
+            for (int j = 0; j < seq->size(); ++j) {
                 prev_pair[nuc][j] = prev;
-                if (check_valid_pair(nuc, seq[j])) {
+                if (check_valid_pair(nuc, seq->at(j))) {
                     prev = j;
                 }
             }
-            for (int j = seq.size() - 1; j >= 0; --j) {
+            for (int j = seq->size() - 1; j >= 0; --j) {
                 next_pair[nuc][j] = next;
-                if (check_valid_pair(nuc, seq[j])) {
+                if (check_valid_pair(nuc, seq->at(j))) {
                     next = j;
                 }
             }
         }
 
-        if (seq.size() > 0)
+        bestC[-1].alpha = 0;
+        bestC[seq->size() - 1].beta = 0;
+        if (seq->size() > 0)
             bestC[0].alpha = 0.0;
-        if (seq.size() > 1)
+        if (seq->size() > 1)
             bestC[1].alpha = 0.0;
-
-        // compute inside scores
-        for (int j = 0; j < seq.size(); j++) {
-            std::cout << j << std::endl;
-
-            // beam of H
-            beam_prune(bestH[j]);
-            beamstep_H(j, next_pair);
-            if (j == 0)
-                continue;
-
-            // beam of Multi
-            beam_prune(bestMulti[j]);
-            beamstep_Multi(j, next_pair);
-
-            // beam of P
-            beam_prune(bestP[j]);
-            beamstep_P(j, next_pair);
-
-            // beam of M2
-            beam_prune(bestM2[j]);
-            beamstep_M2(j, next_pair);
-
-            // beam of M
-            beam_prune(bestM[j]);
-            beamstep_M(j);
-
-            beamstep_C(j); // beam of C
-        }
-
-        // debug_states();
     }
 
-    void lazy_outside();
+    virtual void compute_inside();
+    virtual void compute_outside();
+    void compute_bpp_matrix();
 
-    void print_mfe_structure() {
-        std::string structure(seq.size(), '.');
-        mfe_backtrack(0, seq.size() - 1, C, structure);
-        std::cout << structure << std::endl;
-        std::cout << "MFE: " << bestC[seq.size() - 1].alpha / -100.0 << std::endl;
+    std::string get_mfe_structure() {
+        std::string structure(seq->size(), '.');
+        mfe_backtrack(0, seq->size() - 1, C, structure);
+        return structure;
     }
 
-    double get_ensemble_energy() { return -kT * (bestC[seq.size() - 1].alpha) / 100.0; } // -kT log(Q(x))
+    double get_ensemble_energy() { return -kT * (bestC[seq->size() - 1].alpha) / 100.0; } // -kT log(Q(x))
 
     void print_alpha_beta() {
-        std::cout << "Alpha(n - 1): " << bestC[seq.size() - 1].alpha << std::endl;
-        std::cout << "Beta(0): " << bestC[-1].beta << std::endl;
-        std::cout << "Beta(-1): " << bestC[-1].beta << std::endl;
-        std::cout << "Num Alpha Updates: " << num_alpha_updates << std::endl;
-        std::cout << "Num Beta Updates: " << num_beta_updates << std::endl;
+        std::cout << "\nAlpha(C, n - 1): " << bestC[seq->size() - 1].alpha << std::endl;
+        std::cout << "Beta(C, -1): " << bestC[-1].beta << std::endl;
     }
+
+    void calc_prob_accm();
 
     void debug_states() {
 
-        // for (int j = 0; j < seq.size(); ++j) {
+        // for (int j = 0; j < seq->size(); ++j) {
         //     for (auto item : bestH[j]) {
         //         int i = item.first;
         //         State &state = item.second;
         //         printf("H[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
         //     }
         // }
+        // printf("\n");
+        // for (int j = 0; j < seq->size(); ++j) {
+        //     for (auto item : bestP[j]) {
+        //         int i = item.first;
+        //         State &state = item.second;
+        //         printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
+        //     }
+        // }
         printf("\n");
-        for (int j = 0; j < seq.size(); ++j) {
-            for (auto item : bestP[j]) {
-                int i = item.first;
-                State &state = item.second;
-                printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
-            }
-        }
-        printf("\n");
-        for (int j = -1; j < (int)seq.size(); ++j) {
+        for (int j = -1; j < (int)seq->size(); ++j) {
             printf("C[%d]: %.5f\t%.5f\n", j, bestC[j].alpha, bestC[j].beta);
         }
-        printf("\n");
-        for (int j = 0; j < seq.size(); ++j) {
-            for (auto item : bestM[j]) {
-                int i = item.first;
-                State &state = item.second;
-                printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
-            }
-        }
+        // printf("\n");
+        // for (int j = 0; j < seq->size(); ++j) {
+        //     for (auto item : bestM[j]) {
+        //         int i = item.first;
+        //         State &state = item.second;
+        //         printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
+        //     }
+        // }
     }
 
-  private:
-    double beam_prune(std::unordered_map<int, State> &beamstep);
-    void update_score(State &state, const int new_score, const double prev_score);
+    float get_bpp(const int i, const int j);
 
+    // methods declared in file forward.cpp
+    float beam_prune(std::unordered_map<int, State> &beamstep);
+    void update_score(State &state, const int new_score, const double prev_score);
     void beamstep_H(const int j, const std::vector<int> *next_pair);
     void beamstep_Multi(const int j, const std::vector<int> *next_pair);
     void beamstep_P(const int j, const std::vector<int> *next_pair);
@@ -220,6 +201,10 @@ class Partition {
     void beamstep_M(const int j);
     void beamstep_C(const int j);
 
+    // methods declared in file backward.cpp
+    void hedges_trace_helper(std::vector<HEdge> *incoming_hedges, HEdge &best_hedge, HEdge &new_hedge,
+                             TraceInfo &best_trace, TraceInfo &new_trace);
+    void mfe_backtrack(int i, int j, StateType type, std::string &structure);
     std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
                                         const float edge_threshold);
     TraceInfo get_incoming_hedges_C(const int j, std::vector<HEdge> *incoming_hedges);
@@ -227,57 +212,6 @@ class Partition {
     TraceInfo get_incoming_hedges_M2(const int i, const int j, std::vector<HEdge> *incoming_hedges);
     TraceInfo get_incoming_hedges_P(const int i, const int j, std::vector<HEdge> *incoming_hedges);
     TraceInfo get_incoming_hedges_Multi(const int i, const int j, std::vector<HEdge> *incoming_hedges);
-    // void get_incoming_hedges_H(const int j, std::vector<HEdge> &incoming_hedges);
-
-    void hedges_trace_helper(std::vector<HEdge> *incoming_hedges, HEdge &best_hedge, HEdge &new_hedge,
-                             TraceInfo &best_trace, TraceInfo &new_trace) {
-        if (incoming_hedges) {
-            incoming_hedges->push_back(new_hedge);
-        }
-        const float best_value = best_hedge.weight + (best_hedge.left ? best_hedge.left->alpha : 0) +
-                                 (best_hedge.right ? best_hedge.right->alpha : 0);
-        const float new_value =
-            new_hedge.weight + new_hedge.left->alpha + (new_hedge.right ? new_hedge.right->alpha : 0);
-        if (new_value >= best_value) {
-            best_hedge = new_hedge;
-            best_trace = new_trace;
-        }
-    }
-
-    void mfe_backtrack(int i, int j, StateType type, std::string &structure) {
-        if (i >= j)
-            return;
-        
-        // std::cout << i << " " << j << " " << type << std::endl;
-
-        TraceInfo trace;
-        switch (type) {
-        case H:
-            return;
-        case Multi:
-            trace = get_incoming_hedges_Multi(i, j, nullptr);
-            break;
-        case P:
-            structure[i] = '(';
-            structure[j] = ')';
-            trace = get_incoming_hedges_P(i, j, nullptr);
-            break;
-        case M2:
-            trace = get_incoming_hedges_M2(i, j, nullptr);
-            break;
-        case M:
-            trace = get_incoming_hedges_M(i, j, nullptr);
-            break;
-        case C:
-            trace = get_incoming_hedges_C(j, nullptr);
-            break;
-        }
-
-        mfe_backtrack(trace.i, trace.t, trace.type_left, structure);
-        if (trace.type_left != trace.type_right) {
-            mfe_backtrack(trace.t + 1, trace.j, trace.type_right, structure);
-        }
-    }
 };
 
 #endif // PARTITION_HPP

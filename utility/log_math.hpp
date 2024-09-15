@@ -8,6 +8,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#include "./constants.hpp"
+
 // This header contains extended logarithmic/exponential functions derived from 
 // methods described in TP Mann's 2006 paper:
 //   "Numerically stable hidden Markov model implementation." (Tobias P. Mann, 2006)

@@ -1,8 +1,30 @@
 #ifndef UTILITIES_HPP
 #define UTILITIES_HPP
 
-#include <vector>
 #include "./constants.hpp"
+#include <vector>
+
+class Utility {
+  public:
+    static void showProgressBar(int cur_itr, int total_itr) {
+        int barWidth = 50; // Width of the progress bar
+        std::cout << "[";
+        float progress = (float)cur_itr / total_itr;
+        int pos = barWidth * progress;
+        for (int i = 0; i < barWidth; ++i) {
+            if (i < pos)
+                std::cout << "=";
+            else if (i == pos)
+                std::cout << ">";
+            else
+                std::cout << " ";
+        }
+        std::cout << "] " << int(progress * 100.0) << " %\r"; // \r returns to the start of the line
+        std::cout.flush();                                    // Ensure the output is printed immediately
+        if (cur_itr == total_itr)
+            std::cout << std::endl;
+    }
+};
 
 // used for hashing a pair of integers
 struct PairHash {
@@ -24,8 +46,8 @@ struct PairHash {
 
 inline bool check_valid_pair(const int nuc1, const int nuc2) { return (nuc1 + nuc2) > 3 && (nuc1 + nuc2) % 2 != 0; }
 
-inline int quickselect_partition(std::vector<std::pair<double , int>> &scores, int lower, int upper) {
-    double  pivot = scores[upper].first;
+inline int quickselect_partition(std::vector<std::pair<double, int>> &scores, int lower, int upper) {
+    double pivot = scores[upper].first;
     while (lower < upper) {
         while (scores[lower].first < pivot)
             ++lower;
@@ -40,7 +62,7 @@ inline int quickselect_partition(std::vector<std::pair<double , int>> &scores, i
 }
 
 // in-place quick-select
-inline double quickselect(std::vector<std::pair<double , int>> &scores, int lower, int upper, int k) {
+inline double quickselect(std::vector<std::pair<double, int>> &scores, int lower, int upper, int k) {
     if (lower == upper)
         return scores[lower].first;
     int split = quickselect_partition(scores, lower, upper);

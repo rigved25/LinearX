@@ -55,6 +55,21 @@ const Seq& MultiSeq::operator[](size_t index) const {
     return sequences_.at(index);
 }
 
+// access a sequence with bounds checking
+Seq& MultiSeq::at(size_t index) {
+    if (index >= sequences_.size()) {
+        throw std::out_of_range("Seq index out of range");
+    }
+    return sequences_.at(index);
+}
+
+const Seq& MultiSeq::at(size_t index) const {
+    if (index >= sequences_.size()) {
+        throw std::out_of_range("Seq index out of range");
+    }
+    return sequences_.at(index);
+}
+
 // get all sequences
 const std::vector<Seq>& MultiSeq::get_sequences() const {
     return sequences_;
@@ -74,7 +89,7 @@ size_t MultiSeq::alignment_length() const {
 // find a sequence by ID
 Seq* MultiSeq::find_sequence_by_id(const std::string& id) {
     for (auto& seq : sequences_) {
-        if (seq.get_id() == id) {
+        if (seq.id == id) {
             return &seq;
         }
     }
@@ -126,7 +141,7 @@ bool MultiSeq::write_fasta(const std::string& filepath) const {
     }
 
     for (const auto& seq : sequences_) {
-        outfile << ">" << seq.get_id() << "\n" << seq.get_sequence() << "\n";
+        outfile << ">" << seq.id << "\n" << seq.sequence << "\n";
     }
 
     outfile.close();
