@@ -36,9 +36,15 @@ public:
     // find a sequence by ID
     Seq* find_sequence_by_id(const std::string& id);
 
+    // compute pairwise sequence identity
+    float get_seq_identity();
+
     // Read and Write functions
     bool read_fasta(const std::string& filepath);
     bool write_fasta(const std::string& filepath) const;
+
+    // print all sequences
+    void print_sequences();
 
     // Iterator support for range-based for loops
     inline std::vector<Seq>::iterator begin() { return sequences_.begin(); }

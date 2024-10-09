@@ -62,6 +62,19 @@ void Seq::remove_gaps() { sequence.erase(std::remove(sequence.begin(), sequence.
 // swap all occurences of nuc1 with nuc2
 void Seq::swap_nuc(const char nuc1, const char nuc2) { std::replace(sequence.begin(), sequence.end(), nuc1, nuc2); }
 
+float Seq::compute_seq_identity(const Seq &seq2) {
+    if (this->length() != seq2.sequence.length()) {
+        std::invalid_argument("Sequences must be of the same length to compute sequence identity");
+    }
+    int match_pos = 0;
+    for (int i = 0; i < this->length(); ++i) {
+        if (this->sequence[i] == seq2.sequence[i]) {
+            match_pos++;
+        }
+    }
+    return float(match_pos) / this->length();
+}
+
 // add a character to the sequence at the end
 void Seq::add_nuc(char nucleotide) { sequence += nucleotide; }
 

@@ -1,7 +1,6 @@
 #include "./partition.hpp"
 
-
-float Partition::beam_prune(std::unordered_map<int, State> &beamstep) {
+double Partition::beam_prune(std::unordered_map<int, State> &beamstep) {
     if (beam_size == 0 || beamstep.size() <= beam_size) {
         return VALUE_MIN;
     }
@@ -16,7 +15,7 @@ float Partition::beam_prune(std::unordered_map<int, State> &beamstep) {
     if (scores.size() <= beam_size) {
         return VALUE_MIN;
     }
-    double threshold = quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
+    double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
         if (p.first < threshold)
             beamstep.erase(p.second);
@@ -76,7 +75,8 @@ void Partition::compute_inside() {
     if (verbose_output) {
         std::cout << "  - Execution Time: " << inside_execution_time << " ms" << std::endl;
         if (mode == InsideMode::MFE) {
-            std::cout << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol" << std::endl;
+            std::cout << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol"
+                      << std::endl;
             printf("\n%s (%.2f)\n", get_mfe_structure().c_str(), bestC[seq->size() - 1].alpha / -100.0);
         } else {
             std::cout << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
@@ -91,7 +91,16 @@ void Partition::beamstep_H(const int j, const std::vector<int> *next_pair) {
     }
 
     if (jnext < seq->size()) {
-        int score = -energy_model->score_hairpin(j, jnext, seq->at(j), seq->at(j + 1), seq->at(jnext - 1), seq->at(jnext), -1);
+        int tetra_hex_tri = -1;
+        if (jnext - j - 1 == 4) // 6:tetra
+            tetra_hex_tri = if_tetraloops.at(j);
+        else if (jnext - j - 1 == 6) // 8:hexa
+            tetra_hex_tri = if_hexaloops.at(j);
+        else if (jnext - j - 1 == 3) // 5:tri
+            tetra_hex_tri = if_triloops.at(j);
+
+        int score = -energy_model->score_hairpin(j, jnext, seq->at(j), seq->at(j + 1), seq->at(jnext - 1),
+                                                 seq->at(jnext), tetra_hex_tri);
         update_score(bestH[jnext][j], score);
     }
 
@@ -105,7 +114,16 @@ void Partition::beamstep_H(const int j, const std::vector<int> *next_pair) {
         // 1. extend H(i, j) to H(i, jnext)
         int jnext = next_pair[seq->at(i)][j];
         if (jnext < seq->size()) {
-            int score = -energy_model->score_hairpin(i, jnext, seq->at(i), seq->at(i + 1), seq->at(jnext - 1), seq->at(jnext), -1);
+            int tetra_hex_tri = -1;
+            if (jnext - i - 1 == 4) // 6:tetra
+                tetra_hex_tri = if_tetraloops.at(i);
+            else if (jnext - i - 1 == 6) // 8:hexa
+                tetra_hex_tri = if_hexaloops.at(i);
+            else if (jnext - i - 1 == 3) // 5:tri
+                tetra_hex_tri = if_triloops.at(i);
+
+            int score = -energy_model->score_hairpin(i, jnext, seq->at(i), seq->at(i + 1), seq->at(jnext - 1),
+                                                     seq->at(jnext), tetra_hex_tri);
             update_score(bestH[jnext][i], score);
         }
 
@@ -127,7 +145,8 @@ void Partition::beamstep_Multi(const int j, const std::vector<int> *next_pair) {
         }
 
         // 2. generate P(i, j)
-        int new_score = -energy_model->score_multi(i, j, seq->at(i), seq->at(i + 1), seq->at(j - 1), seq->at(j), seq->size());
+        int new_score =
+            -energy_model->score_multi(i, j, seq->at(i), seq->at(i + 1), seq->at(j - 1), seq->at(j), seq->size());
         update_score(bestP[j][i], new_score, state.alpha);
     }
 }
@@ -147,8 +166,9 @@ void Partition::beamstep_P(const int j, const std::vector<int> *next_pair) {
             int q = next_pair[seq->at(p)][j];
             while (q < seq->size() && ((i - p) + (q - j) - 2) <= MAXLOOPSIZE) {
                 // current shape is: p...i (pair) j...q
-                int new_score = -energy_model->score_single_loop(p, q, i, j, seq->at(p), seq->at(p + 1), seq->at(q - 1), seq->at(q),
-                                                                 seq->at(i - 1), seq->at(i), seq->at(j), seq->at(j + 1));
+                int new_score =
+                    -energy_model->score_single_loop(p, q, i, j, seq->at(p), seq->at(p + 1), seq->at(q - 1), seq->at(q),
+                                                     seq->at(i - 1), seq->at(i), seq->at(j), seq->at(j + 1));
                 update_score(bestP[q][p], new_score, state.alpha);
                 q = next_pair[seq->at(p)][q];
             }
@@ -177,12 +197,12 @@ void Partition::beamstep_P(const int j, const std::vector<int> *next_pair) {
         h = i - 1;
         if (h >= 0) {
             State &prefix_C = bestC[h];
-            int new_score = -energy_model->score_external_paired(i, j, seq->at(h), seq->at(h + 1), seq->at(j),
-                                                                 (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
+            int new_score = -energy_model->score_external_paired(
+                i, j, seq->at(h), seq->at(h + 1), seq->at(j), (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
             update_score(bestC[j], new_score, prefix_C.alpha + state.alpha);
         } else {
-            int new_score = -energy_model->score_external_paired(0, j, -1, seq->at(0), seq->at(j),
-                                                                 (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
+            int new_score = -energy_model->score_external_paired(
+                0, j, -1, seq->at(0), seq->at(j), (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
             update_score(bestC[j], new_score, state.alpha);
         }
     }

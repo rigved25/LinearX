@@ -96,6 +96,25 @@ Seq* MultiSeq::find_sequence_by_id(const std::string& id) {
     return nullptr;
 }
 
+// compute pairwise sequence identity
+float MultiSeq::get_seq_identity() {
+    int total_pairs = sequences_.size() * (sequences_.size() - 1) / 2;
+    float val = 0;
+    for(int i = 0; i < sequences_.size(); ++i) {
+        for (int j = i + 1; j < sequences_.size(); ++j) {
+            val += sequences_[i].compute_seq_identity(sequences_[j]);
+        }
+    }
+    return val / total_pairs;
+}
+
+// print sequences
+void MultiSeq::print_sequences() {
+    for (const auto& seq : sequences_) {
+        std::cout << seq.id << ": " << seq.sequence << std::endl;
+    }
+}
+
 // read sequences from a FASTA file and create an alignment
 bool MultiSeq::read_fasta(const std::string& filepath) {
     std::ifstream infile(filepath);

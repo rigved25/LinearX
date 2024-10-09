@@ -1,30 +1,5 @@
 #include "turbofold.hpp"
 
-float TurboPartition::turbo_beam_prune(std::unordered_map<int, State> &beamstep, const int j) {
-    if (beam_size == 0 || beamstep.size() <= beam_size) {
-        return VALUE_MIN;
-    }
-    std::vector<std::pair<double, int>> scores;
-    for (auto &item : beamstep) {
-        int i = item.first;
-        State &cand = item.second;
-        int k = i - 1;
-
-        const float ext_info = turbofold->get_extrinsic_info(this->sequence, i, j);
-        float new_alpha = (k >= 0 ? bestC[k].alpha : 0.0) + (cand.alpha * std::pow(ext_info, 0.3));
-        scores.push_back(std::make_pair(new_alpha, i));
-    }
-    if (scores.size() <= beam_size) {
-        return VALUE_MIN;
-    }
-    double threshold = quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
-    for (auto &p : scores) {
-        if (p.first < threshold)
-            beamstep.erase(p.second);
-    }
-    return threshold;
-}
-
 void TurboPartition::compute_inside() {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
@@ -36,21 +11,27 @@ void TurboPartition::compute_inside() {
         }
 
         // beam of H
-        turbo_beam_prune(bestH[j], j);
+        beam_prune(bestH[j]);
         beamstep_H(j, next_pair);
         if (j == 0)
             continue;
         // beam of Multi
-        turbo_beam_prune(bestMulti[j], j);
+        beam_prune(bestMulti[j]);
         beamstep_Multi(j, next_pair);
         // beam of P
-        turbo_beam_prune(bestP[j], j);
+        for (auto &item : bestP[j]) {
+            int i = item.first;
+            State &state = item.second;
+            const float ext_info = turbofold->get_extrinsic_info(*(this->sequence), i, j);
+            state.alpha += ext_info * 0.3; // adjust the weight as needed
+        }
+        beam_prune(bestP[j]);
         beamstep_P(j, next_pair);
         // beam of M2
-        turbo_beam_prune(bestM2[j], j);
+        beam_prune(bestM2[j]);
         beamstep_M2(j, next_pair);
         // beam of M
-        turbo_beam_prune(bestM[j], j);
+        beam_prune(bestM[j]);
         beamstep_M(j);
         // beam of C
         beamstep_C(j);
@@ -71,5 +52,32 @@ void TurboPartition::compute_inside() {
         } else {
             std::cout << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
         }
+    }
+}
+
+void TurboPartition::get_incoming_edges_state(const int i, const int j, const StateType type,
+                                              std::vector<HEdge> &incoming_hedges) {
+    switch (type) {
+    case H:
+        break;
+    case Multi:
+        get_incoming_hedges_Multi(i, j, &incoming_hedges);
+        break;
+    case P:
+        get_incoming_hedges_P(i, j, &incoming_hedges);
+        for (auto &hedge : incoming_hedges) {
+            const float ext_info = turbofold->get_extrinsic_info(*(this->sequence), i, j);
+            hedge.weight += ext_info * 0.3;
+        }
+        break;
+    case M2:
+        get_incoming_hedges_M2(i, j, &incoming_hedges);
+        break;
+    case M:
+        get_incoming_hedges_M(i, j, &incoming_hedges);
+        break;
+    case C:
+        get_incoming_hedges_C(j, &incoming_hedges);
+        break;
     }
 }

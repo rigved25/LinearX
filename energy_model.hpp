@@ -3,12 +3,12 @@
 
 #include "./energy_params/EnergyParams.hpp"
 #include <vector>
+#include <iostream>
 
 #define NUC_TO_PAIR(x, y)                                                                                              \
     (x == 1 ? (y == 4 ? 5 : 0)                                                                                         \
             : (x == 2 ? (y == 3 ? 1 : 0)                                                                               \
                       : (x == 3 ? (y == 2 ? 2 : (y == 4 ? 3 : 0)) : (x == 4 ? (y == 3 ? 4 : (y == 1 ? 6 : 0)) : 0))))
-
 
 class EnergyModel {
 
@@ -38,16 +38,14 @@ class EnergyModel {
                                               "ACAGUGCU "
                                               "ACAGUGUU ";
 
-    void init_tetra_hex_tri(std::vector<std::string> &seq_MSA_no_gap, std::vector<std::vector<int>> &if_tetraloops_MSA,
-                            std::vector<std::vector<int>> &if_hexaloops_MSA,
-                            std::vector<std::vector<int>> &if_triloops_MSA);
-
-
   public:
     const EnergyParams epm;
     const bool use_special_hairpin;
 
-    EnergyModel(EnergyParamsType epm_type) : epm(epm_type), use_special_hairpin(false) {}
+    EnergyModel(EnergyParamsType epm_type) : epm(epm_type), use_special_hairpin(true) {}
+
+    void init_tetra_hex_tri(std::string &seq, int seq_length, std::vector<int> &if_tetraloops,
+                            std::vector<int> &if_hexaloops, std::vector<int> &if_triloops);
 
     int score_hairpin(int i, int j, int nuci, int nuci1, int nucj_1, int nucj, int tetra_hex_tri_index = -1) {
         int size = j - i - 1;
@@ -78,8 +76,8 @@ class EnergyModel {
         return energy;
     };
 
-    int score_single_loop(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1,
-                                 int nucp, int nucq, int nucq1) {
+    int score_single_loop(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1, int nucp,
+                          int nucq, int nucq1) {
 
         int type = NUC_TO_PAIR(nuci, nucj);
         int type_2 = NUC_TO_PAIR(nucq, nucp);

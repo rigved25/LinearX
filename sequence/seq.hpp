@@ -9,7 +9,7 @@ class Seq {
   public:
     std::string id;
     std::string sequence;
-    int k_id; // optional integer id for the sequence
+    int k_id;                 // optional integer id for the sequence
     std::vector<int> enc_seq; // optional encoded sequence
 
     // constructors
@@ -28,6 +28,7 @@ class Seq {
 
     void remove_gaps();
     void swap_nuc(const char nuc1, const char nuc2); // swap all occurences of nuc1 with nuc2
+    float compute_seq_identity(const Seq &seq2);      // compute sequence identity with another sequence
 
     // add, insert, delete, replace characters
     void add_nuc(char nucleotide);
