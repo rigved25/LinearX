@@ -172,8 +172,6 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
             const double prob = item.second;
             if(prob < threshold)
                 continue;
-
-            std::cout << i << " " << j << std::endl;
         
             // output i, j, and the probability to the file
             file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
