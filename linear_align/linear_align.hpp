@@ -1,14 +1,13 @@
+#include <fstream>  // for file I/O
+#include <iostream> // NOTE: for debugging, remove later
 #include <unordered_map>
 #include <vector>
 
 #include "./../sequence/multi_seq.hpp"
 #include "./../sequence/seq.hpp"
-#include "./utility.hpp"
-
-#include <iostream> // NOTE: for debugging, remove later
-
 #include "./../shared.hpp"
 #include "./phmm.hpp"
+#include "./utility.hpp"
 
 class LinearAlign {
     inline const static std::vector<HStateType> hstate_types = {INS1, INS2, ALN};
@@ -91,6 +90,8 @@ class LinearAlign {
     double get_match_score(const int i, const int j);
     void set_prob_accm(ProbAccm &prob_accm1, ProbAccm &prob_accm2);
     double get_bpp(const int i, const int j) const;
+
+    void dump_coinc_probs(const std::string &filepath, const float threshold = 0.001f) const;
 
     inline std::unordered_map<std::pair<int, int>, HState, PairHash> *get_beam(HStateType type) {
         switch (type) {

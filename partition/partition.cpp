@@ -60,7 +60,7 @@ double Partition::get_bpp(const int i, const int j) const {
     if (i > j)
         return get_bpp(j, i);
     if (bpp == nullptr)
-        throw std::runtime_error("[LinearPartition: Error] BPP matrix not computed yet!");
+        throw std::runtime_error("[LinearPartition: Error] BPP matrix not computed yet! You must run compute_bpp_matrix() first.");
     const auto &item = bpp[j].find(i);
     if (item == bpp[j].end())
         return 0.0;
@@ -183,4 +183,31 @@ std::string Partition::get_threshknot_structure() {
     }
 
     return structure;
+}
+
+void Partition::dump_bpp(const std::string &filepath) const {
+    if (bpp == nullptr) {
+        throw std::runtime_error("[LinearPartition: Error] BPP matrix not computed yet! You must run compute_bpp_matrix() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cout << "[Hint] The directory for the output file may not exist. Please create it before running the method." << std::endl;
+        throw std::runtime_error("[LinearPartition: Error] Unable to open the file " + filepath + " for writing BPP matrix.");
+    }
+
+    // dump the BPP matrix to the file
+    for (int j = 0; j < seq->size(); ++j) {
+        for (const auto &item : bpp[j]) {
+            const int i = item.first;
+            const double prob = item.second;
+
+            // output i, j, and the probability to the file
+            file << i << " " << j << " " << std::fixed << std::setprecision(8) << prob << std::endl;
+        }
+    }
+
+    // file automatically closes when it goes out of scope
+    std::cout << "[LinearPartition] BPP matrix dumped to " << filepath << std::endl;
 }

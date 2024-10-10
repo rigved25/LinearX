@@ -1,12 +1,12 @@
 #include "turbofold.hpp"
 
 int LinearTurboFold::get_seq_pair_index(const int k1, const int k2) {
-    // Ensure the indices are within bounds
+    // ensure the indices are within bounds
     if (k1 >= multi_seq->size() || k2 >= multi_seq->size()) {
         throw std::out_of_range("Seq index k out of range");
     }
 
-    // Ensure k1 != k2 and k1 < k2 by swapping if necessary
+    // ensure k1 != k2 and k1 < k2 by swapping if necessary
     int a = k1, b = k2;
     if (k1 == k2) {
         throw std::invalid_argument("k1 and k2 must be different");
@@ -15,10 +15,10 @@ int LinearTurboFold::get_seq_pair_index(const int k1, const int k2) {
         std::swap(a, b);
     }
 
-    // Number of sequences
+    // number of sequences
     int n = multi_seq->size();
 
-    // Compute the index using the triangular indexing formula
+    // compute the index using the triangular indexing formula
     int index = a * (2 * n - a - 1) / 2 + (b - a - 1);
 
     return index;
@@ -102,16 +102,21 @@ void LinearTurboFold::run() {
                     std::cout << alignment.get_seq_identity() << std::endl;
                 }
 
-                // compute partition function
-                aln.reset_beams();
-                // aln.prob_set1();
-                aln.prob_set2(seq_idnty);
-                aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-                aln.compute_inside(false, 100, verbose_state == VerboseState::DEBUG);
-                aln.compute_outside(verbose_state == VerboseState::DEBUG);
-                aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
-                if (verbose_state == VerboseState::DEBUG) {
-                    aln.print_alpha_beta();
+                if (itr < max_itr) {
+                    // compute partition function
+                    aln.reset_beams();
+                    // aln.prob_set1();
+                    aln.prob_set2(seq_idnty);
+                    aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+                    aln.compute_inside(false, 100, verbose_state == VerboseState::DEBUG);
+                    aln.compute_outside(verbose_state == VerboseState::DEBUG);
+                    aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
+                    if (verbose_state == VerboseState::DEBUG) {
+                        aln.print_alpha_beta();
+                    } else if (verbose_state == VerboseState::DETAIL) {
+                        aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                             std::to_string(k2) + ".txt");
+                    }
                 }
             }
         }
@@ -122,16 +127,19 @@ void LinearTurboFold::run() {
                 pf.reset_beams();
                 pf.compute_inside();
                 pf.compute_outside();
-                // std::cout << "Ensemble Energy: " << pf.get_ensemble_energy() << std::endl;
-                // pf.print_alpha_beta();
+                if (verbose_state == VerboseState::DEBUG) {
+                    pf.print_alpha_beta();
+                }
             }
             for (TurboPartition &pf : pfs) {
                 pf.compute_bpp_matrix();
+                if (verbose_state == VerboseState::DETAIL) {
+                    pf.dump_bpp("./vb_info/" + std::to_string(itr) + "_pf_" + pf.sequence->id + ".bpp");
+                }
                 pf.calc_prob_accm();
             }
             this->ext_info_cache.clear();
         } else {
-            // std::cout << std::endl << std::endl;
             for (TurboPartition &pf : pfs) {
                 std::cout << ">" << pf.sequence->id << std::endl;
                 std::cout << pf.get_threshknot_structure() << std::endl;

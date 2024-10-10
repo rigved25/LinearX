@@ -34,6 +34,7 @@
 
 # ignore tmp directory
 tmp/
+vb*/
 
 # ignore mac config files
 .DS_Store

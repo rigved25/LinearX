@@ -152,6 +152,36 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
     }
 }
 
+
+void LinearAlign::dump_coinc_probs(const std::string &filepath, const float threshold) const {
+    if (coinc_prob == nullptr) {
+        throw std::runtime_error("[LinearAlign: Error] Coincidence probabilities not computed yet! You must run compute_coincidence_probabilities() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cout << "[Hint] The directory for the output file may not exist. Please create it before running the method." << std::endl;
+        throw std::runtime_error("[LinearAlign: Error] Unable to open the file " + filepath + " for writing coincidence probabilities.");
+    }
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i < seq1->size(); ++i) {
+        for (const auto &item : coinc_prob[i]) {
+            const int j = item.first;
+            const double prob = item.second;
+            if(prob < threshold)
+                continue;
+
+            std::cout << i << " " << j << std::endl;
+        
+            // output i, j, and the probability to the file
+            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+        }
+    }
+
+};
+
 // legacy methods below
 // ------------------------------------------------------------------------------------------------------------------------
 // void LinearAlign::run_backward_phase(bool verbose_output) {

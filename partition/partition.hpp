@@ -1,72 +1,21 @@
 #ifndef PARTITION_HPP
 #define PARTITION_HPP
 
+#include <cctype>   // for std::toupper and std::tolower
+#include <fstream>  // for file I/O
+#include <iostream> // [DEBUG] for debugging, remove later
+#include <set>
+#include <unordered_map>
+#include <vector>
+
 #include "./../energy_model.hpp"
 #include "./../sequence/seq.hpp"
 #include "./../shared.hpp"
 #include "./../utility/log_math.hpp"
 #include "./../utility/utility.hpp"
-#include <iostream> // [DEBUG] for debugging, remove later
-#include <set>
-#include <unordered_map>
-#include <vector>
-#include <cctype> // for std::toupper and std::tolower
-
-struct State {
-    double alpha;
-    double beta;
-    State() : alpha(VALUE_MIN), beta(VALUE_MIN) {};
-};
-
-enum StateType {
-    H,
-    Multi,
-    P,
-    M2,
-    M,
-    C,
-};
-
-enum InsideMode {
-    MFE,
-    PARTITION,
-};
-
-struct TraceInfo {
-    int i;
-    int j;
-    int t; // split point
-    StateType type_left;
-    StateType type_right;
-
-    TraceInfo() : i(-1), j(-1), t(-1), type_left(H), type_right(H) {};
-
-    void set(const int i, const int j, const int t, const StateType type_left, const StateType type_right) {
-        this->i = i;
-        this->j = j;
-        this->t = t;
-        this->type_left = type_left;
-        this->type_right = type_right;
-    }
-};
-
-struct HEdge {
-    double weight;
-    State *left;
-    State *right; // right=null <=> Edge
-
-    HEdge() : weight(VALUE_MIN), left(nullptr), right(nullptr) {};
-    HEdge(double weight, State *left, State *right) : weight(weight), left(left), right(right) {};
-
-    void set(double weight, State *left, State *right) {
-        this->weight = weight;
-        this->left = left;
-        this->right = right;
-    }
-};
+#include "./utility.hpp"
 
 class Partition {
-
     inline const static StateType state_types[6] = {H, Multi, P, M2, M, C};
 
   private:
@@ -74,7 +23,7 @@ class Partition {
     std::vector<int> if_hexaloops;
     std::vector<int> if_triloops;
 
-  public:
+  protected:
     std::unordered_map<int, State> *bestH = nullptr;
     std::unordered_map<int, State> *bestP = nullptr;
     std::unordered_map<int, State> *bestM = nullptr;
@@ -82,6 +31,7 @@ class Partition {
     std::unordered_map<int, State> *bestMulti = nullptr;
     std::unordered_map<int, State> bestC;
 
+  public:
     std::unordered_map<int, double> *bpp = nullptr;
     State *viterbi = nullptr;
 
@@ -176,6 +126,8 @@ class Partition {
     TraceInfo get_incoming_hedges_Multi(const int i, const int j, std::vector<HEdge> *incoming_hedges);
 
     std::string get_threshknot_structure();
+
+    void dump_bpp(const std::string &filename) const;
 
     void debug_states() {
 
