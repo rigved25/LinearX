@@ -43,10 +43,12 @@ int main(int argc, char* argv[]) {
 
 
     // mseq.add_sequence(Seq("seq1", "ccgggugccuauaccggaggggccacacccguucccauuccgaacacggucguuaagcccuccagggccgaugguacuggggcguuaccgcccugggagaguaggucggugcccggg", 0, &nuc_encoding_scheme));
-    mseq.add_sequence(Seq("seq1", "ugcuuggcgaccauagcguuauggacccaccugaucccaugccgaacucaguagugaaacguaauagcgccgaugguaguguggggucuccccaugugagaguaggacaucgccaggcau", 0, &nuc_encoding_scheme));
-    mseq.add_sequence(Seq("seq2", "ccgggugccuauaccggaggggccacacccguucccauuccgaacacggucguuaagcccuccagggccgaugguacuggggcguuaccgcccugggagaguaggucggugcccggg", 1, &nuc_encoding_scheme));
+    // mseq.add_sequence(Seq("seq1", "ugcuuggcgaccauagcguuauggacccaccugaucccaugccgaacucaguagugaaacguaauagcgccgaugguaguguggggucuccccaugugagaguaggacaucgccaggcau", 0, &nuc_encoding_scheme));
+    // mseq.add_sequence(Seq("seq2", "ccgggugccuauaccggaggggccacacccguucccauuccgaacacggucguuaagcccuccagggccgaugguacuggggcguuaccgcccugggagaguaggucggugcccggg", 1, &nuc_encoding_scheme));
     // mseq.add_sequence(Seq("seq3", "ccgggugccuauaccggaggggccacacccguucccauuccgaacacggucguuaagcccuccagggccgaugguacuggggcguuaccgcccugggagaguaggucggugccggg", 2, &nuc_encoding_scheme));
-    
+
+    mseq.add_sequence(Seq("seq1", "GGCCGAAUGGUCUAGUGGUAUGAUUCUCGCUUUGGGUGCGAGAGGUCCCGGGUUCAAUCCCCGGUUCGGCCC", 0, &nuc_encoding_scheme));
+    mseq.add_sequence(Seq("seq2", "GGAGAAUUACUCAAGAGGCUGAAGAGGACGGUUUGCUAAAUCGUUAGGUCGGGUAACUGGCGCAAGGGUUCGAAUCCCUUAUUCUCCG", 0, &nuc_encoding_scheme));
     
     LinearTurboFold ltf(&mseq, 1, VerboseState::DETAIL);
     ltf.run();

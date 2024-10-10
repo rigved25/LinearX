@@ -74,7 +74,7 @@ float LinearTurboFold::get_extrinsic_info(const Seq &x, const int i, const int j
 }
 
 void LinearTurboFold::run() {
-    int max_itr = 4;
+    int max_itr = 10;
     for (itr = 0; itr <= max_itr; ++itr) {
         // Utility::showProgressBar(itr, max_itr);
         // align step
@@ -115,7 +115,7 @@ void LinearTurboFold::run() {
                         aln.print_alpha_beta();
                     } else if (verbose_state == VerboseState::DETAIL) {
                         aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                             std::to_string(k2) + ".txt");
+                                             std::to_string(k2) + ".bpp.txt");
                     }
                 }
             }
@@ -134,7 +134,7 @@ void LinearTurboFold::run() {
             for (TurboPartition &pf : pfs) {
                 pf.compute_bpp_matrix();
                 if (verbose_state == VerboseState::DETAIL) {
-                    pf.dump_bpp("./vb_info/" + std::to_string(itr) + "_pf_" + pf.sequence->id + ".bpp");
+                    pf.dump_bpp("./vb_info/" + std::to_string(itr) + "_pf_" + pf.sequence->id + ".bpp.txt");
                 }
                 pf.calc_prob_accm();
             }
