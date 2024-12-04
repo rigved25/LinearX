@@ -84,7 +84,8 @@ void LinearTurboFold::run() {
     for (itr = 0; itr <= num_itr; ++itr) {
         // Utility::showProgressBar(itr, num_itr);
         // align step
-        std::cout << "\nCURRENT ITERATION: " << itr << std::endl;
+        std::cerr << "-------------------------CURRENT ITERATION: " << itr << "-------------------------\n"
+                  << std::endl;
         if (itr > 0) {
             for (LinearAlign &aln : alns) {
                 const int k1 = aln.sequence1->k_id;
@@ -102,30 +103,28 @@ void LinearTurboFold::run() {
                 seq_idnty = alignment.get_seq_identity();    // get the new sequence identity using the new alignment
                 seq_identities[aln_pair_index] = seq_idnty;  // store the updated sequence identity
 
-                if (verbose_state == VerboseState::DEBUG) {
-                    // std::cout << "Alignment: " << k1 << " " << k2 << std::endl;
-                    // std::cout << alignment[0].sequence << std::endl;
-                    // std::cout << alignment[1].sequence << std::endl;
-                    // aln.print_alpha_beta();
-                    std::cout << alignment.get_seq_identity() << std::endl;
-                }
+                // if (verbose_state == VerboseState::DEBUG) {
+                // std::cout << "Alignment: " << k1 << " " << k2 << std::endl;
+                // std::cout << alignment[0].sequence << std::endl;
+                // std::cout << alignment[1].sequence << std::endl;
+                // aln.print_alpha_beta();
+                // std::cout << alignment.get_seq_identity() << std::endl;
+                // }
 
-                if (itr < num_itr) {
-                    // compute partition function
-                    aln.reset_beams();
-                    // aln.prob_set1();
-                    // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
-                    aln.prob_set2(seq_idnty);
-                    if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-                    aln.compute_inside(false, 100, verbose_state == VerboseState::DEBUG);
-                    aln.compute_outside(verbose_state == VerboseState::DEBUG);
-                    aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
-                    if (verbose_state == VerboseState::DEBUG) {
-                        aln.print_alpha_beta();
-                    } else if (verbose_state == VerboseState::DETAIL) {
-                        aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                             std::to_string(k2) + ".bpp.txt");
-                    }
+                // compute partition function
+                aln.reset_beams();
+                // aln.prob_set1();
+                // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
+                aln.prob_set2(seq_idnty);
+                if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+                aln.compute_inside(false, 100, verbose_state == VerboseState::DEBUG);
+                aln.compute_outside(verbose_state == VerboseState::DEBUG);
+                aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
+                if (verbose_state == VerboseState::DEBUG) {
+                    aln.print_alpha_beta();
+                } else if (verbose_state == VerboseState::DETAIL) {
+                    aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                         std::to_string(k2) + ".bpp.txt");
                 }
             }
         }
@@ -145,8 +144,11 @@ void LinearTurboFold::run() {
             if (verbose_state == VerboseState::DETAIL) {
                 pf.dump_bpp("./vb_info/" + std::to_string(itr) + "_pf_" + pf.sequence->id + ".bpp.txt");
             }
-            std::cout << itr << " >" << pf.sequence->id << std::endl;
-            std::cout << pf.get_threshknot_structure() << std::endl;
+
+            if (itr == num_itr) {
+                std::cout << ">" << pf.sequence->id << std::endl;
+                std::cout << pf.get_threshknot_structure() << std::endl;
+            }
         }
         reset_extinf_cache();
     }

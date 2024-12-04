@@ -33,7 +33,7 @@ void Partition::update_score(State &state, const int new_score, const double pre
 void Partition::compute_inside() {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
-        std::cerr << "\n[LinearPartition] Running Inside Algorithm:" << std::endl;
+        fprintf(stderr, "[LinearPartition] (Seq k_id: %d) Running Inside Algorithm:\n", sequence->k_id);
     }
     for (int j = 0; j < seq->size(); j++) {
         if (verbose_output) {
@@ -81,6 +81,7 @@ void Partition::compute_inside() {
         } else {
             std::cerr << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
         }
+        std::cerr << std::endl;
     }
 }
 

@@ -96,7 +96,7 @@ void LinearAlign::set_prob_accm(ProbAccm &prob_accm1, ProbAccm &prob_accm2) {
 void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_output) {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
-        std::cout << "\n[LinearAlign] Running Inside Algorithm:" << std::endl;
+        std::cerr << "[LinearAlign] Running Inside Algorithm:" << std::endl;
     }
     bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
     for (int s = 0; s <= seq_len_sum; ++s) {
@@ -146,7 +146,7 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
     auto end_time = std::chrono::high_resolution_clock::now();
     inside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
-        std::cout << "  - Execution Time: " << inside_execution_time << " ms\n" << std::endl;
+        std::cerr << "  - Execution Time: " << inside_execution_time << " ms\n" << std::endl;
     }
 }
 
@@ -160,7 +160,7 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
     // open the file for writing
     std::ofstream file(filepath);
     if (!file) {
-        std::cout
+        std::cerr
             << "[Hint] The directory for the output file may not exist. Please create it before running the method."
             << std::endl;
         throw std::runtime_error("[LinearAlign Error] Unable to open the file " + filepath +

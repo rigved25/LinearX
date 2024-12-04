@@ -6,6 +6,8 @@
 
 using namespace std;
 
+// example run: ./main ./test_seqs/sample1.fasta 0 3 1
+
 MultiSeq read_msa_file(const std::string& filePath, std::unordered_map<char, int>* encoding_scheme = nullptr) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -41,7 +43,7 @@ MultiSeq read_msa_file(const std::string& filePath, std::unordered_map<char, int
 int main(int argc, char* argv[]) {
     // Check if the number of arguments is correct (must be an even number for name-sequence pairs)
     if (argc != 5) {
-        std::cerr << "Usage: " << argv[0] << " <energy_params> <msa_file_path> <num_iterations> <use_lazy_outside>\n";
+        std::cerr << "Usage: " << argv[0] << " <msa_file_path> <energy_params> <num_iterations> <use_lazy_outside>\n";
         return EXIT_FAILURE;
     }
 

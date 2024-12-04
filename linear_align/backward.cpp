@@ -81,7 +81,7 @@ void LinearAlign::compute_outside(bool verbose_output) {
     };
 
     if (verbose_output) {
-        std::cout << "[LinearAlign] Running Outside Algorithm:" << std::endl;
+        std::cerr << "[LinearAlign] Running Outside Algorithm:" << std::endl;
     }
     auto start_time = std::chrono::high_resolution_clock::now();
     process_beam(seq_len_sum + 2, bestALN[seq_len_sum + 2], HStateType::ALN);
@@ -235,8 +235,9 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
             } else {
                 prob = EXP(prob);
                 if (prob > 1.00001) {
-                    printf("[LinearAlign: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
-                           prob);
+                    fprintf(stderr,
+                            "[LinearAlign: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
+                            prob);
                 }
                 prob = std::min(prob, 1.0);
                 prob_rev_idx[j].push_back(i);
@@ -247,7 +248,8 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
     }
 
     if (verbose_output) {
-        printf("[LinearAlign] Coincidence Probabilities Computed: %lu (saved) + %lu (pruned)\n", num_saved, num_pruned);
+        fprintf(stderr, "[LinearAlign] Coincidence Probabilities Computed: %lu (saved) + %lu (pruned)\n", num_saved,
+                num_pruned);
     }
 }
 

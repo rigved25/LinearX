@@ -1,11 +1,12 @@
+#include <fstream>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 #include "./../../partition/partition.hpp"
 #include "./../../sequence/multi_seq.hpp"
 
 using namespace std;
-
-// example run: // ./main ./../../eval/rnastralign/data/v1/no_aln/5S.RNAstralign_LZ_format_k_30_1.auto_mafft.fasta 1
 
 // Function to read MSA file and populate MultiSeq
 MultiSeq read_msa_file(const std::string& filePath) {
@@ -41,13 +42,18 @@ MultiSeq read_msa_file(const std::string& filePath) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <msa_file_path> <use_lazy_outside>\n";
+    if (argc < 2 || argc > 4) {
+        std::cerr << "Usage: " << argv[0] << " <msa_file_path> [energy_params=0|1] [use_lazy_outside=1|0]\n";
+        std::cerr << "  [energy_params=0|1]: 0 for VIENNA, 1 for BL_STAR (default: 0)\n";
+        std::cerr << "  [use_lazy_outside=1|0]: 1 for on, 0 for off (default: 1)\n";
         return EXIT_FAILURE;
     }
 
+    // Parse input arguments
     std::string msaFilePath = argv[1];
-    bool use_lazy_outside = std::stoi(argv[2]);
+    EnergyParamsType energy_params =
+        (argc >= 3 && std::stoi(argv[2]) == 1) ? EnergyParamsType::BL_STAR : EnergyParamsType::VIENNA;
+    bool use_lazy_outside = (argc == 4) ? std::stoi(argv[3]) : true;
 
     try {
         // Read MSA file and generate MultiSeq
@@ -55,8 +61,6 @@ int main(int argc, char* argv[]) {
 
         // Display the sequences
         std::cerr << "MultiSeq contains " << mseq.size() << " sequences:\n";
-
-        // Print the sequences
         for (int k = 0; k < mseq.size(); ++k) {
             std::cerr << ">" << mseq[k].id << std::endl;
             std::cerr << mseq[k].sequence << std::endl;
@@ -68,7 +72,7 @@ int main(int argc, char* argv[]) {
 
             seq.set_encoding(VIENNA_NUC_ENCODING_SCHEME);
             InsideMode mode = InsideMode::PARTITION;
-            Partition partition(&seq, *(new EnergyModel(EnergyParamsType::VIENNA)), mode);
+            Partition partition(&seq, *(new EnergyModel(energy_params)), mode);
             partition.compute_inside();
             if (mode == InsideMode::PARTITION) {
                 partition.compute_outside(use_lazy_outside);

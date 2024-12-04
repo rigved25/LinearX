@@ -112,9 +112,9 @@ class LinearAlign {
     }
 
     inline void print_alpha_beta() {
-        std::cout << "Alpha(ALN, n1 + 1, n2 + 1): "
+        std::cerr << "Alpha(ALN, n1 + 1, n2 + 1): "
                   << bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha << std::endl;
-        std::cout << "Beta(ALN, 0, 0): " << bestALN[0][{0, 0}].beta << std::endl;
+        std::cerr << "Beta(ALN, 0, 0): " << bestALN[0][{0, 0}].beta << std::endl << std::endl;
     }
 
     inline void print_seqs() {

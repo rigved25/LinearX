@@ -71,7 +71,7 @@ void Partition::compute_outside(bool use_lazy_outside) {
     };
 
     if (verbose_output) {
-        std::cerr << "\n[LinearPartition] Running Outside Algorithm:" << std::endl;
+        fprintf(stderr, "[LinearPartition] (Seq k_id: %d) Running Outside Algorithm:\n", sequence->k_id);
     }
     auto start_time = std::chrono::high_resolution_clock::now();
     for (int j = seq->size() - 1; j >= 0; --j) {
@@ -122,6 +122,9 @@ void Partition::get_incoming_edges_state(const int i, const int j, const StateTy
             get_incoming_hedges_C(j, &incoming_hedges);
             break;
     }
+    for (auto &hedge : incoming_hedges) {
+        hedge.weight *= INV_KT;
+    }
 }
 
 std::pair<int, int> Partition::backward_update(const int i, const int j, State &state, const StateType type,
@@ -142,7 +145,6 @@ std::pair<int, int> Partition::backward_update(const int i, const int j, State &
     int num_local_edges_saved = 0;
 
     for (auto &hedge : incoming_hedges) {
-        // hedge.weight *= INV_KT;         [TODO] FIX THIS
         double edge_inside = hedge.weight + hedge.left->alpha + (hedge.right ? hedge.right->alpha : 0);
         if (edge_inside > edge_threshold) {  // keep the edge
             Fast_LogPlusEquals(saved_inside, edge_inside);

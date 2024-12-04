@@ -3,7 +3,7 @@
 void TurboPartition::compute_inside() {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
-        std::cout << "\n[LinearPartition] Running Inside Algorithm:" << std::endl;
+        fprintf(stderr, "[LinearPartition] (Seq k_id: %d) Running Inside Algorithm:\n", sequence->k_id);
     }
     for (int j = 0; j < seq->size(); j++) {
         if (verbose_output) {
@@ -49,42 +49,21 @@ void TurboPartition::compute_inside() {
     auto end_time = std::chrono::high_resolution_clock::now();
     inside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
-        std::cout << "  - Execution Time: " << inside_execution_time << " ms" << std::endl;
+        std::cerr << "  - Execution Time: " << inside_execution_time << " ms" << std::endl;
         if (mode == InsideMode::MFE) {
-            std::cout << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol"
+            std::cerr << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol"
                       << std::endl;
             printf("\n%s (%.2f)\n", get_mfe_structure().c_str(), bestC[seq->size() - 1].alpha / -100.0);
         } else {
-            std::cout << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
+            std::cerr << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
         }
+        std::cerr << std::endl;
     }
 }
 
 void TurboPartition::get_incoming_edges_state(const int i, const int j, const StateType type,
                                               std::vector<HEdge> &incoming_hedges) {
-    switch (type) {
-        case H:
-            break;
-        case Multi:
-            get_incoming_hedges_Multi(i, j, &incoming_hedges);
-            break;
-        case P:
-            get_incoming_hedges_P(i, j, &incoming_hedges);
-            break;
-        case M2:
-            get_incoming_hedges_M2(i, j, &incoming_hedges);
-            break;
-        case M:
-            get_incoming_hedges_M(i, j, &incoming_hedges);
-            break;
-        case C:
-            get_incoming_hedges_C(j, &incoming_hedges);
-            break;
-    }
-
-    for (auto &hedge : incoming_hedges) {
-        hedge.weight *= INV_KT;
-    }
+    Partition::get_incoming_edges_state(i, j, type, incoming_hedges);
 
     if (type == StateType::P) {
         for (auto &hedge : incoming_hedges) {
