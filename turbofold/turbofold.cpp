@@ -66,7 +66,7 @@ double LinearTurboFold::get_extrinsic_info(const Seq &x, const int i, const int 
         }
     }
 
-    output = xlog(2 * output);
+    output = xlog(1 * output);
     extinf_cache[x.k_id][j][i] = output;  // cache the result
     return output;
 }
