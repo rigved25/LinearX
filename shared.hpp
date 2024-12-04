@@ -9,6 +9,4 @@ struct ProbAccm {
     std::vector<float> dwnstrm;
 };
 
-
-
-#endif // SHARED_HPP
+#endif  // SHARED_HPP

@@ -3,7 +3,7 @@
 # Hardcoded path to the turbofold executable
 TURBOFOLD_EXEC="./tests/linearturbofold/main"
 
-# Check if correct number of arguments are provided
+# Check if the correct number of arguments are provided
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <input_directory> <output_directory>"
     exit 1
@@ -19,9 +19,24 @@ if [ ! -d "$input_dir" ]; then
     exit 1
 fi
 
-# Create the output directory if it does not exist
-if [ ! -d "$output_dir" ]; then
-    mkdir -p "$output_dir"
+# Create the output and log directories if they don't exist
+output_subdir="$output_dir/output"
+log_subdir="$output_dir/log"
+
+mkdir -p "$output_subdir"
+mkdir -p "$log_subdir"
+
+# Determine the correct time flag based on the OS
+os_type=$(uname)
+if [ "$os_type" == "Darwin" ]; then
+    # macOS
+    time_cmd="/usr/bin/time -l"
+elif [ "$os_type" == "Linux" ]; then
+    # Linux (assuming GNU time is available)
+    time_cmd="/usr/bin/time -v"
+else
+    echo "Unsupported OS: $os_type"
+    exit 1
 fi
 
 # Process each FASTA file in the input directory
@@ -64,12 +79,14 @@ for fasta_file in "$input_dir"/*.fasta; do
         args+=("$seq_name" "$seq_data")
     fi
 
-    # Define the output file path in the output directory with .txt extension
-    output_file="$output_dir/$base_filename.txt"
+    # Define the output file and log file paths
+    output_file="$output_subdir/$base_filename"
+    log_file="$log_subdir/$base_filename.log"
 
     # Run the turbofold executable and redirect the output to the output file
     echo "Processing $fasta_file..."
-    "$TURBOFOLD_EXEC" "${args[@]}" > "$output_file"
+    $time_cmd "$TURBOFOLD_EXEC" "${args[@]}" > "$output_file" 2> "$log_file"
 
     echo "Output written to $output_file"
+    echo "Time and memory usage written to $log_file"
 done

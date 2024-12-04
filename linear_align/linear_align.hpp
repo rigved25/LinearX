@@ -1,5 +1,5 @@
-#include <fstream>  // for file I/O
-#include <iostream> // NOTE: for debugging, remove later
+#include <fstream>   // for file I/O
+#include <iostream>  // NOTE: for debugging, remove later
 #include <unordered_map>
 #include <vector>
 
@@ -12,8 +12,7 @@
 class LinearAlign {
     inline const static std::vector<HStateType> hstate_types = {INS1, INS2, ALN};
 
-  private:
-    Phmm *phmm = nullptr;
+   private:
     ProbAccm *pm1, *pm2;
 
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN = nullptr;
@@ -33,10 +32,11 @@ class LinearAlign {
     HStateType get_incoming_edges(const int i, const int j, const HStateType type,
                                   std::vector<AlnEdge> *incoming_edges);
 
-  public:
-    const Seq *sequence1; // pointer to actual Seq object
+   public:
+    Phmm *phmm = nullptr;
+    const Seq *sequence1;  // pointer to actual Seq object
     const Seq *sequence2;
-    const std::vector<int> *seq1; // pointer to encoded sequence in Seq object
+    const std::vector<int> *seq1;  // pointer to encoded sequence in Seq object
     const std::vector<int> *seq2;
     int seq_len_sum;
 
@@ -49,8 +49,14 @@ class LinearAlign {
 
     LinearAlign(const Seq *sequence1, const Seq *sequence2, bool verbose = false, double alpha1 = 1.0,
                 double alpha2 = 0.8, double alpha3 = 0.5)
-        : sequence1(sequence1), sequence2(sequence2), seq1(&sequence1->enc_seq), seq2(&sequence2->enc_seq),
-          seq_len_sum(seq1->size() + seq2->size()), alpha1(alpha1), alpha2(alpha2), alpha3(alpha3) {
+        : sequence1(sequence1),
+          sequence2(sequence2),
+          seq1(&sequence1->enc_seq),
+          seq2(&sequence2->enc_seq),
+          seq_len_sum(seq1->size() + seq2->size()),
+          alpha1(alpha1),
+          alpha2(alpha2),
+          alpha3(alpha3) {
         reset_beams();
 
         if (verbose) {
@@ -74,7 +80,8 @@ class LinearAlign {
 
     void prob_set2(float similarity) {
         delete phmm;
-        std::string phmm_pars_fp = "/Users/apoorvmalik/LinearAlifold/linearx/linear_align/parameters/fam_hmm_pars.dat";
+        std::string phmm_pars_fp =
+            "/Users/malikap/ltf-project/LinearAlifold/linearx/linear_align/parameters/fam_hmm_pars.dat";
         phmm = new Phmm(phmm_pars_fp.c_str());
         phmm->set_parameters_by_sim(similarity);
     }
@@ -95,12 +102,12 @@ class LinearAlign {
 
     inline std::unordered_map<std::pair<int, int>, HState, PairHash> *get_beam(HStateType type) {
         switch (type) {
-        case HStateType::INS1:
-            return bestINS1;
-        case HStateType::INS2:
-            return bestINS2;
-        case HStateType::ALN:
-            return bestALN;
+            case HStateType::INS1:
+                return bestINS1;
+            case HStateType::INS2:
+                return bestINS2;
+            case HStateType::ALN:
+                return bestALN;
         }
     }
 

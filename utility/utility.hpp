@@ -1,11 +1,15 @@
 #ifndef UTILITIES_HPP
 #define UTILITIES_HPP
 
-#include "./constants.hpp"
+#include <unistd.h>  // For write() and file descriptors
+
+#include <sstream>  // For stringstream
 #include <vector>
 
+#include "./constants.hpp"
+
 class Utility {
-  public:
+   public:
     static FILE *open_f(const char *fp, const char *mode) {
         if (fp == NULL || mode == NULL) {
             printf("Invalid arguments to open_f: %s.\n", fp);
@@ -30,22 +34,28 @@ class Utility {
     }
 
     static void showProgressBar(int cur_itr, int total_itr) {
-        int barWidth = 50; // Width of the progress bar
-        std::cout << "[";
+        int barWidth = 50;       // Width of the progress bar
+        int fileDescriptor = 3;  // Custom File descriptor for writing to the terminal
+        std::stringstream ss;
+        ss << "[";
         float progress = (float)cur_itr / total_itr;
         int pos = barWidth * progress;
         for (int i = 0; i < barWidth; ++i) {
             if (i < pos)
-                std::cout << "=";
+                ss << "=";
             else if (i == pos)
-                std::cout << ">";
+                ss << ">";
             else
-                std::cout << " ";
+                ss << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << " %\r"; // \r returns to the start of the line
-        std::cout.flush();                                    // Ensure the output is printed immediately
-        if (cur_itr == total_itr)
-            std::cout << std::endl;
+        ss << "] " << int(progress * 100.0) << " %\r";  // \r returns to the start of the line
+        std::string output = ss.str();
+
+        // Write to file descriptor 3
+        write(fileDescriptor, output.c_str(), output.size());
+        if (cur_itr == total_itr) {
+            write(fileDescriptor, "\n", 1);  // Add a newline when progress is complete
+        }
     }
 
     static inline bool check_valid_pair(const int nuc1, const int nuc2) {
@@ -56,10 +66,8 @@ class Utility {
     static inline int quickselect_partition(std::vector<std::pair<double, T>> &scores, int lower, int upper) {
         double pivot = scores[upper].first;
         while (lower < upper) {
-            while (scores[lower].first < pivot)
-                ++lower;
-            while (scores[upper].first > pivot)
-                --upper;
+            while (scores[lower].first < pivot) ++lower;
+            while (scores[upper].first > pivot) --upper;
             if (scores[lower].first == scores[upper].first)
                 ++lower;
             else if (lower < upper)
@@ -70,8 +78,7 @@ class Utility {
 
     template <typename T>
     static inline double quickselect(std::vector<std::pair<double, T>> &scores, int lower, int upper, int k) {
-        if (lower == upper)
-            return scores[lower].first;
+        if (lower == upper) return scores[lower].first;
         int split = quickselect_partition(scores, lower, upper);
         int length = split - lower + 1;
         if (length == k)
@@ -94,11 +101,11 @@ struct PairHash {
 
         // apply an additional mix to further reduce collisions
         hash ^= (hash >> 13);
-        hash *= GOLDEN_RATIO; // a large prime number
+        hash *= GOLDEN_RATIO;  // a large prime number
         hash ^= (hash >> 15);
 
         return hash;
     }
 };
 
-#endif // UTILITIES_HPP
+#endif  // UTILITIES_HPP

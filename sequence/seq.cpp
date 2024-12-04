@@ -1,4 +1,5 @@
 #include "./seq.hpp"
+
 #include <fstream>
 #include <iostream>
 
@@ -15,7 +16,7 @@ Seq::Seq(const std::string &id, const std::string &sequence, const int k_id,
 }
 
 void Seq::set_encoding(std::unordered_map<char, int> &encoding_scheme) {
-    enc_seq.clear(); // clear any existing encoding
+    enc_seq.clear();  // clear any existing encoding
     for (int i = 0; i < sequence.length(); ++i) {
         char nuc = sequence[i];
         if (encoding_scheme.find(nuc) != encoding_scheme.end()) {
@@ -116,15 +117,14 @@ bool Seq::read_fasta(const std::string &filepath) {
     std::string line;
 
     while (std::getline(infile, line)) {
-        if (line.empty())
-            continue;
+        if (line.empty()) continue;
 
         if (line[0] == '>') {
             if (!id.empty()) {
                 // if we already have an ID, we've found the end of the previous sequence
                 break;
             }
-            id = line.substr(1); // remove the '>' character
+            id = line.substr(1);  // remove the '>' character
         } else {
             sequence += line;
         }
@@ -152,4 +152,10 @@ bool Seq::write_fasta(const std::string &filepath) const {
     outfile.close();
 
     return true;
+}
+
+// print the sequence
+void Seq::print() const {
+    printf(">%s (k_id: %d)\n", id.c_str(), k_id);
+    std::cout << sequence << std::endl;
 }

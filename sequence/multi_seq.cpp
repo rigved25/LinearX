@@ -1,15 +1,13 @@
 #include "./multi_seq.hpp"
+
 #include <fstream>
 #include <iostream>
-
 
 // constructor
 MultiSeq::MultiSeq() = default;
 
 // add a sequence to the alignment
-void MultiSeq::add_sequence(const Seq& seq) {
-    sequences_.push_back(seq);
-}
+void MultiSeq::add_sequence(const Seq& seq) { sequences_.push_back(seq); }
 
 // insert a sequence at a specific index
 void MultiSeq::insert_sequence(size_t index, const Seq& seq) {
@@ -41,7 +39,8 @@ void MultiSeq::replace_sequence(size_t index, const Seq& seq) {
 // access a sequence by index
 Seq& MultiSeq::operator[](size_t index) {
     if (index >= sequences_.size()) {
-        std::cerr << "Warning: Invalid index " << index << " for operator[]. Returning the first sequence." << std::endl;
+        std::cerr << "Warning: Invalid index " << index << " for operator[]. Returning the first sequence."
+                  << std::endl;
         return sequences_.at(0);
     }
     return sequences_.at(index);
@@ -49,7 +48,8 @@ Seq& MultiSeq::operator[](size_t index) {
 
 const Seq& MultiSeq::operator[](size_t index) const {
     if (index >= sequences_.size()) {
-        std::cerr << "Warning: Invalid index " << index << " for operator[]. Returning the first sequence." << std::endl;
+        std::cerr << "Warning: Invalid index " << index << " for operator[]. Returning the first sequence."
+                  << std::endl;
         return sequences_.at(0);
     }
     return sequences_.at(index);
@@ -71,14 +71,10 @@ const Seq& MultiSeq::at(size_t index) const {
 }
 
 // get all sequences
-const std::vector<Seq>& MultiSeq::get_sequences() const {
-    return sequences_;
-}
+const std::vector<Seq>& MultiSeq::get_sequences() const { return sequences_; }
 
 // get the number of sequences in the alignment
-size_t MultiSeq::size() const {
-    return sequences_.size();
-}
+size_t MultiSeq::size() const { return sequences_.size(); }
 
 // get the length of the alignment
 size_t MultiSeq::alignment_length() const {
@@ -100,7 +96,7 @@ Seq* MultiSeq::find_sequence_by_id(const std::string& id) {
 float MultiSeq::get_seq_identity() {
     int total_pairs = sequences_.size() * (sequences_.size() - 1) / 2;
     float val = 0;
-    for(int i = 0; i < sequences_.size(); ++i) {
+    for (int i = 0; i < sequences_.size(); ++i) {
         for (int j = i + 1; j < sequences_.size(); ++j) {
             val += sequences_[i].compute_seq_identity(sequences_[j]);
         }
@@ -111,7 +107,8 @@ float MultiSeq::get_seq_identity() {
 // print sequences
 void MultiSeq::print_sequences() {
     for (const auto& seq : sequences_) {
-        std::cout << seq.id << ": " << seq.sequence << std::endl;
+        // std::cout << seq.id << ": " << seq.sequence << std::endl;
+        seq.print();
     }
 }
 
@@ -126,7 +123,7 @@ bool MultiSeq::read_fasta(const std::string& filepath) {
     std::string line;
     std::string id;
     std::string sequence;
-    
+
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
 
@@ -136,7 +133,7 @@ bool MultiSeq::read_fasta(const std::string& filepath) {
                 sequences_.emplace_back(id, sequence);
                 sequence.clear();
             }
-            id = line.substr(1); // remove the '>' character
+            id = line.substr(1);  // remove the '>' character
         } else {
             sequence += line;
         }

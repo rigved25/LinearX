@@ -1,9 +1,9 @@
 #ifndef PARTITION_HPP
 #define PARTITION_HPP
 
-#include <cctype>   // for std::toupper and std::tolower
-#include <fstream>  // for file I/O
-#include <iostream> // [DEBUG] for debugging, remove later
+#include <cctype>    // for std::toupper and std::tolower
+#include <fstream>   // for file I/O
+#include <iostream>  // [DEBUG] for debugging, remove later
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -18,28 +18,28 @@
 class Partition {
     inline const static StateType state_types[6] = {H, Multi, P, M2, M, C};
 
-  private:
+   private:
     std::vector<int> if_tetraloops;
     std::vector<int> if_hexaloops;
     std::vector<int> if_triloops;
 
-  protected:
+   protected:
     std::unordered_map<int, State> *bestH = nullptr;
     std::unordered_map<int, State> *bestP = nullptr;
     std::unordered_map<int, State> *bestM = nullptr;
     std::unordered_map<int, State> *bestM2 = nullptr;
     std::unordered_map<int, State> *bestMulti = nullptr;
-    std::unordered_map<int, State> bestC;
+    VectorWithNegOneIndex<State> bestC;
 
-  public:
+   public:
     std::unordered_map<int, double> *bpp = nullptr;
     State *viterbi = nullptr;
 
     std::vector<int> next_pair[5];
     std::vector<int> prev_pair[5];
 
-    const Seq *sequence;         // pointer to actual Seq object
-    const std::vector<int> *seq; // pointer to encoded sequence in Seq object
+    const Seq *sequence;          // pointer to actual Seq object
+    const std::vector<int> *seq;  // pointer to encoded sequence in Seq object
 
     EnergyModel *energy_model;
     InsideMode mode;
@@ -51,13 +51,16 @@ class Partition {
     double inside_execution_time = 0.0;
     double outside_execution_time = 0.0;
 
-    ProbAccm prob_accm;
-
     Partition(const Seq *sequence, EnergyModel &energy_model, const InsideMode mode, const int beam_size = 100,
               bool allow_sharp_turn = false, bool verbose_output = true)
-        : sequence(sequence), seq(&sequence->enc_seq), energy_model(&energy_model), mode(mode), beam_size(beam_size),
-          allow_sharp_turn(allow_sharp_turn), verbose_output(verbose_output) {
-
+        : bestC(sequence->length() + 1),
+          sequence(sequence),
+          seq(&sequence->enc_seq),
+          energy_model(&energy_model),
+          mode(mode),
+          beam_size(beam_size),
+          allow_sharp_turn(allow_sharp_turn),
+          verbose_output(verbose_output) {
         for (int nuc = 1; nuc < 5; ++nuc) {
             prev_pair[nuc].resize(seq->size(), -1);
             next_pair[nuc].resize(seq->size(), seq->size());
@@ -90,12 +93,9 @@ class Partition {
     void reset_beams();
 
     virtual void compute_inside();
-    virtual void compute_outside();
-
+    void compute_outside(bool use_lazy_outside = true);
     void compute_bpp_matrix();
-    double get_bpp(const int i, const int j) const;
-    void calc_prob_accm();
-
+    double get_bpp(int i, int j) const;
     double get_ensemble_energy();
     std::string get_mfe_structure();
     void print_alpha_beta();
@@ -130,7 +130,6 @@ class Partition {
     void dump_bpp(const std::string &filename) const;
 
     void debug_states() {
-
         // for (int j = 0; j < seq->size(); ++j) {
         //     for (auto item : bestH[j]) {
         //         int i = item.first;
@@ -161,4 +160,4 @@ class Partition {
     }
 };
 
-#endif // PARTITION_HPP
+#endif  // PARTITION_HPP

@@ -17,12 +17,13 @@
 // #define INV_KT 1
 #define GOLDEN_RATIO 0x9e3779b1
 #define DEVIATION_THRESHOLD 9.91152
+#define EPSILON 1e-300
 
-inline std::unordered_map<char, int> nuc_encoding_scheme = {{'N', 0}, {'A', 1}, {'C', 2}, {'G', 3}, {'U', 4},
-                                                            {'-', 5}, {'n', 0}, {'a', 1}, {'c', 2}, {'g', 3},
-                                                            {'u', 4}, {'.', 5}}; // Vienna encoding scheme
+inline std::unordered_map<char, int> VIENNA_NUC_ENCODING_SCHEME = {{'N', 0}, {'A', 1}, {'C', 2}, {'G', 3}, {'U', 4},
+                                                                   {'-', 5}, {'n', 0}, {'a', 1}, {'c', 2}, {'g', 3},
+                                                                   {'u', 4}, {'.', 5}};  // Vienna encoding scheme
 
-#endif // CONSTANTS_HPP
+#endif  // CONSTANTS_HPP
 
 // AC 3 (invalid)
 // AG 4 (invalid)

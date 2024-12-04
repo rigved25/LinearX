@@ -107,6 +107,9 @@ void Phmm::set_parameters_by_sim(double similarity) {
     this->similarity = similarity;
     int fam_par_set_index = get_bin_index(similarity, N_BINZ);
 
+    // for debugging
+    // std::cout << "Similarity: " << similarity << " Bin Index: " << fam_par_set_index << std::endl;
+
     // load emission probabilities
     int start_linear_index = (N_STATES + N_OUTPUTS) * N_STATES * get_bin_index(similarity, N_BINZ);
     double *par_ptr = fam_hmm_pars + start_linear_index;

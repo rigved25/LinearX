@@ -21,12 +21,10 @@ double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, P
         HState &cand = item.second;
         scores.push_back(std::make_pair(cand.alpha, aij));
     }
-    if (scores.size() <= beam_size)
-        return VALUE_MIN;
+    if (scores.size() <= beam_size) return VALUE_MIN;
     double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
-        if (p.first < threshold)
-            beamstep.erase(p.second);
+        if (p.first < threshold) beamstep.erase(p.second);
     }
     return threshold;
 }
@@ -107,7 +105,7 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
         }
         for (const HStateType h : hstate_types) {
             std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h);
-            auto& current_beam = beam[s];
+            auto &current_beam = beam[s];
             if (beam_size > 0 && current_beam.size() > beam_size) {
                 beam_prune(current_beam, beam_size);
             }
@@ -152,17 +150,21 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
     }
 }
 
-
 void LinearAlign::dump_coinc_probs(const std::string &filepath, const float threshold) const {
     if (coinc_prob == nullptr) {
-        throw std::runtime_error("[LinearAlign: Error] Coincidence probabilities not computed yet! You must run compute_coincidence_probabilities() first.");
+        throw std::runtime_error(
+            "[LinearAlign Error] Coincidence probabilities not computed yet! You must run "
+            "compute_coincidence_probabilities() first.");
     }
 
     // open the file for writing
     std::ofstream file(filepath);
     if (!file) {
-        std::cout << "[Hint] The directory for the output file may not exist. Please create it before running the method." << std::endl;
-        throw std::runtime_error("[LinearAlign: Error] Unable to open the file " + filepath + " for writing coincidence probabilities.");
+        std::cout
+            << "[Hint] The directory for the output file may not exist. Please create it before running the method."
+            << std::endl;
+        throw std::runtime_error("[LinearAlign Error] Unable to open the file " + filepath +
+                                 " for writing coincidence probabilities.");
     }
 
     // dump the coincidence probabilities to the file
@@ -170,14 +172,12 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
             const double prob = item.second;
-            if(prob < threshold)
-                continue;
-        
+            if (prob < threshold) continue;
+
             // output i, j, and the probability to the file
             file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
         }
     }
-
 };
 
 // legacy methods below

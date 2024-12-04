@@ -8,6 +8,7 @@ from coinc_prob import plot_prob_heatmap
 from bpp import plot_rna_bpp_arcs
 from PIL import Image
 
+plt.rcParams.update({'font.size': 16})  # Example: Set font size to 14
 
 def main():
     # Set up argument parser
@@ -78,6 +79,8 @@ def main():
             cropped_img.save(cropped_png_output_path, dpi=(dpi, dpi))
 
         print(f"Cropped PNG saved to {cropped_png_output_path}")
+    
+    plt.show()
 
 if __name__ == "__main__":
     main()

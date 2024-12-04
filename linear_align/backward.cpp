@@ -11,24 +11,24 @@ MultiSeq LinearAlign::get_alignment() {
     while (i > 0 || j > 0) {
         HStateType h_prev = get_incoming_edges(i, j, h, nullptr);
         switch (h) {
-        case HStateType::ALN:
-            i -= 1;
-            j -= 1;
-            aln1 += std::to_string(seq1->at(i));
-            aln2 += std::to_string(seq2->at(j));
-            break;
+            case HStateType::ALN:
+                i -= 1;
+                j -= 1;
+                aln1 += std::to_string(seq1->at(i));
+                aln2 += std::to_string(seq2->at(j));
+                break;
 
-        case HStateType::INS1:
-            i -= 1;
-            aln1 += std::to_string(seq1->at(i));
-            aln2 += "-";
-            break;
+            case HStateType::INS1:
+                i -= 1;
+                aln1 += std::to_string(seq1->at(i));
+                aln2 += "-";
+                break;
 
-        case HStateType::INS2:
-            j -= 1;
-            aln1 += "-";
-            aln2 += std::to_string(seq2->at(j));
-            break;
+            case HStateType::INS2:
+                j -= 1;
+                aln1 += "-";
+                aln2 += std::to_string(seq2->at(j));
+                break;
         }
         h = h_prev;
     }
@@ -99,23 +99,24 @@ void LinearAlign::compute_outside(bool verbose_output) {
     outside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
     if (verbose_output) {
-        printf("  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
-               100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
-        printf("  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
-        printf("  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n\n", 100.0 * states_visited / total_states,
-               states_visited, total_states);
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
+                100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
+        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
+        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n\n",
+                100.0 * states_visited / total_states, states_visited, total_states);
     }
 }
 
 std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const HState &state, const HStateType type,
                                                  const double edge_threshold) {
-
-    if ((i == 0 || j == 0) && type == HStateType::ALN)
+    if ((i == 0 || j == 0) && type == HStateType::ALN) {
         return std::make_pair(0, 0);
+    }
     std::vector<AlnEdge> incoming_hedges;
     get_incoming_edges(i, j, type, &incoming_hedges);
-    if (incoming_hedges.empty())
+    if (incoming_hedges.empty()) {
         return std::make_pair(0, 0);
+    }
 
     std::vector<AlnEdge *> saved_edges;
     saved_edges.reserve(incoming_hedges.size());
@@ -128,11 +129,11 @@ std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const
     int num_local_edges_saved = 0;
 
     for (auto &edge : incoming_hedges) {
-        double edge_inside = LOG_MUL(edge.prev->alpha, edge.weight); // LOG_MUL(a, b) -> a + b
-        if (edge_inside > edge_threshold) {                          // keep the edge
-            saved_inside = LOG_SUM(saved_inside, edge_inside);       // Fast_LogPlusEquals(saved_inside, edge_inside);
+        double edge_inside = LOG_MUL(edge.prev->alpha, edge.weight);  // LOG_MUL(a, b) -> a + b
+        if (edge_inside > edge_threshold) {                           // keep the edge
+            saved_inside = LOG_SUM(saved_inside, edge_inside);        // Fast_LogPlusEquals(saved_inside, edge_inside);
             saved_edges.push_back(&edge);
-        } else { // prune the edge
+        } else {  // prune the edge
             num_local_edges_pruned++;
             if (saved_edges.empty() && edge_inside > best_inside) {
                 best_inside = edge_inside;
@@ -141,13 +142,13 @@ std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const
         }
     }
 
-    double delta; // scaling factor to compensate for edge pruning
+    double delta;  // scaling factor to compensate for edge pruning
     if (!saved_edges.empty()) {
-        delta = LOG_DIV(state.alpha, saved_inside); // LOG_DIV(a, b) -> a - b
+        delta = LOG_DIV(state.alpha, saved_inside);  // LOG_DIV(a, b) -> a - b
     } else {
-        delta = LOG_DIV(state.alpha, best_inside); // state.alpha - best_inside
+        delta = LOG_DIV(state.alpha, best_inside);  // state.alpha - best_inside
         saved_edges.push_back(best_edge);
-        num_local_edges_pruned -= 1; // one more edge recovered
+        num_local_edges_pruned -= 1;  // one more edge recovered
     }
 
     for (auto &edge : saved_edges) {
@@ -165,16 +166,16 @@ HStateType LinearAlign::get_incoming_edges(const int i, const int j, const HStat
 
     int p = i, q = j;
     switch (type) {
-    case HStateType::ALN:
-        p = i - 1;
-        q = j - 1;
-        break;
-    case HStateType::INS1:
-        p = i - 1;
-        break;
-    case HStateType::INS2:
-        q = j - 1;
-        break;
+        case HStateType::ALN:
+            p = i - 1;
+            q = j - 1;
+            break;
+        case HStateType::INS1:
+            p = i - 1;
+            break;
+        case HStateType::INS2:
+            q = j - 1;
+            break;
     }
 
     bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
@@ -198,18 +199,12 @@ HStateType LinearAlign::get_incoming_edges(const int i, const int j, const HStat
 
 void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
     // clear the previous matrix
-    if (coinc_prob != nullptr || prob_rev_idx != nullptr) {
-        for (size_t i = 0; i < seq1->size(); ++i)
-            coinc_prob[i].clear(); // ensure the maps are cleared before deallocation
-        for (size_t j = 0; j < seq2->size(); ++j)
-            prob_rev_idx[j].clear();
-        delete[] coinc_prob;
-        delete[] prob_rev_idx;
-    }
+    delete[] coinc_prob;
+    delete[] prob_rev_idx;
+    coinc_prob = new std::unordered_map<int, double>[seq1->size()];  // reallocate memory
+    prob_rev_idx = new std::vector<int>[seq2->size()];               // reallocate memory
 
     double p_xy = bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha;
-    coinc_prob = new std::unordered_map<int, double>[seq1->size()]; // reallocate memory
-    prob_rev_idx = new std::vector<int>[seq2->size()];
     for (int s = 0; s <= seq_len_sum; ++s) {
         for (const HStateType h : hstate_types) {
             std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h);
@@ -227,14 +222,15 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
         }
     }
 
-    unsigned long num_pruned = 0; // for keeping track of pruned P(i,j)s
-    unsigned long num_saved = 0;  // for keeping track of saved P(i,j)s
+    unsigned long num_pruned = 0;  // for keeping track of pruned P(i,j)s
+    unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
     for (int i = 0; i < seq1->size(); ++i) {
         for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
             const int j = it->first;
             double &prob = it->second;
-            if (phmm->similarity > -1.0f && prob <= phmm->get_fam_threshold()) {
-                it = coinc_prob[i].erase(it); // erase and get the next valid iterator
+
+            if (prob < phmm->get_fam_threshold()) {
+                it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {
                 prob = EXP(prob);
@@ -245,7 +241,7 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
                 prob = std::min(prob, 1.0);
                 prob_rev_idx[j].push_back(i);
                 ++num_saved;
-                ++it; // move to the next element if not erased
+                ++it;  // move to the next element if not erased
             }
         }
     }
@@ -260,8 +256,9 @@ double LinearAlign::get_bpp(const int i, const int j) const {
         throw std::runtime_error("[LinearAlign: Error] Coincidence probability matrix not computed yet!");
 
     const auto it = coinc_prob[i].find(j);
-    if (it == coinc_prob[i].end())
+    if (it == coinc_prob[i].end()) {
         return 0.0;
+    }
 
-    return it->second; // access the value directly from the iterator
+    return it->second;  // access the value directly from the iterator
 }

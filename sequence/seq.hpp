@@ -6,11 +6,12 @@
 #include <vector>
 
 class Seq {
-  public:
+   public:
     std::string id;
     std::string sequence;
-    int k_id;                 // optional integer id for the sequence
-    std::vector<int> enc_seq; // optional encoded sequence
+
+    int k_id;                  // optional integer id for the sequence
+    std::vector<int> enc_seq;  // optional encoded sequence
 
     // constructors
     Seq();
@@ -27,7 +28,7 @@ class Seq {
     const char &operator[](size_t index) const;
 
     void remove_gaps();
-    void swap_nuc(const char nuc1, const char nuc2); // swap all occurences of nuc1 with nuc2
+    void swap_nuc(const char nuc1, const char nuc2);  // swap all occurences of nuc1 with nuc2
     float compute_seq_identity(const Seq &seq2);      // compute sequence identity with another sequence
 
     // add, insert, delete, replace characters
@@ -39,6 +40,9 @@ class Seq {
     // read and Write functions
     bool read_fasta(const std::string &filepath);
     bool write_fasta(const std::string &filepath) const;
+
+    // print the sequence
+    void print() const;
 };
 
-#endif // SEQ_HPP
+#endif  // SEQ_HPP

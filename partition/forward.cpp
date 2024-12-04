@@ -2,7 +2,7 @@
 
 double Partition::beam_prune(std::unordered_map<int, State> &beamstep) {
     if (beam_size == 0 || beamstep.size() <= beam_size) {
-        return VALUE_MIN;
+        return xlog(0.0);
     }
     std::vector<std::pair<double, int>> scores;
     for (auto &item : beamstep) {
@@ -13,12 +13,11 @@ double Partition::beam_prune(std::unordered_map<int, State> &beamstep) {
         scores.push_back(std::make_pair(newalpha, i));
     }
     if (scores.size() <= beam_size) {
-        return VALUE_MIN;
+        return xlog(0.0);
     }
     double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
-        if (p.first < threshold)
-            beamstep.erase(p.second);
+        if (p.first < threshold) beamstep.erase(p.second);
     }
     return threshold;
 }
@@ -34,7 +33,7 @@ void Partition::update_score(State &state, const int new_score, const double pre
 void Partition::compute_inside() {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
-        std::cout << "\n[LinearPartition] Running Inside Algorithm:" << std::endl;
+        std::cerr << "\n[LinearPartition] Running Inside Algorithm:" << std::endl;
     }
     for (int j = 0; j < seq->size(); j++) {
         if (verbose_output) {
@@ -44,8 +43,9 @@ void Partition::compute_inside() {
         // beam of H
         beam_prune(bestH[j]);
         beamstep_H(j, next_pair);
-        if (j == 0)
+        if (j == 0) {
             continue;
+        }
 
         // beam of Multi
         beam_prune(bestMulti[j]);
@@ -63,7 +63,7 @@ void Partition::compute_inside() {
         beam_prune(bestM[j]);
         beamstep_M(j);
 
-        beamstep_C(j); // beam of C
+        beamstep_C(j);  // beam of C
     }
 
     // set viterbi pointer
@@ -73,13 +73,13 @@ void Partition::compute_inside() {
     auto end_time = std::chrono::high_resolution_clock::now();
     inside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
-        std::cout << "  - Execution Time: " << inside_execution_time << " ms" << std::endl;
+        std::cerr << "  - Execution Time: " << inside_execution_time << " ms" << std::endl;
         if (mode == InsideMode::MFE) {
-            std::cout << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol"
+            std::cerr << "  - MFE (Minimum Free Energy): " << bestC[seq->size() - 1].alpha / -100.0 << " kcal/mol"
                       << std::endl;
             printf("\n%s (%.2f)\n", get_mfe_structure().c_str(), bestC[seq->size() - 1].alpha / -100.0);
         } else {
-            std::cout << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
+            std::cerr << "  - Free Energy of the Ensemble: " << get_ensemble_energy() << " kcal/mol" << std::endl;
         }
     }
 }
@@ -92,11 +92,11 @@ void Partition::beamstep_H(const int j, const std::vector<int> *next_pair) {
 
     if (jnext < seq->size()) {
         int tetra_hex_tri = -1;
-        if (jnext - j - 1 == 4) // 6:tetra
+        if (jnext - j - 1 == 4)  // 6:tetra
             tetra_hex_tri = if_tetraloops.at(j);
-        else if (jnext - j - 1 == 6) // 8:hexa
+        else if (jnext - j - 1 == 6)  // 8:hexa
             tetra_hex_tri = if_hexaloops.at(j);
-        else if (jnext - j - 1 == 3) // 5:tri
+        else if (jnext - j - 1 == 3)  // 5:tri
             tetra_hex_tri = if_triloops.at(j);
 
         int score = -energy_model->score_hairpin(j, jnext, seq->at(j), seq->at(j + 1), seq->at(jnext - 1),
@@ -115,11 +115,11 @@ void Partition::beamstep_H(const int j, const std::vector<int> *next_pair) {
         int jnext = next_pair[seq->at(i)][j];
         if (jnext < seq->size()) {
             int tetra_hex_tri = -1;
-            if (jnext - i - 1 == 4) // 6:tetra
+            if (jnext - i - 1 == 4)  // 6:tetra
                 tetra_hex_tri = if_tetraloops.at(i);
-            else if (jnext - i - 1 == 6) // 8:hexa
+            else if (jnext - i - 1 == 6)  // 8:hexa
                 tetra_hex_tri = if_hexaloops.at(i);
-            else if (jnext - i - 1 == 3) // 5:tri
+            else if (jnext - i - 1 == 3)  // 5:tri
                 tetra_hex_tri = if_triloops.at(i);
 
             int score = -energy_model->score_hairpin(i, jnext, seq->at(i), seq->at(i + 1), seq->at(jnext - 1),

@@ -36,5 +36,8 @@
 tmp/
 vb*/
 
+# ignore experiments data
+output/
+
 # ignore mac config files
 .DS_Store
