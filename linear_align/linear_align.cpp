@@ -1,5 +1,35 @@
 #include "./linear_align.hpp"
 
+void AlignBeam::reset(bool force) {
+    if (!has_data && !force) {
+        return;
+    }
+
+    bestALN.assign(seq_len_sum + 3, std::unordered_map<std::pair<int, int>, HState, PairHash>());
+    bestINS1.assign(seq_len_sum + 1, std::unordered_map<std::pair<int, int>, HState, PairHash>());
+    bestINS2.assign(seq_len_sum + 1, std::unordered_map<std::pair<int, int>, HState, PairHash>());
+
+    has_data = false;
+}
+
+void AlignBeam::save(std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN,
+                     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1,
+                     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2) {
+    for (int s = 0; s < seq_len_sum + 3; ++s) {
+        this->bestALN[s] = bestALN[s];
+    }
+    for (int s = 0; s < seq_len_sum + 1; ++s) {
+        this->bestINS1[s] = bestINS1[s];
+        this->bestINS2[s] = bestINS2[s];
+    }
+    has_data = true;
+}
+
+void AlignBeam::save(LinearAlign &la) {
+    save(la.bestALN, la.bestINS1, la.bestINS2);
+    has_data = true;
+}
+
 void LinearAlign::reset_beams() {
     delete[] bestALN;
     delete[] bestINS1;
@@ -13,7 +43,8 @@ void LinearAlign::reset_beams() {
     bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].beta = LOG(1.0);
 }
 
-double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, int beam_size) {
+double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
+                               int beam_size) {
     std::vector<std::pair<double, std::pair<int, int>>> scores;
     scores.reserve(beamstep.size());
     for (auto &item : beamstep) {
@@ -107,7 +138,7 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
             std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h);
             auto &current_beam = beam[s];
             if (beam_size > 0 && current_beam.size() > beam_size) {
-                beam_prune(current_beam, beam_size);
+                beam_prune(current_beam, h, beam_size);
             }
             for (const auto &item : current_beam) {
                 int i = item.first.first;

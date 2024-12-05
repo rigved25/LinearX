@@ -1,44 +1,47 @@
 #ifndef ENERGY_MODEL_HPP
 #define ENERGY_MODEL_HPP
 
-#include "./energy_params/EnergyParams.hpp"
-#include <vector>
 #include <iostream>
+#include <vector>
 
-#define NUC_TO_PAIR(x, y)                                                                                              \
-    (x == 1 ? (y == 4 ? 5 : 0)                                                                                         \
-            : (x == 2 ? (y == 3 ? 1 : 0)                                                                               \
+#include "./energy_params/EnergyParams.hpp"
+
+#define NUC_TO_PAIR(x, y)                \
+    (x == 1 ? (y == 4 ? 5 : 0)           \
+            : (x == 2 ? (y == 3 ? 1 : 0) \
                       : (x == 3 ? (y == 2 ? 2 : (y == 4 ? 3 : 0)) : (x == 4 ? (y == 3 ? 4 : (y == 1 ? 6 : 0)) : 0))))
 
 class EnergyModel {
+   private:
+    inline const static char Triloops[241] =
+        "CAACG "
+        "GUUAC ";
 
-  private:
-    inline const static char Triloops[241] = "CAACG "
-                                             "GUUAC ";
+    inline const static char Tetraloops[281] =
+        "CAACGG "
+        "CCAAGG "
+        "CCACGG "
+        "CCCAGG "
+        "CCGAGG "
+        "CCGCGG "
+        "CCUAGG "
+        "CCUCGG "
+        "CUAAGG "
+        "CUACGG "
+        "CUCAGG "
+        "CUCCGG "
+        "CUGCGG "
+        "CUUAGG "
+        "CUUCGG "
+        "CUUUGG ";
 
-    inline const static char Tetraloops[281] = "CAACGG "
-                                               "CCAAGG "
-                                               "CCACGG "
-                                               "CCCAGG "
-                                               "CCGAGG "
-                                               "CCGCGG "
-                                               "CCUAGG "
-                                               "CCUCGG "
-                                               "CUAAGG "
-                                               "CUACGG "
-                                               "CUCAGG "
-                                               "CUCCGG "
-                                               "CUGCGG "
-                                               "CUUAGG "
-                                               "CUUCGG "
-                                               "CUUUGG ";
+    inline const static char Hexaloops[361] =
+        "ACAGUACU "
+        "ACAGUGAU "
+        "ACAGUGCU "
+        "ACAGUGUU ";
 
-    inline const static char Hexaloops[361] = "ACAGUACU "
-                                              "ACAGUGAU "
-                                              "ACAGUGCU "
-                                              "ACAGUGUU ";
-
-  public:
+   public:
     const EnergyParams epm;
     const bool use_special_hairpin;
 
@@ -54,10 +57,8 @@ class EnergyModel {
         int energy = size <= 30 ? (*epm.hairpin37)[size] : (*epm.hairpin37)[30] + (int)(LXC37 * log((size) / 30.));
 
         bool specialHP_exists = (*epm.Tetraloop37 && *epm.Hexaloop37 && *epm.Triloop37);
-        if (specialHP_exists && size < 3)
-            return energy; /* should only be the case when folding alignments */
-        if (!specialHP_exists && size == 3)
-            return energy + ((type > 2 || type == 0) ? epm.TerminalAU37 : 0);
+        if (specialHP_exists && size < 3) return energy; /* should only be the case when folding alignments */
+        if (!specialHP_exists && size == 3) return energy + ((type > 2 || type == 0) ? epm.TerminalAU37 : 0);
 
         if (specialHP_exists && use_special_hairpin) {
             if (size == 4 && tetra_hex_tri_index > -1) {
@@ -78,7 +79,6 @@ class EnergyModel {
 
     int score_single_loop(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1, int nucp,
                           int nucq, int nucq1) {
-
         int type = NUC_TO_PAIR(nuci, nucj);
         int type_2 = NUC_TO_PAIR(nucq, nucp);
         int n1 = p - i - 1;
@@ -87,18 +87,15 @@ class EnergyModel {
         int ns = (n1 > n2) ? n2 : n1;
         int energy = 0;
 
-        if (nl == 0)
-            return (*epm.stack37)[type][type_2]; /* stack */
+        if (nl == 0) return (*epm.stack37)[type][type_2]; /* stack */
 
         if (ns == 0) { /* bulge */
             energy = (nl <= MAXLOOPSIZE) ? (*epm.bulge37)[nl] : ((*epm.bulge37)[30] + (int)(LXC37 * log(nl / 30.)));
             if (nl == 1)
                 energy += (*epm.stack37)[type][type_2];
             else {
-                if (type > 2 || type == 0)
-                    energy += epm.TerminalAU37;
-                if (type_2 > 2 || type == 0)
-                    energy += epm.TerminalAU37;
+                if (type > 2 || type == 0) energy += epm.TerminalAU37;
+                if (type_2 > 2 || type == 0) energy += epm.TerminalAU37;
             }
             return energy;
         } else { /* interior loop */
@@ -158,10 +155,8 @@ class EnergyModel {
             else if (sj1 >= 0)
                 energy += (*epm.dangle3_37)[type][sj1];
         } else {
-            if (si1 > 0)
-                energy += (*epm.dangle5_37)[type][si1];
-            if (sj1 > 0)
-                energy += (*epm.dangle3_37)[type][sj1];
+            if (si1 > 0) energy += (*epm.dangle5_37)[type][si1];
+            if (sj1 > 0) energy += (*epm.dangle3_37)[type][sj1];
         }
 
         if (type > 2 || type == 0) {
@@ -198,14 +193,11 @@ class EnergyModel {
             else if (nucj1 >= 0)
                 energy += (*epm.dangle3_37)[type][nucj1];
         } else {
-            if (nuci_1 > 0)
-                energy += (*epm.dangle5_37)[type][nuci_1];
-            if (nucj1 > 0)
-                energy += (*epm.dangle3_37)[type][nucj1];
+            if (nuci_1 > 0) energy += (*epm.dangle5_37)[type][nuci_1];
+            if (nucj1 > 0) energy += (*epm.dangle3_37)[type][nucj1];
         }
 
-        if (type > 2 || type == 0)
-            energy += epm.TerminalAU37;
+        if (type > 2 || type == 0) energy += epm.TerminalAU37;
 
         return energy;
     }
@@ -213,4 +205,4 @@ class EnergyModel {
     int score_external_unpaired(int i, int j) { return 0; }
 };
 
-#endif // ENERGY_MODEL_HPP
+#endif  // ENERGY_MODEL_HPP

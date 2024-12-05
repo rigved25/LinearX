@@ -9,6 +9,26 @@
 #include "./phmm.hpp"
 #include "./utility.hpp"
 
+class LinearAlign;
+
+struct AlignBeam {
+    int seq_len_sum;
+    bool has_data;
+    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestALN;
+    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestINS1;
+    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestINS2;
+
+    AlignBeam(int seq_len_sum) : seq_len_sum(seq_len_sum) { reset(true); }
+
+    void reset(bool force = false);
+
+    void save(std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN,
+              std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1,
+              std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2);
+
+    void save(LinearAlign &la);
+};
+
 class LinearAlign {
     inline const static std::vector<HStateType> hstate_types = {INS1, INS2, ALN};
 
@@ -19,7 +39,6 @@ class LinearAlign {
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2 = nullptr;
 
-    double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, int beam_size);
     void update_state_alpha(HState &state, const double new_score, const HStateType h, const HStateType pre,
                             const bool best_only);
     void update_state_beta(HState &state, const double new_score);
@@ -32,7 +51,13 @@ class LinearAlign {
     HStateType get_incoming_edges(const int i, const int j, const HStateType type,
                                   std::vector<AlnEdge> *incoming_edges);
 
+   protected:
+    virtual double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
+                              int beam_size);
+
    public:
+    friend struct AlignBeam;
+
     Phmm *phmm = nullptr;
     const Seq *sequence1;  // pointer to actual Seq object
     const Seq *sequence2;

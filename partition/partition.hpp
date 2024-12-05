@@ -15,6 +15,27 @@
 #include "./../utility/utility.hpp"
 #include "./utility.hpp"
 
+class Partition;
+
+struct PartitionFunctionBeam {
+    int length;
+    bool has_data;
+    std::vector<std::unordered_map<int, State>> bestH;
+    std::vector<std::unordered_map<int, State>> bestP;
+    std::vector<std::unordered_map<int, State>> bestM;
+    std::vector<std::unordered_map<int, State>> bestM2;
+    std::vector<std::unordered_map<int, State>> bestMulti;
+    VectorWithNegOneIndex<State> bestC;
+
+    PartitionFunctionBeam(int length) : length(length), bestC(length) { reset(true); }
+
+    void reset(bool force = false);
+    void save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
+              std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
+              std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC);
+    void save(Partition &pf);
+};
+
 class Partition {
     inline const static StateType state_types[6] = {H, Multi, P, M2, M, C};
 
@@ -32,6 +53,8 @@ class Partition {
     VectorWithNegOneIndex<State> bestC;
 
    public:
+    friend struct PartitionFunctionBeam;
+
     std::unordered_map<int, double> *bpp = nullptr;
     State *viterbi = nullptr;
 
@@ -44,21 +67,19 @@ class Partition {
     EnergyModel *energy_model;
     InsideMode mode;
 
-    const int beam_size;
     bool allow_sharp_turn;
     bool verbose_output;
 
     double inside_execution_time = 0.0;
     double outside_execution_time = 0.0;
 
-    Partition(const Seq *sequence, EnergyModel &energy_model, const InsideMode mode, const int beam_size = 100,
-              bool allow_sharp_turn = false, bool verbose_output = true)
+    Partition(const Seq *sequence, EnergyModel &energy_model, const InsideMode mode, bool allow_sharp_turn = false,
+              bool verbose_output = true)
         : bestC(sequence->length() + 1),
           sequence(sequence),
           seq(&sequence->enc_seq),
           energy_model(&energy_model),
           mode(mode),
-          beam_size(beam_size),
           allow_sharp_turn(allow_sharp_turn),
           verbose_output(verbose_output) {
         for (int nuc = 1; nuc < 5; ++nuc) {
@@ -92,7 +113,7 @@ class Partition {
 
     void reset_beams();
 
-    virtual void compute_inside();
+    virtual void compute_inside(int beam_size = 100);
     void compute_outside(bool use_lazy_outside = true);
     void compute_bpp_matrix();
     double get_bpp(int i, int j) const;
@@ -101,8 +122,9 @@ class Partition {
     void print_alpha_beta();
 
     // methods declared in file forward.cpp
-    double beam_prune(std::unordered_map<int, State> &beamstep);
+    double beam_prune(std::unordered_map<int, State> &beamstep, int beam_size);
     void update_score(State &state, const int new_score, const double prev_score);
+    virtual bool check_state(const StateType type, const int i, const int j);
     void beamstep_H(const int j, const std::vector<int> *next_pair);
     void beamstep_Multi(const int j, const std::vector<int> *next_pair);
     void beamstep_P(const int j, const std::vector<int> *next_pair);

@@ -80,14 +80,18 @@ void LinearTurboFold::reset_extinf_cache() {
 }
 
 void LinearTurboFold::run() {
-    // int num_itr = 3;
     for (itr = 0; itr <= num_itr; ++itr) {
         // Utility::showProgressBar(itr, num_itr);
+
+        if (shrink_beam && itr > 1) {
+            beam_size -= 25;
+            beam_size = std::max(min_beam_size, beam_size);
+        }
         // align step
         std::cerr << "-------------------------CURRENT ITERATION: " << itr << "-------------------------\n"
-                  << std::endl;
+                  << "BEAM SIZE: " << beam_size << std::endl;
         if (itr > 0) {
-            for (LinearAlign &aln : alns) {
+            for (TurboAlign &aln : alns) {
                 const int k1 = aln.sequence1->k_id;
                 const int k2 = aln.sequence2->k_id;
                 const int aln_pair_index = get_seq_pair_index(k1, k2);
@@ -98,7 +102,7 @@ void LinearTurboFold::run() {
                 // aln.prob_set1();
                 itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-                aln.compute_inside(true, 100, verbose_state == VerboseState::DEBUG);
+                aln.compute_inside(true, beam_size, verbose_state == VerboseState::DEBUG);
                 MultiSeq alignment = aln.get_alignment();
                 seq_idnty = alignment.get_seq_identity();    // get the new sequence identity using the new alignment
                 seq_identities[aln_pair_index] = seq_idnty;  // store the updated sequence identity
@@ -113,11 +117,9 @@ void LinearTurboFold::run() {
 
                 // compute partition function
                 aln.reset_beams();
-                // aln.prob_set1();
-                // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
                 aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-                aln.compute_inside(false, 100, verbose_state == VerboseState::DEBUG);
+                aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
                 aln.compute_outside(verbose_state == VerboseState::DEBUG);
                 aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
                 if (verbose_state == VerboseState::DEBUG) {
@@ -126,14 +128,27 @@ void LinearTurboFold::run() {
                     aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
                                          std::to_string(k2) + ".bpp.txt");
                 }
+
+                // save alignment beams for the next iteration
+                if (use_prev_outside_score) {
+                    aln.ab.reset();
+                    aln.ab.save(aln);
+                }
             }
         }
 
         // fold step
         for (TurboPartition &pf : pfs) {
             pf.reset_beams();
-            pf.compute_inside();
+            pf.compute_inside(beam_size);
             pf.compute_outside(use_lazy_outside);
+
+            // // save partition function beams for the next iteration
+            if (use_prev_outside_score && itr > 0) {
+                pf.pfb.reset();
+                pf.pfb.save(pf);
+            }
+
             if (verbose_state == VerboseState::DEBUG) {
                 pf.print_alpha_beta();
             }

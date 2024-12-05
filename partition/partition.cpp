@@ -1,5 +1,38 @@
 #include "partition.hpp"
 
+void PartitionFunctionBeam::reset(bool force) {
+    if (!has_data && !force) {
+        return;
+    }
+    bestH.assign(length, std::unordered_map<int, State>());
+    bestP.assign(length, std::unordered_map<int, State>());
+    bestM.assign(length, std::unordered_map<int, State>());
+    bestM2.assign(length, std::unordered_map<int, State>());
+    bestMulti.assign(length, std::unordered_map<int, State>());
+    bestC.reset();
+
+    has_data = false;
+}
+
+void PartitionFunctionBeam::save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
+                                 std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
+                                 std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC) {
+    for (int j = 0; j < length; j++) {
+        this->bestH[j] = bestH[j];
+        this->bestP[j] = bestP[j];
+        this->bestM[j] = bestM[j];
+        this->bestM2[j] = bestM2[j];
+        this->bestMulti[j] = bestMulti[j];
+    }
+    this->bestC = bestC;
+    has_data = true;
+}
+
+void PartitionFunctionBeam::save(Partition &pf) {
+    save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti, pf.bestC);
+    has_data = true;
+}
+
 void Partition::reset_beams() {
     delete[] bestH;
     delete[] bestP;
@@ -53,9 +86,9 @@ double Partition::get_bpp(int i, int j) const {
         throw std::runtime_error(
             "[Error (LinearPartition)] BPP matrix not computed yet! You must run compute_bpp_matrix() first.");
     }
-    if (i > j) {
-        std::swap(i, j);
-    }
+    // if (i > j) {
+    //     std::swap(i, j);
+    // }
     const auto &item = bpp[j].find(i);
     if (item == bpp[j].end()) return 0.0;
     return item->second;

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// example run: ./main ./test_seqs/sample1.fasta 0 3 1
+// example run: ./main ./test_seqs/sample1.fasta 0 3 1 1 1
 
 MultiSeq read_msa_file(const std::string& filePath, std::unordered_map<char, int>* encoding_scheme = nullptr) {
     std::ifstream file(filePath);
@@ -42,8 +42,10 @@ MultiSeq read_msa_file(const std::string& filePath, std::unordered_map<char, int
 
 int main(int argc, char* argv[]) {
     // Check if the number of arguments is correct (must be an even number for name-sequence pairs)
-    if (argc != 5) {
-        std::cerr << "Usage: " << argv[0] << " <msa_file_path> <energy_params> <num_iterations> <use_lazy_outside>\n";
+    if (argc != 7) {
+        std::cerr << "Usage: " << argv[0]
+                  << " <msa_file_path> <energy_params> <num_iterations> <use_lazy_outside> <use_prev_outside_score> "
+                     "<shrink_beam> \n";
         return EXIT_FAILURE;
     }
 
@@ -51,12 +53,23 @@ int main(int argc, char* argv[]) {
     EnergyParamsType energy_params = std::stoi(argv[2]) == 0 ? EnergyParamsType::VIENNA : EnergyParamsType::BL_STAR;
     int num_itr = std::stoi(argv[3]);
     bool use_lazy_outside = std::stoi(argv[4]);
+    bool use_prev_outside_score = std::stoi(argv[5]);
+    int shrink_beam = std::stoi(argv[6]);
+
+    std::cerr << "Arguments:\n";
+    std::cerr << "msa_file_path: " << msaFilePath << "\n";
+    std::cerr << "energy_params: " << energy_params << "\n";
+    std::cerr << "num_itr: " << num_itr << "\n";
+    std::cerr << "use_lazy_outside: " << use_lazy_outside << "\n";
+    std::cerr << "use_prev_outside_score: " << use_prev_outside_score << "\n";
+    std::cerr << "shrink_beam: " << shrink_beam << "\n\n";
 
     try {
         // Read MSA file and generate MultiSeq
         MultiSeq mseq = read_msa_file(msaFilePath, &VIENNA_NUC_ENCODING_SCHEME);
 
-        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, VerboseState::DEBUG);
+        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, use_prev_outside_score, shrink_beam,
+                            VerboseState::DEBUG);
         ltf.run();
 
     } catch (const std::exception& e) {

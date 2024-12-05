@@ -2,11 +2,11 @@
 
 # Example run: ./run.sh ./test_seqs/ ./tmp 0 1
 
-CPP_EXECUTABLE="./main"
+CPP_EXECUTABLE="./main2"
 
 # Ensure the correct number of arguments
-if [ "$#" -ne 6 ]; then
-    echo "Usage: $0 <input_dir> <output_dir> <energy_params> <lazy_outside> <use_prev_outside_score> <shrink_beam>"
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <input_dir> <output_dir> <energy_params> <lazy_outside>"
     exit 1
 fi
 
@@ -14,8 +14,6 @@ INPUT_DIR=$1
 OUTPUT_DIR=$2
 ENERGY_PARAMS=$3
 LAZY_OUTSIDE=$4
-USE_OUTSIDE_SCORE=$5
-SHRINK_BEAM=$6
 
 # Check if the C++ executable exists and is executable
 if [ ! -x "$CPP_EXECUTABLE" ]; then
@@ -51,7 +49,7 @@ for INPUT_FILE in "$INPUT_DIR"/*.fasta*; do
         EXIT_STATUS=0
 
         # Run the executable with `time` and redirect output
-        /usr/bin/time -l -p -o "$TIME_LOG" "$CPP_EXECUTABLE" "$INPUT_FILE" "$ENERGY_PARAMS" "3" "$LAZY_OUTSIDE" "$USE_OUTSIDE_SCORE" "$SHRINK_BEAM" > "$OUTPUT_FILE_STDOUT" 2> "$OUTPUT_FILE_STDERR" || EXIT_STATUS=$?
+        /usr/bin/time -l -p -o "$TIME_LOG" "$CPP_EXECUTABLE" "$INPUT_FILE" "$ENERGY_PARAMS" "3" "$LAZY_OUTSIDE" > "$OUTPUT_FILE_STDOUT" 2> "$OUTPUT_FILE_STDERR" || EXIT_STATUS=$?
 
         # Check the exit status
         if [ "$EXIT_STATUS" -ne 0 ]; then
