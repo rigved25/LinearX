@@ -12,7 +12,9 @@ OBJ_DIR = ./../tmp
 
 # Source files shared by both targets
 COMMON_SOURCES = ./../../sequence/seq.cpp ./../../sequence/multi_seq.cpp ./../../energy_model.cpp \
-                 ./../../partition/partition.cpp ./../../partition/forward.cpp ./../../partition/backward.cpp
+                 ./../../partition/partition.cpp ./../../partition/forward.cpp ./../../partition/backward.cpp \
+				 ./../../structure/structure.cpp
+				 
 
 # Per-target sources
 MAIN1_SOURCES = ./main1.cpp

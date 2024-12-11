@@ -107,17 +107,17 @@ void Partition::print_alpha_beta() {
     std::cerr << "Beta(C, -1): " << bestC[-1].beta << std::endl << std::endl;
 }
 
-std::string Partition::get_threshknot_structure() {
+std::string &Partition::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
     std::vector<double> best_prob(seq->size(), 0.0);
-    std::vector<std::pair<int, int>> pairs;
-    std::vector<std::pair<int, int>> pseudo_pairs1;
-    std::vector<std::pair<int, int>> pseudo_pairs2;
-    std::vector<std::pair<int, int>> pseudo_pairs3;
+    Structure structure(seq->size());
     std::set<int> visited;
 
     for (int j = 0; j < seq->size(); j++) {
         for (const auto &item : bpp[j]) {
             const int i = item.first;
+            if (j - i < min_helix_size + 1) {
+                continue;
+            }
             const double prob = item.second;
             best_prob[i] = std::max(best_prob[i], prob);
             best_prob[j] = std::max(best_prob[j], prob);
@@ -127,76 +127,26 @@ std::string Partition::get_threshknot_structure() {
     for (int j = 0; j < seq->size(); j++) {
         for (const auto &item : bpp[j]) {
             const int i = item.first;
+            if (j - i < min_helix_size + 1) {
+                continue;
+            }
+
             const double prob = item.second;
-            if (prob >= 0.3 && prob == best_prob[i] && prob == best_prob[j]) {
+            if (prob >= threshknot_threshold && prob == best_prob[i] && prob == best_prob[j]) {
                 if (visited.find(i) != visited.end() || visited.find(j) != visited.end()) {
                     continue;
                 }
-                pairs.push_back(std::make_pair(i, j));
+                structure.addPair(i, j);
                 visited.insert(i);
                 visited.insert(j);
             }
         }
     }
 
-    // check for pseudoknots 1
-    for (int i = 0; i < pairs.size(); i++) {
-        for (int j = i + 1; j < pairs.size(); j++) {
-            if (pairs[i].first < pairs[j].first && pairs[j].first < pairs[i].second &&
-                pairs[i].second < pairs[j].second) {
-                pseudo_pairs1.push_back(std::make_pair(pairs[j].first, pairs[j].second));
-            }
-        }
-    }
+    structure.removeShortHelices(min_helix_size);
+    std::string &dotBracket = structure.getDotBracket();
 
-    // check for pseudoknots 2
-    for (int i = 0; i < pseudo_pairs1.size(); i++) {
-        for (int j = i + 1; j < pseudo_pairs1.size(); j++) {
-            if (pseudo_pairs1[i].first < pseudo_pairs1[j].first && pseudo_pairs1[j].first < pseudo_pairs1[i].second &&
-                pseudo_pairs1[i].second < pseudo_pairs1[j].second) {
-                pseudo_pairs2.push_back(std::make_pair(pseudo_pairs1[j].first, pseudo_pairs1[j].second));
-            }
-        }
-    }
-
-    // check for pseudoknots 3
-    for (int i = 0; i < pseudo_pairs2.size(); i++) {
-        for (int j = i + 1; j < pseudo_pairs2.size(); j++) {
-            if (pseudo_pairs2[i].first < pseudo_pairs2[j].first && pseudo_pairs2[j].first < pseudo_pairs2[i].second &&
-                pseudo_pairs2[i].second < pseudo_pairs2[j].second) {
-                pseudo_pairs3.push_back(std::make_pair(pseudo_pairs2[j].first, pseudo_pairs2[j].second));
-            }
-        }
-    }
-
-    // struc = ['.' for _ in range(seq_length)]
-    std::string structure(seq->size(), '.');
-
-    // normal pairs
-    for (int i = 0; i < pairs.size(); i++) {
-        structure[pairs[i].first] = '(';
-        structure[pairs[i].second] = ')';
-    }
-
-    // pseudoknots 1
-    for (int i = 0; i < pseudo_pairs1.size(); i++) {
-        structure[pseudo_pairs1[i].first] = '[';
-        structure[pseudo_pairs1[i].second] = ']';
-    }
-
-    // pseudoknots 2
-    for (int i = 0; i < pseudo_pairs2.size(); i++) {
-        structure[pseudo_pairs2[i].first] = '{';
-        structure[pseudo_pairs2[i].second] = '}';
-    }
-
-    // pseudoknots 3
-    for (int i = 0; i < pseudo_pairs3.size(); i++) {
-        structure[pseudo_pairs3[i].first] = '<';
-        structure[pseudo_pairs3[i].second] = '>';
-    }
-
-    return structure;
+    return dotBracket;
 }
 
 void Partition::dump_bpp(const std::string &filepath) const {

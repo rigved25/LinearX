@@ -27,6 +27,10 @@ class LinearTurboFold {
     const bool use_lazy_outside;
     const bool use_prev_outside_score;
     const bool shrink_beam;
+    const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
+    const float threshknot_threshold;
+    const float min_helix_size;
+
     const VerboseState verbose_state;
 
     int itr;                                                                 // current iteration
@@ -35,13 +39,17 @@ class LinearTurboFold {
 
     LinearTurboFold(MultiSeq *multi_seq, const EnergyParamsType energy_params, const int num_itr,
                     const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
-                    const VerboseState verbose_state)
+                    const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
+                    const VerboseState verbose_state = VerboseState::DEBUG)
         : multi_seq(multi_seq),
           energy_model(energy_params),
           num_itr(num_itr),
           use_lazy_outside(use_lazy_outside),
           use_prev_outside_score(use_prev_outside_score),
           shrink_beam(shrink_beam),
+          lambda(lambda),
+          threshknot_threshold(threshknot_threshold),
+          min_helix_size(min_helix_size),
           verbose_state(verbose_state) {
         size_t num_pairs = (multi_seq->size() * (multi_seq->size() - 1)) / 2;
 
@@ -96,6 +104,10 @@ class TurboPartition final : public Partition {
 
     void get_incoming_edges_state(const int i, const int j, const StateType type,
                                   std::vector<HEdge> &incoming_hedges) override;
+    void compute_outside(bool use_lazy_outside) override;
+    void compute_bpp_matrix() override;
+    std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
+                                        const double edge_threshold) override;
     double beam_prune(StateType type, int j, int beam_size);
     bool check_state(const StateType type, const int i, const int j) override;
     void compute_inside(int beam_size = 100) override;
@@ -112,7 +124,7 @@ class TurboAlign final : public LinearAlign {
     friend class LinearTurboFold;
 
     TurboAlign(LinearTurboFold *turbofold, const Seq *sequence1, const Seq *sequence2, bool use_prev_outside_score,
-               bool verbose = false, double alpha1 = 1.0, double alpha2 = 1.0, double alpha3 = 1.0)
+               bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8, double alpha3 = 0.5)
         : LinearAlign(sequence1, sequence2, verbose, alpha1, alpha2, alpha3),
           turbofold(turbofold),
           ab(use_prev_outside_score ? sequence1->length() + sequence2->length() : 0),

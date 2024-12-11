@@ -66,7 +66,7 @@ double LinearTurboFold::get_extrinsic_info(const Seq &x, const int i, const int 
         }
     }
 
-    output = xlog(1 * output);
+    output = xlog(2 * output);
     extinf_cache[x.k_id][j][i] = output;  // cache the result
     return output;
 }
@@ -99,8 +99,8 @@ void LinearTurboFold::run() {
 
                 // get the alignments
                 aln.reset_beams();
-                // aln.prob_set1();
-                itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
+                aln.prob_set1();
+                // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
                 aln.compute_inside(true, beam_size, verbose_state == VerboseState::DEBUG);
                 MultiSeq alignment = aln.get_alignment();
@@ -120,7 +120,7 @@ void LinearTurboFold::run() {
                 aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
                 aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
-                aln.compute_outside(verbose_state == VerboseState::DEBUG);
+                aln.compute_outside(use_lazy_outside, verbose_state == VerboseState::DEBUG);
                 aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
                 if (verbose_state == VerboseState::DEBUG) {
                     aln.print_alpha_beta();

@@ -10,6 +10,7 @@
 #define POS_INF std::numeric_limits<int>::max()
 #define NEG_INF std::numeric_limits<int>::lowest()
 
+#define MIN_HELIX_SIZE 3
 #define MAXLOOPSIZE 30
 #define LXC37 107.856
 #define kT 61.63207755

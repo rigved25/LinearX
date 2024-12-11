@@ -114,7 +114,7 @@ class LinearAlign {
     void reset_beams();
 
     void compute_inside(bool best_only = false, int beam_size = 100, bool verbose_output = true);
-    void compute_outside(bool verbose_output = true);
+    void compute_outside(bool use_lazy_outside = true, bool verbose_output = true);
     void compute_coincidence_probabilities(bool verbose_output = true);
 
     MultiSeq get_alignment();

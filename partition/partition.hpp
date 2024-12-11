@@ -11,6 +11,7 @@
 #include "./../energy_model.hpp"
 #include "./../sequence/seq.hpp"
 #include "./../shared.hpp"
+#include "./../structure/structure.hpp"
 #include "./../utility/log_math.hpp"
 #include "./../utility/utility.hpp"
 #include "./utility.hpp"
@@ -82,9 +83,13 @@ class Partition {
           mode(mode),
           allow_sharp_turn(allow_sharp_turn),
           verbose_output(verbose_output) {
-        for (int nuc = 1; nuc < 5; ++nuc) {
+        for (int nuc = 0; nuc < 5; ++nuc) {
             prev_pair[nuc].resize(seq->size(), -1);
             next_pair[nuc].resize(seq->size(), seq->size());
+
+            if (nuc == 0) {
+                continue; // skip N
+            }
 
             int prev = -1;
             int next = seq->size();
@@ -114,8 +119,8 @@ class Partition {
     void reset_beams();
 
     virtual void compute_inside(int beam_size = 100);
-    void compute_outside(bool use_lazy_outside = true);
-    void compute_bpp_matrix();
+    virtual void compute_outside(bool use_lazy_outside = true);
+    virtual void compute_bpp_matrix();
     double get_bpp(int i, int j) const;
     double get_ensemble_energy();
     std::string get_mfe_structure();
@@ -136,8 +141,8 @@ class Partition {
     void hedges_trace_update_helper(std::vector<HEdge> *incoming_hedges, HEdge &best_hedge, const HEdge &new_hedge,
                                     TraceInfo &best_trace, const TraceInfo &new_trace);
     void mfe_backtrack(int i, int j, StateType type, std::string &structure);
-    std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
-                                        const double edge_threshold);
+    virtual std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
+                                                const double edge_threshold);
 
     virtual void get_incoming_edges_state(const int i, const int j, const StateType type,
                                           std::vector<HEdge> &incoming_hedges);
@@ -147,38 +152,38 @@ class Partition {
     TraceInfo get_incoming_hedges_P(const int i, const int j, std::vector<HEdge> *incoming_hedges);
     TraceInfo get_incoming_hedges_Multi(const int i, const int j, std::vector<HEdge> *incoming_hedges);
 
-    std::string get_threshknot_structure();
+    std::string &get_threshknot_structure(float threshknot_threshold = 0.3f, int min_helix_size = MIN_HELIX_SIZE) const;
 
     void dump_bpp(const std::string &filename) const;
 
     void debug_states() {
-        // for (int j = 0; j < seq->size(); ++j) {
-        //     for (auto item : bestH[j]) {
-        //         int i = item.first;
-        //         State &state = item.second;
-        //         printf("H[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
-        //     }
-        // }
-        // printf("\n");
-        // for (int j = 0; j < seq->size(); ++j) {
-        //     for (auto item : bestP[j]) {
-        //         int i = item.first;
-        //         State &state = item.second;
-        //         printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
-        //     }
-        // }
+        for (int j = 0; j < seq->size(); ++j) {
+            for (auto item : bestH[j]) {
+                int i = item.first;
+                State &state = item.second;
+                printf("H[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
+            }
+        }
+        printf("\n");
+        for (int j = 0; j < seq->size(); ++j) {
+            for (auto item : bestP[j]) {
+                int i = item.first;
+                State &state = item.second;
+                printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
+            }
+        }
         printf("\n");
         for (int j = -1; j < (int)seq->size(); ++j) {
             printf("C[%d]: %.5f\t%.5f\n", j, bestC[j].alpha, bestC[j].beta);
         }
-        // printf("\n");
-        // for (int j = 0; j < seq->size(); ++j) {
-        //     for (auto item : bestM[j]) {
-        //         int i = item.first;
-        //         State &state = item.second;
-        //         printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
-        //     }
-        // }
+        printf("\n");
+        for (int j = 0; j < seq->size(); ++j) {
+            for (auto item : bestM[j]) {
+                int i = item.first;
+                State &state = item.second;
+                printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
+            }
+        }
     }
 };
 

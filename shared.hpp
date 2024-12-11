@@ -5,8 +5,8 @@
 #include <vector>
 
 struct ProbAccm {
-    std::vector<float> upstrm;
-    std::vector<float> dwnstrm;
+    std::vector<double> upstrm;
+    std::vector<double> dwnstrm;
 };
 
 #endif  // SHARED_HPP

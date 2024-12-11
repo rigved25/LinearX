@@ -304,7 +304,6 @@ TraceInfo Partition::get_incoming_hedges_M2(const int i, const int j, std::vecto
             if (itr != bestM[t - 1].end()) {
                 double new_score = -energy_model->score_M1(t, j, j, seq->at(t - 1), seq->at(t), seq->at(j),
                                                            (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
-                // incoming_hedges->push_back(HEdge(new_score, &itr->second, &state));
                 new_hedge.set(new_score, &itr->second, &state);
                 new_trace.set(i, j, t - 1, StateType::M, StateType::P);
                 hedges_trace_update_helper(incoming_hedges, best_hedge, new_hedge, best_trace, new_trace);

@@ -25,11 +25,13 @@ double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, Pa
             }
             if (prev_beamstep->find(aij) != prev_beamstep->end()) {
                 offset = prev_beamstep->at(aij).beta;
+            } else {
+                offset = NEG_INF;
             }
         }
         scores.push_back(std::make_pair(cand.alpha + offset, aij));
     }
-    if (scores.size() <= beam_size) return VALUE_MIN;
+    if (scores.size() <= beam_size) return NEG_INF;
     double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
         if (p.first < threshold) beamstep.erase(p.second);

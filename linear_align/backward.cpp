@@ -55,8 +55,8 @@ void LinearAlign::edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges
     }
 }
 
-void LinearAlign::compute_outside(bool verbose_output) {
-    double deviation_threshold = DEVIATION_THRESHOLD;
+void LinearAlign::compute_outside(bool use_lazy_outside, bool verbose_output) {
+    double deviation_threshold = use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF;
     double global_threshold =
         bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha - deviation_threshold;
 
@@ -122,8 +122,8 @@ std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const
     saved_edges.reserve(incoming_hedges.size());
     AlnEdge *best_edge = nullptr;
 
-    double best_inside = VALUE_MIN;
-    double saved_inside = VALUE_MIN;
+    double best_inside = LOG(0.0);
+    double saved_inside = LOG(0.0);
 
     int num_local_edges_pruned = 0;
     int num_local_edges_saved = 0;

@@ -52,7 +52,7 @@ double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, P
         HState &cand = item.second;
         scores.push_back(std::make_pair(cand.alpha, aij));
     }
-    if (scores.size() <= beam_size) return VALUE_MIN;
+    if (scores.size() <= beam_size) return NEG_INF;
     double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
         if (p.first < threshold) beamstep.erase(p.second);
@@ -112,11 +112,11 @@ double LinearAlign::get_match_score(const int i, const int j) {
 
     const double t1 = sqrt(pm1->upstrm.at(i) * pm2->upstrm.at(j));
     const double t2 = sqrt(pm1->dwnstrm.at(i) * pm2->dwnstrm.at(j));
-    const double t3 = sqrt(std::max(1 - pm1->upstrm.at(i) - pm1->dwnstrm.at(i), 0.0f) *
-                           std::max(1 - pm2->upstrm.at(j) - pm2->dwnstrm.at(j), 0.0f));
+    const double t3 = sqrt(std::max(1 - pm1->upstrm.at(i) - pm1->dwnstrm.at(i), 0.0) *
+                           std::max(1 - pm2->upstrm.at(j) - pm2->dwnstrm.at(j), 0.0));
 
-    const double output = LOG(((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3));
-    return output;
+    const double output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
+    return LOG(output);
 }
 
 void LinearAlign::set_prob_accm(ProbAccm &prob_accm1, ProbAccm &prob_accm2) {

@@ -68,8 +68,7 @@ int main(int argc, char* argv[]) {
         // Read MSA file and generate MultiSeq
         MultiSeq mseq = read_msa_file(msaFilePath, &VIENNA_NUC_ENCODING_SCHEME);
 
-        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, use_prev_outside_score, shrink_beam,
-                            VerboseState::DEBUG);
+        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, use_prev_outside_score, shrink_beam);
         ltf.run();
 
     } catch (const std::exception& e) {
