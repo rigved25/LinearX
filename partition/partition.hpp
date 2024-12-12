@@ -20,17 +20,18 @@ class Partition;
 
 struct PartitionFunctionBeam {
     int length;
-    bool has_data;
-    std::vector<std::unordered_map<int, State>> bestH;
-    std::vector<std::unordered_map<int, State>> bestP;
-    std::vector<std::unordered_map<int, State>> bestM;
-    std::vector<std::unordered_map<int, State>> bestM2;
-    std::vector<std::unordered_map<int, State>> bestMulti;
+
+    std::unordered_map<int, State> *bestH = nullptr;
+    std::unordered_map<int, State> *bestP = nullptr;
+    std::unordered_map<int, State> *bestM = nullptr;
+    std::unordered_map<int, State> *bestM2 = nullptr;
+    std::unordered_map<int, State> *bestMulti = nullptr;
     VectorWithNegOneIndex<State> bestC;
 
-    PartitionFunctionBeam(int length) : length(length), bestC(length) { reset(true); }
+    PartitionFunctionBeam(int length) : length(length), bestC(length) {}
 
-    void reset(bool force = false);
+    void free();
+
     void save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
               std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
               std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC);
@@ -88,7 +89,7 @@ class Partition {
             next_pair[nuc].resize(seq->size(), seq->size());
 
             if (nuc == 0) {
-                continue; // skip N
+                continue;  // skip N
             }
 
             int prev = -1;
@@ -108,7 +109,7 @@ class Partition {
             }
         }
 
-        reset_beams();
+        reset_beams(false);
 
         std::string tmp = sequence->sequence;
         std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::toupper);
@@ -116,11 +117,11 @@ class Partition {
         energy_model.init_tetra_hex_tri(tmp, seq->size(), if_tetraloops, if_hexaloops, if_triloops);
     }
 
-    void reset_beams();
+    void reset_beams(bool freeMemory = true);
 
     virtual void compute_inside(int beam_size = 100);
-    virtual void compute_outside(bool use_lazy_outside = true);
-    virtual void compute_bpp_matrix();
+    void compute_outside(bool use_lazy_outside = true);
+    void compute_bpp_matrix();
     double get_bpp(int i, int j) const;
     double get_ensemble_energy();
     std::string get_mfe_structure();
@@ -129,7 +130,6 @@ class Partition {
     // methods declared in file forward.cpp
     double beam_prune(std::unordered_map<int, State> &beamstep, int beam_size);
     void update_score(State &state, const int new_score, const double prev_score);
-    virtual bool check_state(const StateType type, const int i, const int j);
     void beamstep_H(const int j, const std::vector<int> *next_pair);
     void beamstep_Multi(const int j, const std::vector<int> *next_pair);
     void beamstep_P(const int j, const std::vector<int> *next_pair);
@@ -141,11 +141,10 @@ class Partition {
     void hedges_trace_update_helper(std::vector<HEdge> *incoming_hedges, HEdge &best_hedge, const HEdge &new_hedge,
                                     TraceInfo &best_trace, const TraceInfo &new_trace);
     void mfe_backtrack(int i, int j, StateType type, std::string &structure);
-    virtual std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
-                                                const double edge_threshold);
+    std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
+                                        const double edge_threshold);
 
-    virtual void get_incoming_edges_state(const int i, const int j, const StateType type,
-                                          std::vector<HEdge> &incoming_hedges);
+    void get_incoming_edges_state(const int i, const int j, const StateType type, std::vector<HEdge> &incoming_hedges);
     TraceInfo get_incoming_hedges_C(const int j, std::vector<HEdge> *incoming_hedges);
     TraceInfo get_incoming_hedges_M(const int i, const int j, std::vector<HEdge> *incoming_hedges);
     TraceInfo get_incoming_hedges_M2(const int i, const int j, std::vector<HEdge> *incoming_hedges);

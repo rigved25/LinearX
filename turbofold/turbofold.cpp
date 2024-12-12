@@ -98,7 +98,7 @@ void LinearTurboFold::run() {
                 float seq_idnty = seq_identities[aln_pair_index];
 
                 // get the alignments
-                aln.reset_beams();
+                aln.reset_beams(use_prev_outside_score ? false : true);
                 aln.prob_set1();
                 // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
@@ -116,7 +116,7 @@ void LinearTurboFold::run() {
                 // }
 
                 // compute partition function
-                aln.reset_beams();
+                aln.reset_beams(true);
                 aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
                 aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
@@ -131,21 +131,23 @@ void LinearTurboFold::run() {
 
                 // save alignment beams for the next iteration
                 if (use_prev_outside_score) {
-                    aln.ab.reset();
-                    aln.ab.save(aln);
+                    aln.ab.free();
+                    if (itr < num_itr) {
+                        aln.ab.save(aln);
+                    }
                 }
             }
         }
 
         // fold step
         for (TurboPartition &pf : pfs) {
-            pf.reset_beams();
+            pf.reset_beams(false);
             pf.compute_inside(beam_size);
             pf.compute_outside(use_lazy_outside);
 
             // // save partition function beams for the next iteration
             if (use_prev_outside_score && itr > 0) {
-                pf.pfb.reset();
+                pf.pfb.free();
                 pf.pfb.save(pf);
             }
 

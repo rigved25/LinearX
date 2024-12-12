@@ -13,14 +13,14 @@ class LinearAlign;
 
 struct AlignBeam {
     int seq_len_sum;
-    bool has_data;
-    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestALN;
-    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestINS1;
-    std::vector<std::unordered_map<std::pair<int, int>, HState, PairHash>> bestINS2;
 
-    AlignBeam(int seq_len_sum) : seq_len_sum(seq_len_sum) { reset(true); }
+    std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN = nullptr;
+    std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
+    std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2 = nullptr;
 
-    void reset(bool force = false);
+    AlignBeam(int seq_len_sum) : seq_len_sum(seq_len_sum) {}
+
+    void free();
 
     void save(std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN,
               std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1,
@@ -59,10 +59,10 @@ class LinearAlign {
     friend struct AlignBeam;
 
     Phmm *phmm = nullptr;
-    const Seq *sequence1;  // pointer to actual Seq object
-    const Seq *sequence2;
-    const std::vector<int> *seq1;  // pointer to encoded sequence in Seq object
-    const std::vector<int> *seq2;
+    Seq *sequence1;  // pointer to actual Seq object
+    Seq *sequence2;
+    std::vector<int> *seq1;  // pointer to encoded sequence in Seq object
+    std::vector<int> *seq2;
     int seq_len_sum;
 
     std::unordered_map<int, double> *coinc_prob = nullptr;
@@ -72,8 +72,8 @@ class LinearAlign {
     double inside_execution_time = 0.0;
     double outside_execution_time = 0.0;
 
-    LinearAlign(const Seq *sequence1, const Seq *sequence2, bool verbose = false, double alpha1 = 1.0,
-                double alpha2 = 0.8, double alpha3 = 0.5)
+    LinearAlign(Seq *sequence1, Seq *sequence2, bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8,
+                double alpha3 = 0.5)
         : sequence1(sequence1),
           sequence2(sequence2),
           seq1(&sequence1->enc_seq),
@@ -82,7 +82,19 @@ class LinearAlign {
           alpha1(alpha1),
           alpha2(alpha2),
           alpha3(alpha3) {
-        reset_beams();
+        reset_beams(false);
+
+        for (auto &x : *seq1) {
+            if (x == 0) {
+                x = (rand() % 4) + 1;
+            }
+        }
+
+        for (auto &x : *seq2) {
+            if (x == 0) {
+                x = (rand() % 4) + 1;
+            }
+        }
 
         if (verbose) {
             print_seqs();
@@ -111,7 +123,7 @@ class LinearAlign {
         phmm->set_parameters_by_sim(similarity);
     }
 
-    void reset_beams();
+    void reset_beams(bool freeMemory = true);
 
     void compute_inside(bool best_only = false, int beam_size = 100, bool verbose_output = true);
     void compute_outside(bool use_lazy_outside = true, bool verbose_output = true);

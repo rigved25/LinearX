@@ -34,8 +34,7 @@ static const double LOG_OF_ONE = 0.0;
 
 // Calculates log1p(exp(x))  -- used for calculating xlog_sum.
 inline double log1pexp(const double &x) noexcept {
-    if (IS_LOG_ZERO(x))
-        return 0.0; // if x <= LOG_OF_ZERO, then exp(x) is 0, and log(1+0)=log(1)=0, so return 0.
+    if (IS_LOG_ZERO(x)) return 0.0;  // if x <= LOG_OF_ZERO, then exp(x) is 0, and log(1+0)=log(1)=0, so return 0.
 #ifdef USE_LOGP1_LOOKUP_SUM
     return LogTable.exp_lu(x);
 #else
@@ -45,8 +44,7 @@ inline double log1pexp(const double &x) noexcept {
 
 // calculates log1p(-exp(x))  -- used for calculating xlog_sub.
 inline double log1pNexp(const double &x) noexcept {
-    if (IS_LOG_ZERO(x))
-        return 0.0; // if x <= LOG_OF_ZERO, then exp(x) is 0, and log(1-0)=log(1)=0, so return 0.
+    if (IS_LOG_ZERO(x)) return 0.0;  // if x <= LOG_OF_ZERO, then exp(x) is 0, and log(1-0)=log(1)=0, so return 0.
 #ifdef USE_LOGP1_LOOKUP_DIFF
     return LogTableDiff.exp_lu(x);
 #else
@@ -72,16 +70,14 @@ double xlog_pow(const double &xlog, const double &power);
 
 inline double xlog(const double &value) noexcept {
 #ifdef USE_XLOG_ZERO
-    if (value == 0.0)
-        return LOG_OF_ZERO; // the log function itself will throw an exception if value < 0.
+    if (value == 0.0) return LOG_OF_ZERO;  // the log function itself will throw an exception if value < 0.
 #endif
-    return log(value); // the log function itself will throw an exception if value < 0.
+    return log(value);  // the log function itself will throw an exception if value < 0.
 }
 
 inline double xexp(const double &xlog) noexcept {
 #ifdef USE_XLOG_ZERO
-    if (xlog <= LOG_OF_ZERO)
-        return 0.0;
+    if (xlog <= LOG_OF_ZERO) return 0.0;
 #endif
     return exp(xlog);
 }
@@ -93,10 +89,8 @@ inline double xlog_sum(const double &a, const double &b) {
     //             = a+log(1-exp(b-a))
     //             = a+log1p(-exp(b-a))
 #ifdef USE_XLOG_ZERO
-    if (IS_LOG_ZERO(a))
-        return b;
-    if (IS_LOG_ZERO(b))
-        return a;
+    if (IS_LOG_ZERO(a)) return b;
+    if (IS_LOG_ZERO(b)) return a;
 #endif
     // Note: The test of a>b is important when A or B is greater than MAX_DOUBLE.
     // e.g. A=1E+500 and B=1 --- exp(a-b) will overflow, while exp(b-a) will not.
@@ -123,10 +117,8 @@ inline double xlog_sum2(const double &a, const double &b) {
     //             = a+log(1-exp(b-a))
     //             = a+log1p(-exp(b-a))
 #ifdef USE_XLOG_ZERO
-    if (IS_LOG_ZERO(a))
-        return b;
-    if (IS_LOG_ZERO(b))
-        return a;
+    if (IS_LOG_ZERO(a)) return b;
+    if (IS_LOG_ZERO(b)) return a;
 #endif
     // Note: The test of a>b is important when A or B is greater than MAX_DOUBLE.
     // e.g. A=1E+500 and B=1 --- exp(a-b) will overflow, while exp(b-a) will not.
@@ -157,8 +149,7 @@ inline double xlog_sum3(const double &a, const double &b) {
     }
     x = c - d;
 
-    if (x > 11.8624794162)
-        return d + x;
+    if (x > 11.8624794162) return d + x;
     if (x < double(3.3792499610)) {
         if (x < double(1.6320158198)) {
             if (x < double(0.6615367791))
@@ -188,23 +179,22 @@ inline double xlog_sum3(const double &a, const double &b) {
 }
 
 // Computes log(exp(a)-exp(b))
-inline double xlog_sub(const double &a, const double &b) { // (previously xlog_sub)
+inline double xlog_sub(const double &a, const double &b) {  // (previously xlog_sub)
 // Derivation:   log(exp(a)-exp(b))
 //             = log(exp(a) * (1-exp(b-a)) )
 //             = a+log(1-exp(b-a))
 //             = a+log1p(-exp(b-a))
 #ifdef USE_XLOG_ZERO
     // `a` must be >= `b` so that exp(a) >= exp(b), otherwise the value inside the log would be negative.
-    if (b <= LOG_OF_ZERO)
-        return a; // Important to do this test, because (a<b) is NOT an error if (b <= LOG_OF_ZERO)
+    if (b <= LOG_OF_ZERO) return a;  // Important to do this test, because (a<b) is NOT an error if (b <= LOG_OF_ZERO)
     if (a < b)
         throw std::runtime_error(
             "Subtraction of xlog values resulted in an unrepresentable negative number. (in " __FILE__ ")");
-    return a == b ? LOG_OF_ZERO : a + log1pNexp(b - a); // note that (b-a) is always < 0, which is required because we
-                                                        // are computing log(1-exp(b-a))
+    return a == b ? LOG_OF_ZERO : a + log1pNexp(b - a);  // note that (b-a) is always < 0, which is required because we
+                                                         // are computing log(1-exp(b-a))
 #else
     return a + log1pNexp(
-                   b - a); // note that (b-a) is always < 0, which is required because we are computing log(1-exp(b-a))
+                   b - a);  // note that (b-a) is always < 0, which is required because we are computing log(1-exp(b-a))
 #endif
 }
 
@@ -219,10 +209,8 @@ inline double xlog_mul(const double &log1, const double &log2) {
 // Returns 0 if log1 is 0 no matter what log2 is.
 inline double xlog_div(const double &log1, const double &log2) {
 #ifdef USE_XLOG_ZERO
-    if (log1 <= LOG_OF_ZERO)
-        return LOG_OF_ZERO;
-    if (log2 <= LOG_OF_ZERO)
-        throw std::runtime_error("Division by xlog zero-value (in " __FILE__ ")");
+    if (log1 <= LOG_OF_ZERO) return LOG_OF_ZERO;
+    if (log2 <= LOG_OF_ZERO) throw std::runtime_error("Division by xlog zero-value (in " __FILE__ ")");
 #endif
     return log1 - log2;
 }
@@ -236,7 +224,6 @@ inline double xlog_pow(const double &log_value, const double &pow) {
 }
 
 inline double Fast_LogExpPlusOne(double x) {
-
     // Bounds for tolerance of 7.05e-06: (0, 11.8625)
     // Approximating interval: (0, 0.661537) -->
     // ((T(-0.0065591595)*x+T(0.1276442762))*x+T(0.4996554598))*x+T(0.6931542306); Approximating interval:
@@ -304,10 +291,18 @@ inline double Fast_LogExpPlusOne(double x) {
 }
 
 inline void Fast_LogPlusEquals(double &x, double y) {
-    if (x < y)
-        std::swap(x, y);
-    if (y > double(NEG_INF / 2) && x - y < double(11.8624794162))
-        x = Fast_LogExpPlusOne(x - y) + y;
+// #ifdef USE_XLOG_ZERO
+//     if (IS_LOG_ZERO(x)) {
+//         x = y;
+//         return;
+//     }
+//     if (IS_LOG_ZERO(y)) {
+//         return;
+//     }
+// #endif
+
+    if (x < y) std::swap(x, y);
+    if (y > double(NEG_INF / 2) && x - y < double(11.8624794162)) x = Fast_LogExpPlusOne(x - y) + y;
 }
 
 inline double Fast_Exp(double x) {
@@ -323,8 +318,7 @@ inline double Fast_Exp(double x) {
 
     if (x < double(-2.4915033807)) {
         if (x < double(-5.8622823336)) {
-            if (x < double(-9.91152))
-                return double(0);
+            if (x < double(-9.91152)) return double(0);
             return ((double(0.0000803850) * x + double(0.0021627428)) * x + double(0.0194708555)) * x +
                    double(0.0588080014);
         }
@@ -347,4 +341,4 @@ inline double Fast_Exp(double x) {
     return (x > double(46.052) ? double(1e20) : expf(x));
 }
 
-#endif // LOG_MATH_HPP
+#endif  // LOG_MATH_HPP

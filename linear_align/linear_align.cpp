@@ -1,39 +1,31 @@
 #include "./linear_align.hpp"
 
-void AlignBeam::reset(bool force) {
-    if (!has_data && !force) {
-        return;
-    }
+void AlignBeam::free() {
+    delete[] bestALN;
+    delete[] bestINS1;
+    delete[] bestINS2;
 
-    bestALN.assign(seq_len_sum + 3, std::unordered_map<std::pair<int, int>, HState, PairHash>());
-    bestINS1.assign(seq_len_sum + 1, std::unordered_map<std::pair<int, int>, HState, PairHash>());
-    bestINS2.assign(seq_len_sum + 1, std::unordered_map<std::pair<int, int>, HState, PairHash>());
-
-    has_data = false;
+    bestALN = nullptr;
+    bestINS1 = nullptr;
+    bestINS2 = nullptr;
 }
 
 void AlignBeam::save(std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN,
                      std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1,
                      std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2) {
-    for (int s = 0; s < seq_len_sum + 3; ++s) {
-        this->bestALN[s] = bestALN[s];
-    }
-    for (int s = 0; s < seq_len_sum + 1; ++s) {
-        this->bestINS1[s] = bestINS1[s];
-        this->bestINS2[s] = bestINS2[s];
-    }
-    has_data = true;
+    this->bestALN = bestALN;
+    this->bestINS1 = bestINS1;
+    this->bestINS2 = bestINS2;
 }
 
-void AlignBeam::save(LinearAlign &la) {
-    save(la.bestALN, la.bestINS1, la.bestINS2);
-    has_data = true;
-}
+void AlignBeam::save(LinearAlign &la) { save(la.bestALN, la.bestINS1, la.bestINS2); }
 
-void LinearAlign::reset_beams() {
-    delete[] bestALN;
-    delete[] bestINS1;
-    delete[] bestINS2;
+void LinearAlign::reset_beams(bool freeMemory) {
+    if (freeMemory) {
+        delete[] bestALN;
+        delete[] bestINS1;
+        delete[] bestINS2;
+    }
 
     bestALN = new std::unordered_map<std::pair<int, int>, HState, PairHash>[seq_len_sum + 3];
     bestINS1 = new std::unordered_map<std::pair<int, int>, HState, PairHash>[seq_len_sum + 1];

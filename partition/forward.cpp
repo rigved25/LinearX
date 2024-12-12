@@ -30,8 +30,6 @@ void Partition::update_score(State &state, const int new_score, const double pre
     }
 }
 
-bool Partition::check_state(const StateType type, const int i, const int j) { return true; }
-
 void Partition::compute_inside(int beam_size) {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
@@ -144,17 +142,16 @@ void Partition::beamstep_Multi(const int j, const std::vector<int> *next_pair) {
 
         // 1. extend Multi(i, j) to Multi(i, jnext)
         int jnext = next_pair[seq->at(i)][j];
-        if (jnext < seq->size() && check_state(StateType::Multi, i, jnext)) {
+        if (jnext < seq->size()) {
             int new_score = -energy_model->score_multi_unpaired(j, jnext);
             update_score(bestMulti[jnext][i], new_score, state.alpha);
         }
 
         // 2. generate P(i, j)
-        if (check_state(StateType::P, i, j)) {
-            int new_score =
-                -energy_model->score_multi(i, j, seq->at(i), seq->at(i + 1), seq->at(j - 1), seq->at(j), seq->size());
-            update_score(bestP[j][i], new_score, state.alpha);
-        }
+
+        int new_score =
+            -energy_model->score_multi(i, j, seq->at(i), seq->at(i + 1), seq->at(j - 1), seq->at(j), seq->size());
+        update_score(bestP[j][i], new_score, state.alpha);
     }
 }
 
@@ -173,18 +170,18 @@ void Partition::beamstep_P(const int j, const std::vector<int> *next_pair) {
             int q = next_pair[seq->at(p)][j];
             while (q < seq->size() && ((i - p) + (q - j) - 2) <= MAXLOOPSIZE) {
                 // current shape is: p...i (pair) j...q
-                if (check_state(StateType::P, p, q)) {
-                    int new_score = -energy_model->score_single_loop(p, q, i, j, seq->at(p), seq->at(p + 1),
-                                                                     seq->at(q - 1), seq->at(q), seq->at(i - 1),
-                                                                     seq->at(i), seq->at(j), seq->at(j + 1));
-                    update_score(bestP[q][p], new_score, state.alpha);
-                }
+
+                int new_score =
+                    -energy_model->score_single_loop(p, q, i, j, seq->at(p), seq->at(p + 1), seq->at(q - 1), seq->at(q),
+                                                     seq->at(i - 1), seq->at(i), seq->at(j), seq->at(j + 1));
+                update_score(bestP[q][p], new_score, state.alpha);
+
                 q = next_pair[seq->at(p)][q];
             }
         }
 
         // 2. M = P
-        if (i > 0 && j < seq->size() - 1 && check_state(StateType::M, i, j)) {
+        if (i > 0 && j < seq->size() - 1) {
             int new_score = -energy_model->score_M1(i, j, j, seq->at(i - 1), seq->at(i), seq->at(j),
                                                     (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
             update_score(bestM[j][i], new_score, state.alpha);
@@ -197,10 +194,9 @@ void Partition::beamstep_P(const int j, const std::vector<int> *next_pair) {
                                                     (j + 1 < seq->size() ? seq->at(j + 1) : -1), seq->size());
             for (auto &m_item : bestM[h]) {
                 int g = m_item.first;
-                if (check_state(StateType::M2, g, j)) {
-                    State &m_state = m_item.second;
-                    update_score(bestM2[j][g], new_score, m_state.alpha + state.alpha);
-                }
+
+                State &m_state = m_item.second;
+                update_score(bestM2[j][g], new_score, m_state.alpha + state.alpha);
             }
         }
 
@@ -227,7 +223,7 @@ void Partition::beamstep_M2(const int j, const std::vector<int> *next_pair) {
         // 1. multi-loop = M2
         for (int p = i - 1; p >= std::max(0, i - MAXLOOPSIZE); --p) {
             int q = next_pair[seq->at(p)][j];
-            if (q < seq->size() && check_state(StateType::Multi, p, q)) {
+            if (q < seq->size()) {
                 int new_score =
                     -(energy_model->score_multi_unpaired(p, i - 1) + energy_model->score_multi_unpaired(j, q - 1));
                 update_score(bestMulti[q][p], new_score, state.alpha);
@@ -235,9 +231,8 @@ void Partition::beamstep_M2(const int j, const std::vector<int> *next_pair) {
         }
 
         // 2. M = M2
-        if (check_state(StateType::M, i, j)) {
-            update_score(bestM[j][i], 0, state.alpha);
-        }
+
+        update_score(bestM[j][i], 0, state.alpha);
     }
 }
 
@@ -246,7 +241,7 @@ void Partition::beamstep_M(const int j) {
         int i = item.first;
         State &state = item.second;
 
-        if (j < seq->size() - 1 && check_state(StateType::M, i, j + 1)) {
+        if (j < seq->size() - 1) {
             int new_score = -energy_model->score_multi_unpaired(j, j + 1);
             update_score(bestM[j + 1][i], new_score, state.alpha);
         }

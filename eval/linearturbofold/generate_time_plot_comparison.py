@@ -5,8 +5,8 @@ from collections import defaultdict
 import difflib
 
 # Directories for log files
-log_dir1 = "./output/log_ltf1_rnastraln"
-log_dir2 = "./output/logs_ltf2_rnastraln_lazy_ltf1_params"
+log_dir1 = "./../../tests/linearturbofold/test_output_new/rnastraln_ltf2_ltf1conf_lazyout/logs/"
+log_dir2 = "./../../tests/linearturbofold/test_output_new/rnastraln_ltf2_ltf1conf_lzyout_outHrstc_shrnkBeam/logs/"
 
 # log_dir = "./output/logs_ltf2_rnastraln_lazy_ltf1_params"
 # log_dir = "./output/log_ltf1_rnastraln"

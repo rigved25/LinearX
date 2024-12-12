@@ -102,14 +102,7 @@ class TurboPartition final : public Partition {
           pfb(use_prev_outside_score ? sequence->length() : 0),
           use_prev_outside_score(use_prev_outside_score) {}
 
-    void get_incoming_edges_state(const int i, const int j, const StateType type,
-                                  std::vector<HEdge> &incoming_hedges) override;
-    void compute_outside(bool use_lazy_outside) override;
-    void compute_bpp_matrix() override;
-    std::pair<int, int> backward_update(const int i, const int j, State &state, const StateType type,
-                                        const double edge_threshold) override;
     double beam_prune(StateType type, int j, int beam_size);
-    bool check_state(const StateType type, const int i, const int j) override;
     void compute_inside(int beam_size = 100) override;
     void calc_prob_accm();
 };
@@ -123,7 +116,7 @@ class TurboAlign final : public LinearAlign {
    public:
     friend class LinearTurboFold;
 
-    TurboAlign(LinearTurboFold *turbofold, const Seq *sequence1, const Seq *sequence2, bool use_prev_outside_score,
+    TurboAlign(LinearTurboFold *turbofold, Seq *sequence1, Seq *sequence2, bool use_prev_outside_score,
                bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8, double alpha3 = 0.5)
         : LinearAlign(sequence1, sequence2, verbose, alpha1, alpha2, alpha3),
           turbofold(turbofold),

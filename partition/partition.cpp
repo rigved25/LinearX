@@ -1,44 +1,42 @@
 #include "partition.hpp"
 
-void PartitionFunctionBeam::reset(bool force) {
-    if (!has_data && !force) {
-        return;
-    }
-    bestH.assign(length, std::unordered_map<int, State>());
-    bestP.assign(length, std::unordered_map<int, State>());
-    bestM.assign(length, std::unordered_map<int, State>());
-    bestM2.assign(length, std::unordered_map<int, State>());
-    bestMulti.assign(length, std::unordered_map<int, State>());
-    bestC.reset();
-
-    has_data = false;
-}
-
-void PartitionFunctionBeam::save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
-                                 std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
-                                 std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC) {
-    for (int j = 0; j < length; j++) {
-        this->bestH[j] = bestH[j];
-        this->bestP[j] = bestP[j];
-        this->bestM[j] = bestM[j];
-        this->bestM2[j] = bestM2[j];
-        this->bestMulti[j] = bestMulti[j];
-    }
-    this->bestC = bestC;
-    has_data = true;
-}
-
-void PartitionFunctionBeam::save(Partition &pf) {
-    save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti, pf.bestC);
-    has_data = true;
-}
-
-void Partition::reset_beams() {
+void PartitionFunctionBeam::free() {
     delete[] bestH;
     delete[] bestP;
     delete[] bestM;
     delete[] bestM2;
     delete[] bestMulti;
+
+    bestH = nullptr;
+    bestP = nullptr;
+    bestM = nullptr;
+    bestM2 = nullptr;
+    bestMulti = nullptr;
+}
+
+void PartitionFunctionBeam::save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
+                                 std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
+                                 std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC) {
+    this->bestH = bestH;
+    this->bestP = bestP;
+    this->bestM = bestM;
+    this->bestM2 = bestM2;
+    this->bestMulti = bestMulti;
+    this->bestC = bestC;
+}
+
+void PartitionFunctionBeam::save(Partition &pf) {
+    save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti, pf.bestC);
+}
+
+void Partition::reset_beams(bool freeMemory) {
+    if (freeMemory) {
+        delete[] bestH;
+        delete[] bestP;
+        delete[] bestM;
+        delete[] bestM2;
+        delete[] bestMulti;
+    }
 
     bestH = new std::unordered_map<int, State>[seq->size()];
     bestP = new std::unordered_map<int, State>[seq->size()];

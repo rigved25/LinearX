@@ -14,6 +14,8 @@ inline double EXP(double x) {
 
 inline double LOG_SUM(double a, double b) {
     return xlog_sum(a, b);
+    // Fast_LogPlusEquals(a, b);
+    // return a;
 }
 
 inline double LOG_MUL(double a, double b) {
