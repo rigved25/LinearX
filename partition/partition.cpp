@@ -18,18 +18,15 @@ void PartitionFunctionBeam::free() {
 
 void PartitionFunctionBeam::save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
                                  std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
-                                 std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC) {
+                                 std::unordered_map<int, State> *bestMulti) {
     this->bestH = bestH;
     this->bestP = bestP;
     this->bestM = bestM;
     this->bestM2 = bestM2;
     this->bestMulti = bestMulti;
-    this->bestC = bestC;
 }
 
-void PartitionFunctionBeam::save(Partition &pf) {
-    save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti, pf.bestC);
-}
+void PartitionFunctionBeam::save(Partition &pf) { save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti); }
 
 void Partition::reset_beams(bool freeMemory) {
     if (freeMemory) {

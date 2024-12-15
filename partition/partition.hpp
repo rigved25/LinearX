@@ -26,16 +26,15 @@ struct PartitionFunctionBeam {
     std::unordered_map<int, State> *bestM = nullptr;
     std::unordered_map<int, State> *bestM2 = nullptr;
     std::unordered_map<int, State> *bestMulti = nullptr;
-    VectorWithNegOneIndex<State> bestC;
 
-    PartitionFunctionBeam(int length) : length(length), bestC(length) {}
+    PartitionFunctionBeam(int length) : length(length) {}
     ~PartitionFunctionBeam();
 
     void free();
 
     void save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
               std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
-              std::unordered_map<int, State> *bestMulti, VectorWithNegOneIndex<State> &bestC);
+              std::unordered_map<int, State> *bestMulti);
     void save(Partition &pf);
 };
 
