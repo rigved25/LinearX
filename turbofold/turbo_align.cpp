@@ -28,10 +28,10 @@ double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, Pa
             }
 
             auto prev_it = prev_beamstep->find(aij);
-            if (prev_it == prev_beamstep->end() || prev_it->second.beta <= LOG_OF_ZERO) {
-                it = beamstep.erase(it);
-                continue;
-            }
+            // if (prev_it == prev_beamstep->end() || prev_it->second.beta <= LOG_OF_ZERO) {
+            //     it = beamstep.erase(it);
+            //     continue;
+            // }  [NOTE: Not Required]
             offset = prev_it->second.beta;
         }
 
@@ -49,4 +49,38 @@ double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, Pa
     }
 
     return threshold;
+}
+
+bool TurboAlign::check_state(const int i, const int j, const HStateType h) {
+    if (use_prev_outside_score && turbofold->itr > 1) {
+        int s = i + j;
+        std::unordered_map<std::pair<int, int>, HState, PairHash> *prev_beamstep;
+
+        switch (h) {
+            case INS1:
+                prev_beamstep = &ab.bestINS1[s];
+                break;
+            case INS2:
+                prev_beamstep = &ab.bestINS2[s];
+                break;
+            case ALN:
+                prev_beamstep = &ab.bestALN[s];
+                break;
+        }
+
+        auto prev_it = prev_beamstep->find({i, j});
+        bool keep_state = false;
+        if (prev_it != prev_beamstep->end()) {
+            if (!(turbofold->use_lazy_outside)) {
+                double global_threshold = ab.total_alpha - DEVIATION_THRESHOLD;
+                keep_state = prev_it->second.alpha + prev_it->second.beta > global_threshold;
+            } else {
+                keep_state = prev_it->second.beta > LOG_OF_ZERO;
+            }
+        }
+
+        return keep_state;
+    }
+
+    return true;
 }

@@ -88,7 +88,9 @@ double Partition::get_bpp(int i, int j) const {
     //     std::swap(i, j);
     // }
     const auto &item = bpp[j].find(i);
-    if (item == bpp[j].end()) return 0.0;
+    if (item == bpp[j].end()) {
+        return 0.0;
+    }
     return item->second;
 }
 

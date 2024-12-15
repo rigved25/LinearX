@@ -3,13 +3,14 @@
 MultiSeq LinearAlign::get_alignment() {
     int i = seq1->size();
     int j = seq2->size();
-    HStateType h = get_incoming_edges(i + 1, j + 1, HStateType::ALN, nullptr);
+    bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
+    HStateType h = get_incoming_edges(i + 1, j + 1, HStateType::ALN, nullptr, use_match_score);
 
     std::string aln1 = "";
     std::string aln2 = "";
 
     while (i > 0 || j > 0) {
-        HStateType h_prev = get_incoming_edges(i, j, h, nullptr);
+        HStateType h_prev = get_incoming_edges(i, j, h, nullptr, use_match_score);
         switch (h) {
             case HStateType::ALN:
                 i -= 1;
@@ -42,6 +43,68 @@ MultiSeq LinearAlign::get_alignment() {
     return alignment;
 }
 
+void LinearAlign::update_state_beta(HState &state, const double new_score) {
+    state.beta = LOG_SUM(state.beta, new_score);
+}
+
+void LinearAlign::run_normal_outside(bool verbose_output) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    if (verbose_output) {
+        std::cout << "[LinearAlign] Running Outside Algorithm:" << std::endl;
+    }
+    bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
+    int states_visited = 0;
+    for (int s = seq_len_sum; s >= 0; --s) {
+        if (verbose_output) {
+            Utility::showProgressBar(seq_len_sum - s, seq_len_sum);
+        }
+        for (const HStateType h : hstate_types) {
+            std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h);
+            for (const auto &item : beam[s]) {
+                int i = item.first.first;
+                int j = item.first.second;
+                HState &state = beam[s][{i, j}];
+                states_visited += 1;
+
+                // INS1
+                if (i < seq1->size() && j <= seq2->size()) {
+                    double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                    double score = LOG_MUL(prob, bestINS1[s + 1][{i + 1, j}].beta);
+                    update_state_beta(state, score);
+                }
+
+                // INS2
+                if (i <= seq1->size() && j < seq2->size()) {
+                    double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                    double score = LOG_MUL(prob, bestINS2[s + 1][{i, j + 1}].beta);
+                    update_state_beta(state, score);
+                }
+
+                // ALN
+                const bool end_check = (i == seq1->size() && j == seq2->size());
+                if ((i < seq1->size() && j < seq2->size()) || end_check) {
+                    double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                    double score = LOG_MUL(prob, bestALN[s + 2][{i + 1, j + 1}].beta);
+                    if (use_match_score) {
+                        double match_score = get_match_score(i, j);
+                        score = LOG_MUL(score, match_score);
+                    }
+                    update_state_beta(state, score);
+                }
+            }
+        }
+    }
+    
+    // update/print time stats
+    auto end_time = std::chrono::high_resolution_clock::now();
+    outside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    if (verbose_output) {
+        printf("  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
+               100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
+        printf("  - Visited Nodes: %d\n\n", states_visited);
+    }
+}
+
 void LinearAlign::edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges, const AlnEdge &new_edge,
                                             AlnEdge &best_edge, const HStateType &new_trace, HStateType &best_trace) {
     if (incoming_edges) {
@@ -56,6 +119,11 @@ void LinearAlign::edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges
 }
 
 void LinearAlign::compute_outside(bool use_lazy_outside, bool verbose_output) {
+    if (!use_lazy_outside) {
+        run_normal_outside(verbose_output);
+        return;
+    }
+
     double deviation_threshold = use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF;
     double global_threshold =
         bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha - deviation_threshold;
@@ -113,7 +181,7 @@ std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const
         return std::make_pair(0, 0);
     }
     std::vector<AlnEdge> incoming_hedges;
-    get_incoming_edges(i, j, type, &incoming_hedges);
+    get_incoming_edges(i, j, type, &incoming_hedges, false);
     if (incoming_hedges.empty()) {
         return std::make_pair(0, 0);
     }
@@ -160,7 +228,7 @@ std::pair<int, int> LinearAlign::backward_update(const int i, const int j, const
 }
 
 HStateType LinearAlign::get_incoming_edges(const int i, const int j, const HStateType type,
-                                           std::vector<AlnEdge> *incoming_edges) {
+                                           std::vector<AlnEdge> *incoming_edges, bool use_match_score) {
     AlnEdge new_edge, best_edge;
     HStateType new_trace, best_trace;
 
@@ -178,7 +246,6 @@ HStateType LinearAlign::get_incoming_edges(const int i, const int j, const HStat
             break;
     }
 
-    bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
     for (const HStateType h_prev : hstate_types) {
         std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h_prev);
         const auto it = beam[p + q].find({p, q});
@@ -234,7 +301,7 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
                 ++num_pruned;
             } else {
                 prob = EXP(prob);
-                if (prob > 1.00001) {
+                if (prob > 1.001) {
                     fprintf(stderr,
                             "[LinearAlign: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
                             prob);

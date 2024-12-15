@@ -12,13 +12,16 @@
 class LinearAlign;
 
 struct AlignBeam {
-    int seq_len_sum;
+    int seq1_size;
+    int seq2_size;
 
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2 = nullptr;
+    double total_alpha;
 
-    AlignBeam(int seq_len_sum) : seq_len_sum(seq_len_sum) {}
+    AlignBeam(int seq1_size, int seq2_size)
+        : seq1_size(seq1_size), seq2_size(seq2_size) {}
 
     void free();
 
@@ -39,21 +42,25 @@ class LinearAlign {
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2 = nullptr;
 
-    void update_state_alpha(HState &state, const double new_score, const HStateType h, const HStateType pre,
-                            const bool best_only);
-    void update_state_beta(HState &state, const double new_score);
+    inline void update_state_alpha(HState &state, const double new_score, const HStateType h, const HStateType pre,
+                                   const bool best_only);
+    inline void update_state_beta(HState &state, const double new_score);
 
-    void edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges, const AlnEdge &new_edge, AlnEdge &best_edge,
-                                   const HStateType &new_trace, HStateType &best_trace);
+    inline void edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges, const AlnEdge &new_edge,
+                                          AlnEdge &best_edge, const HStateType &new_trace, HStateType &best_trace);
 
     std::pair<int, int> backward_update(const int i, const int j, const HState &state, const HStateType type,
                                         const double edge_threshold);
-    HStateType get_incoming_edges(const int i, const int j, const HStateType type,
-                                  std::vector<AlnEdge> *incoming_edges);
+    HStateType get_incoming_edges(const int i, const int j, const HStateType type, std::vector<AlnEdge> *incoming_edges,
+                                  bool use_match_score);
+
+    void run_normal_outside(bool verbose_output);
 
    protected:
     virtual double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
                               int beam_size);
+
+    virtual inline bool check_state(const int i, const int j, const HStateType h);
 
    public:
     friend struct AlignBeam;

@@ -120,11 +120,13 @@ class TurboAlign final : public LinearAlign {
                bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8, double alpha3 = 0.5)
         : LinearAlign(sequence1, sequence2, verbose, alpha1, alpha2, alpha3),
           turbofold(turbofold),
-          ab(use_prev_outside_score ? sequence1->length() + sequence2->length() : 0),
+          ab(use_prev_outside_score ? sequence1->length() : 0, use_prev_outside_score ? sequence2->length() : 0),
           use_prev_outside_score(use_prev_outside_score) {}
 
     double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
                       int beam_size) override;
+
+    inline bool check_state(const int i, const int j, const HStateType h) override;
 };
 
 #endif  // TURBOFOLD

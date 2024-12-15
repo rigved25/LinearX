@@ -141,14 +141,16 @@ void LinearTurboFold::run() {
 
         // fold step
         for (TurboPartition &pf : pfs) {
-            pf.reset_beams(false);
+            pf.reset_beams(use_prev_outside_score ? false : true);
             pf.compute_inside(beam_size);
             pf.compute_outside(use_lazy_outside);
 
             // // save partition function beams for the next iteration
             if (use_prev_outside_score && itr > 0) {
                 pf.pfb.free();
-                pf.pfb.save(pf);
+                if (itr < num_itr) {
+                    pf.pfb.save(pf);
+                }
             }
 
             if (verbose_state == VerboseState::DEBUG) {

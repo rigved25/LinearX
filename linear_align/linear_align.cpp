@@ -8,6 +8,7 @@ void AlignBeam::free() {
     bestALN = nullptr;
     bestINS1 = nullptr;
     bestINS2 = nullptr;
+    total_alpha = 0.0;
 }
 
 void AlignBeam::save(std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN,
@@ -16,6 +17,8 @@ void AlignBeam::save(std::unordered_map<std::pair<int, int>, HState, PairHash> *
     this->bestALN = bestALN;
     this->bestINS1 = bestINS1;
     this->bestINS2 = bestINS2;
+    int seq_len_sum = seq1_size + seq2_size;
+    total_alpha = bestALN[seq_len_sum + 2][{seq1_size + 1, seq2_size + 1}].alpha;
 }
 
 void AlignBeam::save(LinearAlign &la) { save(la.bestALN, la.bestINS1, la.bestINS2); }
@@ -52,6 +55,8 @@ double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, P
     return threshold;
 }
 
+bool LinearAlign::check_state(const int i, const int j, const HStateType h) { return true; }
+
 void LinearAlign::update_state_alpha(HState &state, const double new_score, const HStateType h, const HStateType pre,
                                      const bool best_only = false) {
     if (best_only) {
@@ -61,10 +66,6 @@ void LinearAlign::update_state_alpha(HState &state, const double new_score, cons
     } else {
         state.alpha = LOG_SUM(state.alpha, new_score);
     }
-}
-
-void LinearAlign::update_state_beta(HState &state, const double new_score) {
-    state.beta = LOG_SUM(state.beta, new_score);
 }
 
 double LinearAlign::get_trans_emit_prob(const int i, const int j, const HStateType h, const HStateType h_prev) {
@@ -138,14 +139,14 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
                 HState &state = current_beam[{i, j}];
 
                 // INS1
-                if (i < seq1->size() && j <= seq2->size()) {
+                if (i < seq1->size() && j <= seq2->size() && check_state(i + 1, j, HStateType::INS1)) {
                     double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
                     double new_score = LOG_MUL(state.alpha, prob);
                     update_state_alpha(bestINS1[s + 1][{i + 1, j}], new_score, HStateType::INS1, h, best_only);
                 }
 
                 // INS2
-                if (i <= seq1->size() && j < seq2->size()) {
+                if (i <= seq1->size() && j < seq2->size() && check_state(i, j + 1, HStateType::INS2)) {
                     double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
                     double new_score = LOG_MUL(state.alpha, prob);
                     update_state_alpha(bestINS2[s + 1][{i, j + 1}], new_score, HStateType::INS2, h, best_only);
@@ -153,7 +154,7 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
 
                 // ALN
                 const bool end_check = (i == seq1->size() && j == seq2->size());
-                if ((i < seq1->size() && j < seq2->size()) || end_check) {
+                if ((i < seq1->size() && j < seq2->size() && check_state(i + 1, j + 1, HStateType::ALN)) || end_check) {
                     double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
                     double new_score = LOG_MUL(state.alpha, prob);
                     if (use_match_score) {
@@ -205,60 +206,6 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
 
 // legacy methods below
 // ------------------------------------------------------------------------------------------------------------------------
-// void LinearAlign::run_backward_phase(bool verbose_output) {
-//     auto start_time = std::chrono::high_resolution_clock::now();
-//     if (verbose_output) {
-//         std::cout << "[LinearAlign] Running Outside Algorithm:" << std::endl;
-//     }
-//     bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
-//     for (int s = seq_len_sum; s >= 0; --s) {
-//         if (verbose_output) {
-//             Utility::showProgressBar(seq_len_sum - s, seq_len_sum);
-//         }
-//         for (const HStateType h : hstate_types) {
-//             std::unordered_map<std::pair<int, int>, HState, PairHash> *beam = get_beam(h);
-//             for (const auto &item : beam[s]) {
-//                 int i = item.first.first;
-//                 int j = item.first.second;
-//                 HState &state = beam[s][{i, j}];
-
-//                 // INS1
-//                 if (i < seq1->size() && j <= seq2->size()) {
-//                     double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-//                     double score = LOG_MUL(prob, bestINS1[s + 1][{i + 1, j}].beta);
-//                     update_state_beta(state, score);
-//                 }
-
-//                 // INS2
-//                 if (i <= seq1->size() && j < seq2->size()) {
-//                     double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-//                     double score = LOG_MUL(prob, bestINS2[s + 1][{i, j + 1}].beta);
-//                     update_state_beta(state, score);
-//                 }
-
-//                 // ALN
-//                 const bool end_check = (i == seq1->size() && j == seq2->size());
-//                 if ((i < seq1->size() && j < seq2->size()) || end_check) {
-//                     double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-//                     double score = LOG_MUL(prob, bestALN[s + 2][{i + 1, j + 1}].beta);
-//                     if (use_match_score) {
-//                         double match_score = get_match_score(i, j);
-//                         score = LOG_MUL(score, match_score);
-//                     }
-//                     update_state_beta(state, score);
-//                 }
-//             }
-//         }
-//     }
-//     // update/print time stats
-//     auto end_time = std::chrono::high_resolution_clock::now();
-//     outside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-//     if (verbose_output) {
-//         printf("  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
-//                100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
-//     }
-// }
-
 // MultiSeq LinearAlign::old_traceback() {
 //     HStateType h = bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].pre;
 
