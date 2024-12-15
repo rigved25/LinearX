@@ -102,7 +102,10 @@ class TurboPartition final : public Partition {
           pfb(use_prev_outside_score ? sequence->length() : 0),
           use_prev_outside_score(use_prev_outside_score) {}
 
+    ~TurboPartition();
+
     double beam_prune(StateType type, int j, int beam_size);
+    inline bool check_state(StateType type, int i, int j) const override;
     void compute_inside(int beam_size = 100) override;
     void calc_prob_accm();
 };
@@ -122,6 +125,8 @@ class TurboAlign final : public LinearAlign {
           turbofold(turbofold),
           ab(use_prev_outside_score ? sequence1->length() : 0, use_prev_outside_score ? sequence2->length() : 0),
           use_prev_outside_score(use_prev_outside_score) {}
+
+    ~TurboAlign();
 
     double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
                       int beam_size) override;

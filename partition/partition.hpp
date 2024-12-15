@@ -29,6 +29,7 @@ struct PartitionFunctionBeam {
     VectorWithNegOneIndex<State> bestC;
 
     PartitionFunctionBeam(int length) : length(length), bestC(length) {}
+    ~PartitionFunctionBeam();
 
     void free();
 
@@ -53,6 +54,8 @@ class Partition {
     std::unordered_map<int, State> *bestM2 = nullptr;
     std::unordered_map<int, State> *bestMulti = nullptr;
     VectorWithNegOneIndex<State> bestC;
+
+    virtual inline bool check_state(StateType type, int i, int j) const;
 
    public:
     friend struct PartitionFunctionBeam;

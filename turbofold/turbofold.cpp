@@ -146,7 +146,7 @@ void LinearTurboFold::run() {
             pf.compute_outside(use_lazy_outside);
 
             // // save partition function beams for the next iteration
-            if (use_prev_outside_score && itr > 0) {
+            if (use_prev_outside_score) {
                 pf.pfb.free();
                 if (itr < num_itr) {
                     pf.pfb.save(pf);

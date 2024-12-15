@@ -22,6 +22,7 @@ struct AlignBeam {
 
     AlignBeam(int seq1_size, int seq2_size)
         : seq1_size(seq1_size), seq2_size(seq2_size) {}
+    ~AlignBeam();
 
     void free();
 

@@ -1,5 +1,10 @@
 #include "turbofold.hpp"
 
+TurboAlign::~TurboAlign() {
+    turbofold = nullptr;
+    reset_beams(true);
+}
+
 double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
                               int beam_size) {
     std::vector<std::pair<double, std::pair<int, int>>> scores;
@@ -68,7 +73,7 @@ bool TurboAlign::check_state(const int i, const int j, const HStateType h) {
                 break;
         }
 
-        auto prev_it = prev_beamstep->find({i, j});
+        const auto prev_it = prev_beamstep->find({i, j});
         bool keep_state = false;
         if (prev_it != prev_beamstep->end()) {
             if (!(turbofold->use_lazy_outside)) {

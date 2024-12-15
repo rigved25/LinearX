@@ -1,5 +1,10 @@
 #include "turbofold.hpp"
 
+TurboPartition::~TurboPartition() {
+    turbofold = nullptr;
+    reset_beams(true);
+}
+
 double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
     std::unordered_map<int, State> *beamstep;
     std::unordered_map<int, State> *prev_beamstep;
@@ -40,14 +45,15 @@ double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
         int k = i - 1;
 
         double offset_alpha = 0.0;
-        if (!use_prev_outside_score || turbofold->itr < 2) {
+        if (!use_prev_outside_score || turbofold->itr == 0) {
             offset_alpha = (k >= 0 ? bestC[k].alpha : 0.0);
         } else {
             auto prev_it = prev_beamstep->find(i);
-            if (prev_it == prev_beamstep->end() || prev_it->second.beta <= LOG_OF_ZERO) {
-                it = beamstep->erase(it);  // Erase item and get the next iterator
-                continue;                  // Skip further processing for this item
-            }
+            // if (prev_it == prev_beamstep->end() || prev_it->second.beta <= LOG_OF_ZERO) {
+            //     it = beamstep->erase(it);  // Erase item and get the next iterator
+            //     std::cout << "Erased item: " << i << " type: " << type << std::endl;
+            //     continue;  // Skip further processing for this item
+            // } [NOTE: Not Required]
             offset_alpha = prev_it->second.beta;
         }
 
@@ -67,6 +73,42 @@ double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
     }
 
     return threshold;
+}
+
+bool TurboPartition::check_state(StateType type, int i, int j) const {
+    if (use_prev_outside_score && turbofold->itr > 0) {
+        std::unordered_map<int, State> *prev_beamstep;
+
+        switch (type) {
+            case StateType::H:
+                prev_beamstep = &pfb.bestH[j];
+                break;
+            case StateType::P:
+                prev_beamstep = &pfb.bestP[j];
+                break;
+            case StateType::Multi:
+                prev_beamstep = &pfb.bestMulti[j];
+                break;
+            case StateType::M2:
+                prev_beamstep = &pfb.bestM2[j];
+                break;
+            case StateType::M:
+                prev_beamstep = &pfb.bestM[j];
+                break;
+            default:
+                return true;
+        }
+
+        const auto it = prev_beamstep->find(i);
+        bool keep_state = false;
+        if (it != prev_beamstep->end() && it->second.beta > LOG_OF_ZERO) {
+            keep_state = true;
+        }
+
+        return keep_state;
+    }
+
+    return true;
 }
 
 void TurboPartition::compute_inside(int beam_size) {

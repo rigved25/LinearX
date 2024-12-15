@@ -1,5 +1,7 @@
 #include "partition.hpp"
 
+PartitionFunctionBeam::~PartitionFunctionBeam() { free(); }
+
 void PartitionFunctionBeam::free() {
     delete[] bestH;
     delete[] bestP;

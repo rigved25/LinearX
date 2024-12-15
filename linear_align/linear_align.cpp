@@ -1,5 +1,7 @@
 #include "./linear_align.hpp"
 
+AlignBeam::~AlignBeam() { free(); }
+
 void AlignBeam::free() {
     delete[] bestALN;
     delete[] bestINS1;
