@@ -101,8 +101,13 @@ bool TurboPartition::check_state(StateType type, int i, int j) const {
 
         const auto it = prev_beamstep->find(i);
         bool keep_state = false;
-        if (it != prev_beamstep->end() && it->second.beta > LOG_OF_ZERO) {
-            keep_state = true;
+        if (it != prev_beamstep->end()) {
+            if (!(turbofold->use_lazy_outside)) {
+                double global_threshold = pfb.total_alpha - DEVIATION_THRESHOLD;
+                keep_state = (it->second.alpha + it->second.beta > global_threshold);
+            } else {
+                keep_state = it->second.beta > LOG_OF_ZERO;
+            }
         }
 
         return keep_state;

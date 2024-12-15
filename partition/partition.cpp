@@ -14,19 +14,23 @@ void PartitionFunctionBeam::free() {
     bestM = nullptr;
     bestM2 = nullptr;
     bestMulti = nullptr;
+    total_alpha = 0.0;
 }
 
 void PartitionFunctionBeam::save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
                                  std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
-                                 std::unordered_map<int, State> *bestMulti) {
+                                 std::unordered_map<int, State> *bestMulti, double total_alpha) {
     this->bestH = bestH;
     this->bestP = bestP;
     this->bestM = bestM;
     this->bestM2 = bestM2;
     this->bestMulti = bestMulti;
+    this->total_alpha = total_alpha;
 }
 
-void PartitionFunctionBeam::save(Partition &pf) { save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti); }
+void PartitionFunctionBeam::save(Partition &pf) {
+    save(pf.bestH, pf.bestP, pf.bestM, pf.bestM2, pf.bestMulti, pf.bestC[pf.seq->size() - 1].alpha);
+}
 
 void Partition::reset_beams(bool freeMemory) {
     if (freeMemory) {

@@ -21,6 +21,8 @@ class Partition;
 struct PartitionFunctionBeam {
     int length;
 
+    double total_alpha;
+
     std::unordered_map<int, State> *bestH = nullptr;
     std::unordered_map<int, State> *bestP = nullptr;
     std::unordered_map<int, State> *bestM = nullptr;
@@ -34,7 +36,7 @@ struct PartitionFunctionBeam {
 
     void save(std::unordered_map<int, State> *bestH, std::unordered_map<int, State> *bestP,
               std::unordered_map<int, State> *bestM, std::unordered_map<int, State> *bestM2,
-              std::unordered_map<int, State> *bestMulti);
+              std::unordered_map<int, State> *bestMulti, double total_alpha);
     void save(Partition &pf);
 };
 

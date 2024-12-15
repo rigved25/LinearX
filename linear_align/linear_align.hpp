@@ -15,13 +15,13 @@ struct AlignBeam {
     int seq1_size;
     int seq2_size;
 
+    double total_alpha;
+
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS2 = nullptr;
-    double total_alpha;
 
-    AlignBeam(int seq1_size, int seq2_size)
-        : seq1_size(seq1_size), seq2_size(seq2_size) {}
+    AlignBeam(int seq1_size, int seq2_size) : seq1_size(seq1_size), seq2_size(seq2_size) {}
     ~AlignBeam();
 
     void free();
