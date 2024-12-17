@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import difflib
 
+from matplotlib.ticker import MultipleLocator
+
 # Directories for log files
 log_dir1 = "./../../tests/linearturbofold/output-final/rnastraln_ltf1/log/"
 log_dir2 = "./../../tests/linearturbofold/output-final/rnastraln_ltf2_ltf1conf_vn_lazyout/logs/"
-log_dir3 = "./../../tests/linearturbofold/output-final/rnastraln_ltf2_ltf1conf_vn_lazyout_outHrstc_shrnkBeam/logs/"
+log_dir3 = "./../../tests/linearturbofold/output-final2/rnastraln_ltf2_ltf1conf_vn_lzy_pp/logs/"
 
 # Initialize dictionaries to store total time and count for averaging
 time_data1 = defaultdict(lambda: {"real": 0, "count": 0, "values": []})
@@ -139,7 +141,7 @@ ax1.plot(
     range(len(correct_families)),
     avg_time_values3,
     color="tab:green",
-    label="LTF II (Vienna, Lazy Outside, Outside Heuristic, Shrink Beam)",
+    label="LTF II (Vienna, Lazy Outside, Restrict Survival Area)",
 )
 
 # Scatter actual time data points for algorithm 3
@@ -155,6 +157,13 @@ ax1.legend()
 plt.title("Average Time Comparison per Family")
 plt.tight_layout()
 plt.grid()
+# plt.yticks(range(0, 550, 25), minor=True)
+
+
+ax1.set_ylim(0)
+ax1.yaxis.set_major_locator(MultipleLocator(50))
+ax1.yaxis.set_minor_locator(MultipleLocator(25))
+ax1.grid(which='minor', linestyle='--', linewidth=0.75, color='lightgray')  # Dashed for minor grid lines
 
 # Show the plot
 plt.show()

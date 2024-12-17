@@ -47,8 +47,7 @@ void Partition::mfe_backtrack(int i, int j, StateType type, std::string &structu
     mfe_backtrack(trace.t + 1, trace.j, trace.type_right, structure);
 }
 
-void Partition::compute_outside(bool use_lazy_outside) {
-    double deviation_threshold = use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF;
+void Partition::compute_outside(double deviation_threshold) {
     double global_threshold = bestC[seq->size() - 1].alpha - deviation_threshold;
 
     unsigned long total_states = 0, states_visited = 0;

@@ -83,14 +83,16 @@ void LinearTurboFold::run() {
     for (itr = 0; itr <= num_itr; ++itr) {
         // Utility::showProgressBar(itr, num_itr);
 
-        if (shrink_beam && itr > 1) {
-            beam_size -= 25;
-            beam_size = std::max(min_beam_size, beam_size);
-        }
+        // if (shrink_beam && itr > 1) {
+        //     beam_size -= 25;
+        //     beam_size = std::max(min_beam_size, beam_size);
+        // }
+
         // align step
         std::cerr << "-------------------------CURRENT ITERATION: " << itr << "-------------------------\n"
                   << "BEAM SIZE: " << beam_size << std::endl;
         if (itr > 0) {
+            auto align_start_time = std::chrono::high_resolution_clock::now();
             for (TurboAlign &aln : alns) {
                 const int k1 = aln.sequence1->k_id;
                 const int k2 = aln.sequence2->k_id;
@@ -137,13 +139,22 @@ void LinearTurboFold::run() {
                     }
                 }
             }
+            auto align_end_time = std::chrono::high_resolution_clock::now();
+
+            if (verbose_state == VerboseState::DEBUG) {
+                std::cerr << "[ALIGNMENT] Total Time taken for iteration " << itr << ": "
+                          << std::chrono::duration_cast<std::chrono::milliseconds>(align_end_time - align_start_time).count()
+                          << "ms\n"
+                          << std::endl;
+            }
         }
 
         // fold step
+        auto fold_start_time = std::chrono::high_resolution_clock::now();
         for (TurboPartition &pf : pfs) {
             pf.reset_beams(use_prev_outside_score ? false : true);
             pf.compute_inside(beam_size);
-            pf.compute_outside(use_lazy_outside);
+            pf.compute_outside(use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF);
 
             // // save partition function beams for the next iteration
             if (use_prev_outside_score) {
@@ -169,6 +180,15 @@ void LinearTurboFold::run() {
                 std::cout << pf.get_threshknot_structure() << std::endl;
             }
         }
+        auto fold_end_time = std::chrono::high_resolution_clock::now();
+
+        if (VerboseState::DEBUG) {
+            std::cerr << "\n[FOLDING] Total Time taken for iteration " << itr << ": "
+                      << std::chrono::duration_cast<std::chrono::milliseconds>(fold_end_time - fold_start_time).count()
+                      << "ms\n"
+                      << std::endl;
+        }
+
         reset_extinf_cache();
     }
 }

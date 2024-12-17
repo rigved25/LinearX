@@ -1,9 +1,6 @@
 #include "turbofold.hpp"
 
-TurboPartition::~TurboPartition() {
-    turbofold = nullptr;
-    reset_beams(true);
-}
+TurboPartition::~TurboPartition() { turbofold = nullptr; }
 
 double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
     std::unordered_map<int, State> *beamstep;
@@ -49,11 +46,10 @@ double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
             offset_alpha = (k >= 0 ? bestC[k].alpha : 0.0);
         } else {
             auto prev_it = prev_beamstep->find(i);
-            // if (prev_it == prev_beamstep->end() || prev_it->second.beta <= LOG_OF_ZERO) {
-            //     it = beamstep->erase(it);  // Erase item and get the next iterator
-            //     std::cout << "Erased item: " << i << " type: " << type << std::endl;
-            //     continue;  // Skip further processing for this item
-            // } [NOTE: Not Required]
+            if (prev_it == prev_beamstep->end()) {
+                it = beamstep->erase(it);
+                continue;
+            }
             offset_alpha = prev_it->second.beta;
         }
 
@@ -69,7 +65,7 @@ double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
 
     double threshold = Utility::quickselect(scores, 0, scores.size() - 1, scores.size() - beam_size);
     for (auto &p : scores) {
-        if (p.first < threshold) (*beamstep).erase(p.second);
+        if (p.first <= threshold) (*beamstep).erase(p.second);
     }
 
     return threshold;
@@ -102,11 +98,13 @@ bool TurboPartition::check_state(StateType type, int i, int j) const {
         const auto it = prev_beamstep->find(i);
         bool keep_state = false;
         if (it != prev_beamstep->end()) {
-            if (!(turbofold->use_lazy_outside)) {
-                double global_threshold = pfb.total_alpha - DEVIATION_THRESHOLD;
-                keep_state = (it->second.alpha + it->second.beta > global_threshold);
+            if (turbofold->use_lazy_outside) {
+                return true;
+                // double score = xlog_div(it->second.alpha, pfb.total_alpha);
+                // keep_state = it->second.beta > LOG_OF_ZERO;
             } else {
-                keep_state = it->second.beta > LOG_OF_ZERO;
+                double score = xlog_div(xlog_mul(it->second.alpha, it->second.beta), pfb.total_alpha);
+                keep_state = score > -10 * DEVIATION_THRESHOLD;
             }
         }
 

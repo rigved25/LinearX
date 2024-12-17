@@ -55,6 +55,7 @@ class LinearTurboFold {
 
         // reserve space for sequence pairs and sequence identities
         alns.reserve(num_pairs);
+        pfs.reserve(multi_seq->size());
         seq_identities.reserve(num_pairs);
 
         // reserve space extrinsic info cache

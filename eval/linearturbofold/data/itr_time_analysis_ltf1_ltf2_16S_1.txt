@@ -1,0 +1,17 @@
+MODE: LTF (Vienna, Normal Outside)
+[ALIGNMENT] Total Time taken for iteration 1: 95054ms
+[ALIGNMENT] Total Time taken for iteration 2: 94841ms
+[ALIGNMENT] Total Time taken for iteration 3: 93712ms
+[FOLDING] Total Time taken for iteration 0: 45817ms
+[FOLDING] Total Time taken for iteration 1: 58192ms
+[FOLDING] Total Time taken for iteration 2: 22410ms
+[FOLDING] Total Time taken for iteration 3: 19562ms
+
+MODE: LTF (Vienna, Lazy Outside, Restrict Search)
+[ALIGNMENT] Total Time taken for iteration 1: 81200ms
+[ALIGNMENT] Total Time taken for iteration 2: 13715ms
+[ALIGNMENT] Total Time taken for iteration 3: 7728ms
+[FOLDING] Total Time taken for iteration 0: 23068ms
+[FOLDING] Total Time taken for iteration 1: 24774ms
+[FOLDING] Total Time taken for iteration 2: 8152ms
+[FOLDING] Total Time taken for iteration 3: 4415ms

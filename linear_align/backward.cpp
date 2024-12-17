@@ -50,7 +50,7 @@ void LinearAlign::update_state_beta(HState &state, const double new_score) {
 void LinearAlign::run_normal_outside(bool verbose_output) {
     auto start_time = std::chrono::high_resolution_clock::now();
     if (verbose_output) {
-        std::cout << "[LinearAlign] Running Outside Algorithm:" << std::endl;
+        std::cerr << "[LinearAlign] Running Outside Algorithm:" << std::endl;
     }
     bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
     int states_visited = 0;
@@ -67,41 +67,52 @@ void LinearAlign::run_normal_outside(bool verbose_output) {
                 states_visited += 1;
 
                 // INS1
+
                 if (i < seq1->size() && j <= seq2->size()) {
-                    double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                    double score = LOG_MUL(prob, bestINS1[s + 1][{i + 1, j}].beta);
-                    update_state_beta(state, score);
+                    auto it = bestINS1[s + 1].find({i + 1, j});
+                    if ((it != bestINS1[s + 1].end())) {
+                        double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                        double score = LOG_MUL(prob, it->second.beta);
+                        update_state_beta(state, score);
+                    }
                 }
 
                 // INS2
+
                 if (i <= seq1->size() && j < seq2->size()) {
-                    double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                    double score = LOG_MUL(prob, bestINS2[s + 1][{i, j + 1}].beta);
-                    update_state_beta(state, score);
+                    auto it = bestINS2[s + 1].find({i, j + 1});
+                    if ((it != bestINS2[s + 1].end())) {
+                        double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                        double score = LOG_MUL(prob, it->second.beta);
+                        update_state_beta(state, score);
+                    }
                 }
 
                 // ALN
                 const bool end_check = (i == seq1->size() && j == seq2->size());
                 if ((i < seq1->size() && j < seq2->size()) || end_check) {
-                    double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                    double score = LOG_MUL(prob, bestALN[s + 2][{i + 1, j + 1}].beta);
-                    if (use_match_score) {
-                        double match_score = get_match_score(i, j);
-                        score = LOG_MUL(score, match_score);
+                    auto it = bestALN[s + 2].find({i + 1, j + 1});
+                    if (it != bestALN[s + 2].end()) {
+                        double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                        double score = LOG_MUL(prob, it->second.beta);
+                        if (use_match_score) {
+                            double match_score = get_match_score(i, j);
+                            score = LOG_MUL(score, match_score);
+                        }
+                        update_state_beta(state, score);
                     }
-                    update_state_beta(state, score);
                 }
             }
         }
     }
-    
+
     // update/print time stats
     auto end_time = std::chrono::high_resolution_clock::now();
     outside_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
-        printf("  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
-               100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
-        printf("  - Visited Nodes: %d\n\n", states_visited);
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", outside_execution_time,
+                100.0 * outside_execution_time / std::max(inside_execution_time, 1.0));
+        fprintf(stderr, "  - Visited Nodes: %d\n\n", states_visited);
     }
 }
 

@@ -67,10 +67,10 @@ class Partition {
     std::vector<int> next_pair[5];
     std::vector<int> prev_pair[5];
 
-    const Seq *sequence;          // pointer to actual Seq object
-    const std::vector<int> *seq;  // pointer to encoded sequence in Seq object
+    const Seq *sequence = nullptr;          // pointer to actual Seq object
+    const std::vector<int> *seq = nullptr;  // pointer to encoded sequence in Seq object
 
-    EnergyModel *energy_model;
+    EnergyModel *energy_model = nullptr;
     InsideMode mode;
 
     bool allow_sharp_turn;
@@ -121,10 +121,24 @@ class Partition {
         energy_model.init_tetra_hex_tri(tmp, seq->size(), if_tetraloops, if_hexaloops, if_triloops);
     }
 
+    ~Partition() {
+        // std::cerr << "[INFO] Free Folding Memory" << std::endl;
+        delete[] bestH;
+        delete[] bestP;
+        delete[] bestM;
+        delete[] bestM2;
+        delete[] bestMulti;
+        delete[] bpp;
+        // delete viterbi;
+        // delete energy_model;
+        //     delete seq;
+        //     delete sequence;
+    }
+
     void reset_beams(bool freeMemory = true);
 
     virtual void compute_inside(int beam_size = 100);
-    void compute_outside(bool use_lazy_outside = true);
+    void compute_outside(double deviation_threshold = DEVIATION_THRESHOLD);
     void compute_bpp_matrix();
     double get_bpp(int i, int j) const;
     double get_ensemble_energy();

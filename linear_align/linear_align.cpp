@@ -57,8 +57,6 @@ double LinearAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, P
     return threshold;
 }
 
-bool LinearAlign::check_state(const int i, const int j, const HStateType h) { return true; }
-
 void LinearAlign::update_state_alpha(HState &state, const double new_score, const HStateType h, const HStateType pre,
                                      const bool best_only = false) {
     if (best_only) {

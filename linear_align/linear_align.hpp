@@ -37,7 +37,7 @@ class LinearAlign {
     inline const static std::vector<HStateType> hstate_types = {INS1, INS2, ALN};
 
    private:
-    ProbAccm *pm1, *pm2;
+    ProbAccm *pm1 = nullptr, *pm2 = nullptr;
 
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestALN = nullptr;
     std::unordered_map<std::pair<int, int>, HState, PairHash> *bestINS1 = nullptr;
@@ -61,16 +61,16 @@ class LinearAlign {
     virtual double beam_prune(std::unordered_map<std::pair<int, int>, HState, PairHash> &beamstep, HStateType h,
                               int beam_size);
 
-    virtual inline bool check_state(const int i, const int j, const HStateType h);
+    virtual inline bool check_state(const int i, const int j, const HStateType h) { return true; }
 
    public:
     friend struct AlignBeam;
 
     Phmm *phmm = nullptr;
-    Seq *sequence1;  // pointer to actual Seq object
-    Seq *sequence2;
-    std::vector<int> *seq1;  // pointer to encoded sequence in Seq object
-    std::vector<int> *seq2;
+    Seq *sequence1 = nullptr;  // pointer to actual Seq object
+    Seq *sequence2 = nullptr;
+    std::vector<int> *seq1 = nullptr;  // pointer to encoded sequence in Seq object
+    std::vector<int> *seq2 = nullptr;
     int seq_len_sum;
 
     std::unordered_map<int, double> *coinc_prob = nullptr;
@@ -110,12 +110,19 @@ class LinearAlign {
     }
 
     ~LinearAlign() {
+        // std::cerr << "[INFO] Free Alignment Memory" << std::endl;
         delete[] bestALN;
         delete[] bestINS1;
         delete[] bestINS2;
         delete[] coinc_prob;
         delete[] prob_rev_idx;
-        delete phmm;
+        // delete pm1;
+        // delete pm2;
+        // delete phmm;
+        // delete seq1;
+        // delete seq2;
+        // delete sequence1;
+        // delete sequence2;
     }
 
     void prob_set1() {
