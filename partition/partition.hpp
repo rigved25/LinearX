@@ -56,7 +56,7 @@ class Partition {
     std::unordered_map<int, State> *bestMulti = nullptr;
     VectorWithNegOneIndex<State> bestC;
 
-    virtual inline bool check_state(StateType type, int i, int j) const;
+    virtual bool check_state(StateType type, int i, int j) const;
 
    public:
     friend struct PartitionFunctionBeam;
@@ -147,7 +147,7 @@ class Partition {
 
     // methods declared in file forward.cpp
     double beam_prune(std::unordered_map<int, State> &beamstep, int beam_size);
-    void update_score(State &state, const int new_score, const double prev_score);
+    void update_score(State &state, const int new_score, const double prev_score = 0);
     void beamstep_H(const int j, const std::vector<int> *next_pair);
     void beamstep_Multi(const int j, const std::vector<int> *next_pair);
     void beamstep_P(const int j, const std::vector<int> *next_pair);

@@ -38,7 +38,7 @@ def plot_data(data):
     x_labels = ['f0', 'a1', 'f1', 'a2', 'f2', 'a3', 'f3']  # Alternating x-axis labels
     colors = ['blue', 'green']  # Colors for the two curves
 
-    fig, ax = plt.subplots(figsize=(10, 6))  # Adjust the figure size
+    fig, ax = plt.subplots(figsize=(8, 6))  # Adjust the figure size
     all_points = []  # To store points for arrows
 
     for idx, (mode, values) in enumerate(data.items()):
@@ -119,6 +119,7 @@ def main():
 
     # Parse the input file and extract data
     data = parse_file(args.input_file)
+    print(data)
     
     # Plot the extracted data
     plot_data(data)

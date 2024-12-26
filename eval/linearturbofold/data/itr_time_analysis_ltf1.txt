@@ -1,0 +1,46 @@
+MODE: Original LTF
+[FOLDING] Total Time taken for iteration 0: 12983ms
+[FOLDING] Total inside time for iteration 0: 7507ms
+[FOLDING] Total outside time for iteration 0: 5330ms
+[ALIGNMENT] Total Time taken for iteration 1: 3273ms
+[ALIGNMENT] Total inside time for iteration 1: 1389ms
+[ALIGNMENT] Total outside time for iteration 1: 604ms
+[FOLDING] Total Time taken for iteration 1: 5001ms
+[FOLDING] Total inside time for iteration 1: 3766ms
+[FOLDING] Total outside time for iteration 1: 1082ms
+[ALIGNMENT] Total Time taken for iteration 2: 3302ms
+[ALIGNMENT] Total inside time for iteration 2: 1397ms
+[ALIGNMENT] Total outside time for iteration 2: 611ms
+[FOLDING] Total Time taken for iteration 2: 2554ms
+[FOLDING] Total inside time for iteration 2: 2089ms
+[FOLDING] Total outside time for iteration 2: 360ms
+[ALIGNMENT] Total Time taken for iteration 3: 3309ms
+[ALIGNMENT] Total inside time for iteration 3: 1403ms
+[ALIGNMENT] Total outside time for iteration 3: 610ms
+[FOLDING] Total Time taken for iteration 3: 2023ms
+[FOLDING] Total inside time for iteration 3: 1640ms
+[FOLDING] Total outside time for iteration 3: 293ms
+
+
+MODE: LTF (Vienna, Normal Outside, Restrict Search)
+[ALIGNMENT] Total Time taken for iteration 1: 4589ms
+[ALIGNMENT] Total inside time for iteration 1: 1621ms
+[ALIGNMENT] Total outside time for iteration 1: 1021ms
+[ALIGNMENT] Total Time taken for iteration 2: 688ms
+[ALIGNMENT] Total inside time for iteration 2: 132ms
+[ALIGNMENT] Total outside time for iteration 2: 101ms
+[ALIGNMENT] Total Time taken for iteration 3: 360ms
+[ALIGNMENT] Total inside time for iteration 3: 115ms
+[ALIGNMENT] Total outside time for iteration 3: 103ms
+[FOLDING] Total Time taken for iteration 0: 17797ms
+[FOLDING] Total inside time for iteration 0: 8907ms
+[FOLDING] Total outside time for iteration 0: 8847ms
+[FOLDING] Total Time taken for iteration 1: 522ms
+[FOLDING] Total inside time for iteration 1: 215ms
+[FOLDING] Total outside time for iteration 1: 130ms
+[FOLDING] Total Time taken for iteration 2: 110ms
+[FOLDING] Total inside time for iteration 2: 62ms
+[FOLDING] Total outside time for iteration 2: 40ms
+[FOLDING] Total Time taken for iteration 3: 84ms
+[FOLDING] Total inside time for iteration 3: 43ms
+[FOLDING] Total outside time for iteration 3: 31ms

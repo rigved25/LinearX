@@ -48,7 +48,7 @@ void Partition::mfe_backtrack(int i, int j, StateType type, std::string &structu
 }
 
 void Partition::compute_outside(double deviation_threshold) {
-    double global_threshold = bestC[seq->size() - 1].alpha - deviation_threshold;
+    double global_threshold = bestC[seq->size() - 1].alpha + deviation_threshold;
 
     unsigned long total_states = 0, states_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
@@ -58,7 +58,7 @@ void Partition::compute_outside(double deviation_threshold) {
             const int i = item.first;
             State &state = item.second;
             // if (state.beta > -deviation_threshold) {    // Major Bug Here (fixed!)
-            if (state.alpha + state.beta > global_threshold) {
+            if (state.beta > LOG_OF_ZERO && state.alpha + state.beta > global_threshold) {
                 double edge_threshold = global_threshold - state.beta;
                 std::pair<int, int> local_edges_info = backward_update(i, j, state, type, edge_threshold);
                 edges_saved += local_edges_info.first;
@@ -97,6 +97,7 @@ void Partition::compute_outside(double deviation_threshold) {
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
         fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
                 100.0 * states_visited / total_states, states_visited, total_states);
+        fprintf(stderr, "  - Effective Beam Size: %.2f%%", float(states_visited) / seq->size());
     }
 }
 

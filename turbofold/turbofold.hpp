@@ -28,6 +28,9 @@ class LinearTurboFold {
     const bool use_prev_outside_score;
     const bool shrink_beam;
     const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
+
+    const float alignment_pruning_threshold;
+    const float folding_pruning_threshold;
     const float threshknot_threshold;
     const float min_helix_size;
 
@@ -39,8 +42,9 @@ class LinearTurboFold {
 
     LinearTurboFold(MultiSeq *multi_seq, const EnergyParamsType energy_params, const int num_itr,
                     const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
-                    const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
-                    const VerboseState verbose_state = VerboseState::DEBUG)
+                    const float lambda = 0.3, const float alignment_pruning_threshold = -DEVIATION_THRESHOLD,
+                    const float folding_pruning_threshold = -DEVIATION_THRESHOLD, const float threshknot_threshold = 0.3,
+                    const float min_helix_size = 3, const VerboseState verbose_state = VerboseState::DEBUG)
         : multi_seq(multi_seq),
           energy_model(energy_params),
           num_itr(num_itr),
@@ -48,6 +52,8 @@ class LinearTurboFold {
           use_prev_outside_score(use_prev_outside_score),
           shrink_beam(shrink_beam),
           lambda(lambda),
+          alignment_pruning_threshold(alignment_pruning_threshold),
+          folding_pruning_threshold(folding_pruning_threshold),
           threshknot_threshold(threshknot_threshold),
           min_helix_size(min_helix_size),
           verbose_state(verbose_state) {

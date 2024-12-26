@@ -50,7 +50,7 @@ class EnergyModel {
     void init_tetra_hex_tri(std::string &seq, int seq_length, std::vector<int> &if_tetraloops,
                             std::vector<int> &if_hexaloops, std::vector<int> &if_triloops);
 
-    int score_hairpin(int i, int j, int nuci, int nuci1, int nucj_1, int nucj, int tetra_hex_tri_index = -1) {
+    inline int score_hairpin(int i, int j, int nuci, int nuci1, int nucj_1, int nucj, int tetra_hex_tri_index = -1) {
         int size = j - i - 1;
         int type = NUC_TO_PAIR(nuci, nucj);
 
@@ -77,7 +77,7 @@ class EnergyModel {
         return energy;
     };
 
-    int score_single_loop(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1, int nucp,
+    inline int score_single_loop(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1, int nucp,
                           int nucq, int nucq1) {
         int type = NUC_TO_PAIR(nuci, nucj);
         int type_2 = NUC_TO_PAIR(nucq, nucp);
@@ -144,7 +144,7 @@ class EnergyModel {
     }
 
     // multi_loop
-    int E_MLstem(int type, int si1, int sj1) {
+    inline int E_MLstem(int type, int si1, int sj1) {
         int energy = 0;
 
         if (*epm.mismatchM37) {
@@ -168,20 +168,20 @@ class EnergyModel {
         return energy;
     }
 
-    int score_multi(int i, int j, int nuci, int nuci1, int nucj_1, int nucj, int len) {
+    inline int score_multi(int i, int j, int nuci, int nuci1, int nucj_1, int nucj, int len) {
         int tt = NUC_TO_PAIR(nucj, nuci);
         return E_MLstem(tt, nucj_1, nuci1) + epm.ML_closing37;
     }
 
-    int score_M1(int i, int j, int k, int nuci_1, int nuci, int nuck, int nuck1, int len) {
+    inline int score_M1(int i, int j, int k, int nuci_1, int nuci, int nuck, int nuck1, int len) {
         int tt = NUC_TO_PAIR(nuci, nuck);
         return E_MLstem(tt, nuci_1, nuck1);
     }
 
-    int score_multi_unpaired(int i, int j) { return epm.ML_BASE37 * (j - i); }
+    inline int score_multi_unpaired(int i, int j) { return epm.ML_BASE37 * (j - i); }
 
     // exterior_loop
-    int score_external_paired(int i, int j, int nuci_1, int nuci, int nucj, int nucj1, int len) {
+    inline int score_external_paired(int i, int j, int nuci_1, int nuci, int nucj, int nucj1, int len) {
         int type = NUC_TO_PAIR(nuci, nucj);
         int energy = 0;
 
@@ -202,7 +202,7 @@ class EnergyModel {
         return energy;
     }
 
-    int score_external_unpaired(int i, int j) { return 0; }
+    inline int score_external_unpaired(int i, int j) { return 0; }
 };
 
 #endif  // ENERGY_MODEL_HPP

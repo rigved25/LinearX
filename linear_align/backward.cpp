@@ -67,7 +67,6 @@ void LinearAlign::run_normal_outside(bool verbose_output) {
                 states_visited += 1;
 
                 // INS1
-
                 if (i < seq1->size() && j <= seq2->size()) {
                     auto it = bestINS1[s + 1].find({i + 1, j});
                     if ((it != bestINS1[s + 1].end())) {
@@ -78,7 +77,6 @@ void LinearAlign::run_normal_outside(bool verbose_output) {
                 }
 
                 // INS2
-
                 if (i <= seq1->size() && j < seq2->size()) {
                     auto it = bestINS2[s + 1].find({i, j + 1});
                     if ((it != bestINS2[s + 1].end())) {
@@ -129,15 +127,14 @@ void LinearAlign::edges_trace_update_helper(std::vector<AlnEdge> *incoming_edges
     }
 }
 
-void LinearAlign::compute_outside(bool use_lazy_outside, bool verbose_output) {
+void LinearAlign::compute_outside(bool use_lazy_outside, double deviation_threshold, bool verbose_output) {
     if (!use_lazy_outside) {
         run_normal_outside(verbose_output);
         return;
     }
 
-    double deviation_threshold = use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF;
     double global_threshold =
-        bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha - deviation_threshold;
+        bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha + deviation_threshold;
 
     unsigned long total_states = 0, states_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;

@@ -75,7 +75,7 @@ bool TurboAlign::check_state(const int i, const int j, const HStateType h) {
         bool keep_state = false;
         if (prev_it != prev_beamstep->end()) {
             double score = xlog_div(xlog_mul(prev_it->second.alpha, prev_it->second.beta), ab.total_alpha);
-            keep_state = score > -DEVIATION_THRESHOLD;
+            keep_state = score > turbofold->alignment_pruning_threshold;
         }
 
         return keep_state;

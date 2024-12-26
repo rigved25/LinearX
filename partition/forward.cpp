@@ -24,7 +24,7 @@ double Partition::beam_prune(std::unordered_map<int, State> &beamstep, int beam_
 
 bool Partition::check_state(StateType type, int i, int j) const { return true; }
 
-void Partition::update_score(State &state, const int new_score, const double prev_score = 0) {
+void Partition::update_score(State &state, const int new_score, const double prev_score) {
     if (mode == MFE) {
         state.alpha = std::max(state.alpha, prev_score + new_score);
     } else {

@@ -93,6 +93,8 @@ void LinearTurboFold::run() {
                   << "BEAM SIZE: " << beam_size << std::endl;
         if (itr > 0) {
             auto align_start_time = std::chrono::high_resolution_clock::now();
+            int align_total_inside_time = 0;
+            int align_total_outside_time = 0;
             for (TurboAlign &aln : alns) {
                 const int k1 = aln.sequence1->k_id;
                 const int k2 = aln.sequence2->k_id;
@@ -121,8 +123,23 @@ void LinearTurboFold::run() {
                 aln.reset_beams(true);
                 aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+
+                auto align_inside_start_time = std::chrono::high_resolution_clock::now();
                 aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
-                aln.compute_outside(use_lazy_outside, verbose_state == VerboseState::DEBUG);
+                auto align_inside_end_time = std::chrono::high_resolution_clock::now();
+
+                auto align_outside_start_time = std::chrono::high_resolution_clock::now();
+                aln.compute_outside(use_lazy_outside, alignment_pruning_threshold,
+                                    verbose_state == VerboseState::DEBUG);
+                auto align_outside_end_time = std::chrono::high_resolution_clock::now();
+
+                align_total_inside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
+                                               align_inside_end_time - align_inside_start_time)
+                                               .count();
+                align_total_outside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                align_outside_end_time - align_outside_start_time)
+                                                .count();
+
                 aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
                 if (verbose_state == VerboseState::DEBUG) {
                     aln.print_alpha_beta();
@@ -142,8 +159,13 @@ void LinearTurboFold::run() {
             auto align_end_time = std::chrono::high_resolution_clock::now();
 
             if (verbose_state == VerboseState::DEBUG) {
-                std::cerr << "[ALIGNMENT] Total Time taken for iteration " << itr << ": "
-                          << std::chrono::duration_cast<std::chrono::milliseconds>(align_end_time - align_start_time).count()
+                std::cerr
+                    << "[ALIGNMENT] Total Time taken for iteration " << itr << ": "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(align_end_time - align_start_time).count()
+                    << "ms" << std::endl;
+                std::cerr << "[ALIGNMENT] Total inside time for iteration " << itr << ": " << align_total_inside_time
+                          << "ms" << std::endl;
+                std::cerr << "[ALIGNMENT] Total outside time for iteration " << itr << ": " << align_total_outside_time
                           << "ms\n"
                           << std::endl;
             }
@@ -151,10 +173,25 @@ void LinearTurboFold::run() {
 
         // fold step
         auto fold_start_time = std::chrono::high_resolution_clock::now();
+        int fold_total_inside_time = 0;
+        int fold_total_outside_time = 0;
         for (TurboPartition &pf : pfs) {
             pf.reset_beams(use_prev_outside_score ? false : true);
+
+            auto fold_inside_start_time = std::chrono::high_resolution_clock::now();
             pf.compute_inside(beam_size);
-            pf.compute_outside(use_lazy_outside ? DEVIATION_THRESHOLD : POS_INF);
+            auto fold_inside_end_time = std::chrono::high_resolution_clock::now();
+
+            auto fold_outside_start_time = std::chrono::high_resolution_clock::now();
+            pf.compute_outside(use_lazy_outside ? folding_pruning_threshold : NEG_INF);
+            auto fold_outside_end_time = std::chrono::high_resolution_clock::now();
+
+            fold_total_inside_time +=
+                std::chrono::duration_cast<std::chrono::milliseconds>(fold_inside_end_time - fold_inside_start_time)
+                    .count();
+            fold_total_outside_time +=
+                std::chrono::duration_cast<std::chrono::milliseconds>(fold_outside_end_time - fold_outside_start_time)
+                    .count();
 
             // // save partition function beams for the next iteration
             if (use_prev_outside_score) {
@@ -185,6 +222,10 @@ void LinearTurboFold::run() {
         if (VerboseState::DEBUG) {
             std::cerr << "\n[FOLDING] Total Time taken for iteration " << itr << ": "
                       << std::chrono::duration_cast<std::chrono::milliseconds>(fold_end_time - fold_start_time).count()
+                      << "ms" << std::endl;
+            std::cerr << "[FOLDING] Total inside time for iteration " << itr << ": " << fold_total_inside_time << "ms"
+                      << std::endl;
+            std::cerr << "[FOLDING] Total outside time for iteration " << itr << ": " << fold_total_outside_time
                       << "ms\n"
                       << std::endl;
         }

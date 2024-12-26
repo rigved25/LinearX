@@ -1,0 +1,5 @@
+Input File: ./../../eval/rnastralign/data/v0//23S-grp1.fasta
+Output File (stdout): output-final-tmp/23S_ltf2_ltf1conf_vn_lzy_pp/stdout/23S-grp1.fasta
+Output File (stderr): output-final-tmp/23S_ltf2_ltf1conf_vn_lzy_pp/stderr/23S-grp1.fasta
+Elapsed Time (s): 17.65
+Exit Status: 0

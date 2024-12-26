@@ -62,13 +62,20 @@ int main(int argc, char* argv[]) {
     std::cerr << "num_itr: " << num_itr << "\n";
     std::cerr << "use_lazy_outside: " << use_lazy_outside << "\n";
     std::cerr << "use_prev_outside_score: " << use_prev_outside_score << "\n";
-    std::cerr << "shrink_beam: " << shrink_beam << "\n\n";
+    std::cerr << "shrink_beam: " << shrink_beam << "\n";
 
     try {
         // Read MSA file and generate MultiSeq
         MultiSeq mseq = read_msa_file(msaFilePath, &VIENNA_NUC_ENCODING_SCHEME);
 
-        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, use_prev_outside_score, shrink_beam);
+        double alignment_pruning_threshold = -DEVIATION_THRESHOLD * (use_lazy_outside && use_prev_outside_score ? 1 : 1);
+        double folding_pruning_threshold = -DEVIATION_THRESHOLD * (use_lazy_outside && use_prev_outside_score ? 1 : 1);
+
+        std::cerr << "Alignment Pruning Threshold: " << alignment_pruning_threshold << "\n";
+        std::cerr << "Folding Pruning Threshold: " << folding_pruning_threshold << "\n\n";
+
+        LinearTurboFold ltf(&mseq, energy_params, num_itr, use_lazy_outside, use_prev_outside_score, shrink_beam, 0.3,
+                            alignment_pruning_threshold, folding_pruning_threshold);
         ltf.run();
 
     } catch (const std::exception& e) {

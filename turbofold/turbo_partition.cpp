@@ -28,11 +28,11 @@ double TurboPartition::beam_prune(StateType type, int j, int beam_size) {
             prev_beamstep = &pfb.bestM[j];
             break;
         default:
-            return xlog(0.0);
+            return LOG_OF_ZERO;
     }
 
     if (beam_size == 0 || beamstep->size() <= beam_size) {
-        return xlog(0.0);
+        return LOG_OF_ZERO;
     }
 
     std::vector<std::pair<double, int>> scores;
@@ -98,14 +98,8 @@ bool TurboPartition::check_state(StateType type, int i, int j) const {
         const auto it = prev_beamstep->find(i);
         bool keep_state = false;
         if (it != prev_beamstep->end()) {
-            if (turbofold->use_lazy_outside) {
-                return true;
-                // double score = xlog_div(it->second.alpha, pfb.total_alpha);
-                // keep_state = it->second.beta > LOG_OF_ZERO;
-            } else {
-                double score = xlog_div(xlog_mul(it->second.alpha, it->second.beta), pfb.total_alpha);
-                keep_state = score > -10 * DEVIATION_THRESHOLD;
-            }
+            double score = xlog_div(xlog_mul(it->second.alpha, it->second.beta), pfb.total_alpha);
+            keep_state = score > turbofold->folding_pruning_threshold;
         }
 
         return keep_state;
@@ -132,16 +126,18 @@ void TurboPartition::compute_inside(int beam_size) {
         beam_prune(StateType::Multi, j, beam_size);
         beamstep_Multi(j, next_pair);
         // beam of P
-        auto it = bestP[j].begin();
-        while (it != bestP[j].end()) {
-            int i = it->first;
-            State &state = it->second;
-            const double ext_info = turbofold->get_extrinsic_info(*(this->sequence), i, j);
-            if (ext_info <= LOG_OF_ZERO) {
-                it = bestP[j].erase(it);  // erase the element and update the iterator
-            } else {
-                state.alpha = xlog_mul(state.alpha, ext_info * 0.3);  // adjust the weight as needed
-                ++it;                                                 // only increment if not erased
+        if (turbofold->itr > 0) {
+            auto it = bestP[j].begin();
+            while (it != bestP[j].end()) {
+                int i = it->first;
+                State &state = it->second;
+                const double ext_info = turbofold->get_extrinsic_info(*(this->sequence), i, j);
+                if (ext_info <= LOG_OF_ZERO) {
+                    it = bestP[j].erase(it);  // erase the element and update the iterator
+                } else {
+                    state.alpha = xlog_mul(state.alpha, ext_info * 0.3);  // adjust the weight as needed
+                    ++it;                                                 // only increment if not erased
+                }
             }
         }
         beam_prune(StateType::P, j, beam_size);
