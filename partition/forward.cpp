@@ -1,4 +1,5 @@
 #include "./partition.hpp"
+#include <chrono>
 
 double Partition::beam_prune(std::unordered_map<int, State> &beamstep, int beam_size) {
     if (beam_size == 0 || beamstep.size() <= beam_size) {

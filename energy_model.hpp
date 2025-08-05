@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <cstring>
 
 #include "./energy_params/EnergyParams.hpp"
 

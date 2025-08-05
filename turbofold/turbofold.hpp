@@ -7,6 +7,9 @@
 #include "./../partition/partition.hpp"
 #include "./utility.hpp"
 
+#include "./utils/GuideTree.h"
+#include "./utils/ProbabilisticModel.h"
+
 class TurboAlign;
 class TurboPartition;
 
@@ -15,6 +18,7 @@ class LinearTurboFold {
 
    private:
     MultiSeq *multi_seq;
+    MultiSeq *multi_alignment;
     EnergyModel energy_model;
 
     std::vector<float> seq_identities;  // contains pairwise sequence identities for all k^2 sequence pairs
@@ -39,6 +43,7 @@ class LinearTurboFold {
     int itr;                                                                 // current iteration
     int beam_size = 100;                                                     // current beam size for beam pruning
     std::vector<std::vector<std::unordered_map<int, double>>> extinf_cache;  // cache for extrinsic information
+    vector<vector<unordered_map<int, double>*>> consistency_transform;
 
     LinearTurboFold(MultiSeq *multi_seq, const EnergyParamsType energy_params, const int num_itr,
                     const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
@@ -63,6 +68,7 @@ class LinearTurboFold {
         alns.reserve(num_pairs);
         pfs.reserve(multi_seq->size());
         seq_identities.reserve(num_pairs);
+        consistency_transform.resize(multi_seq->size());
 
         // reserve space extrinsic info cache
         extinf_cache.resize(multi_seq->size());
@@ -73,6 +79,8 @@ class LinearTurboFold {
                              use_prev_outside_score);  // better than pfs.push_back(),
                                                        // creates Partition object directly
                                                        // inside the container
+            
+            consistency_transform[i].resize(multi_seq->size());
 
             // enumerate all possible k^2 sequence pairs and create LinearAlign objects
             for (int j = i + 1; j < multi_seq->size(); j++) {
@@ -88,6 +96,8 @@ class LinearTurboFold {
     int get_seq_pair_index(const int k1, const int k2);
     double get_extrinsic_info(const Seq &x, int i, int j);
     void reset_extinf_cache();
+    int multiple_sequence_alignment();
+
     void run();
 };
 

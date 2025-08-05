@@ -1,8 +1,12 @@
-# Compiler
-CXX = ccache g++
+# Compiler 
+# CXX = ccache g++
+CXX = g++
+
+# Sanitizer flags
+# SANITIZE_FLAGS = -fsanitize=address -g -O1
 
 # Compiler flags
-CXXFLAGS = -Wall -std=c++17 -O3 -MMD -MP -march=native
+CXXFLAGS = -Wall -std=c++17 -O3 -MMD -MP -march=native $(SANITIZE_FLAGS)
 
 # Target executable
 TARGET = main
@@ -15,6 +19,7 @@ SOURCES = ./../../sequence/seq.cpp ./../../sequence/multi_seq.cpp ./../../energy
 		  ./../../partition/partition.cpp ./../../partition/forward.cpp ./../../partition/backward.cpp \
 		  ./../../linear_align/linear_align.cpp ./../../linear_align/backward.cpp ./../../linear_align/phmm.cpp \
 		  ./../../turbofold/turbofold.cpp ./../../turbofold/turbo_align.cpp ./../../turbofold/turbo_partition.cpp \
+		  ./../../turbofold/utils/ProbabilisticModel.cpp ./../../turbofold/utils/GuideTree.cpp \
 		  ./../../structure/structure.cpp ./main.cpp
 
 # Create object file paths in the temporary directory, preserving directory structure

@@ -133,7 +133,7 @@ class LinearAlign {
     void prob_set2(float similarity) {
         delete phmm;
         std::string phmm_pars_fp =
-            "/Users/malikap/ltf-project/LinearAlifold/linearx/linear_align/parameters/fam_hmm_pars.dat";
+            "./../../linear_align/parameters/fam_hmm_pars.dat";
         phmm = new Phmm(phmm_pars_fp.c_str());
         phmm->set_parameters_by_sim(similarity);
     }
@@ -149,6 +149,7 @@ class LinearAlign {
     double get_match_score(const int i, const int j);
     void set_prob_accm(ProbAccm &prob_accm1, ProbAccm &prob_accm2);
     double get_bpp(const int i, const int j) const;
+    int run_multiple_alignment();
 
     void dump_coinc_probs(const std::string &filepath, const float threshold = 0.001f) const;
 

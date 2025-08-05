@@ -1,0 +1,694 @@
+Arguments:
+msa_file_path: ./input/input.fasta
+energy_params: 1
+num_itr: 3
+use_lazy_outside: 1
+use_prev_outside_score: 0
+shrink_beam: 0
+Alignment Pruning Threshold: -9.91152
+Folding Pruning Threshold: -9.91152
+
+-------------------------CURRENT ITERATION: 0-------------------------
+BEAM SIZE: 100
+[LinearPartition] (Seq k_id: 0) Running Inside Algorithm:
+  - Execution Time: 182 ms
+  - Free Energy of the Ensemble: -130.395 kcal/mol
+
+[LinearPartition] (Seq k_id: 0) Running Outside Algorithm:
+  - Execution Time: 8.00 ms (4.40% of inside time)
+  - Visited Edges: 3289 (saved) + 139442 (pruned)
+  - Visited Nodes (2.76%): 2025 (visited) / 73406 (total)
+  - Effective Beam Size: 7.23%
+Alpha(C, n - 1): 211.571
+Beta(C, -1): 211.571
+
+[LinearPartition] (Seq k_id: 1) Running Inside Algorithm:
+  - Execution Time: 92 ms
+  - Free Energy of the Ensemble: -57.7309 kcal/mol
+
+[LinearPartition] (Seq k_id: 1) Running Outside Algorithm:
+  - Execution Time: 10.00 ms (10.87% of inside time)
+  - Visited Edges: 6110 (saved) + 205698 (pruned)
+  - Visited Nodes (8.17%): 3752 (visited) / 45934 (total)
+  - Effective Beam Size: 17.87%
+Alpha(C, n - 1): 93.6702
+Beta(C, -1): 93.6703
+
+[LinearPartition] (Seq k_id: 2) Running Inside Algorithm:
+  - Execution Time: 169 ms
+  - Free Energy of the Ensemble: -135.079 kcal/mol
+
+[LinearPartition] (Seq k_id: 2) Running Outside Algorithm:
+  - Execution Time: 10.00 ms (5.92% of inside time)
+  - Visited Edges: 3377 (saved) + 159761 (pruned)
+  - Visited Nodes (2.91%): 2096 (visited) / 71926 (total)
+  - Effective Beam Size: 7.51%
+Alpha(C, n - 1): 219.169
+Beta(C, -1): 219.17
+
+[LinearPartition] (Seq k_id: 3) Running Inside Algorithm:
+  - Execution Time: 168 ms
+  - Free Energy of the Ensemble: -95.1681 kcal/mol
+
+[LinearPartition] (Seq k_id: 3) Running Outside Algorithm:
+  - Execution Time: 5.00 ms (2.98% of inside time)
+  - Visited Edges: 2108 (saved) + 57913 (pruned)
+  - Visited Nodes (1.71%): 1211 (visited) / 70991 (total)
+  - Effective Beam Size: 4.28%
+Alpha(C, n - 1): 154.413
+Beta(C, -1): 154.413
+
+[LinearPartition] (Seq k_id: 4) Running Inside Algorithm:
+  - Execution Time: 185 ms
+  - Free Energy of the Ensemble: -124.026 kcal/mol
+
+[LinearPartition] (Seq k_id: 4) Running Outside Algorithm:
+  - Execution Time: 5.00 ms (2.70% of inside time)
+  - Visited Edges: 1436 (saved) + 69161 (pruned)
+  - Visited Nodes (1.17%): 828 (visited) / 70863 (total)
+  - Effective Beam Size: 3.03%
+Alpha(C, n - 1): 201.237
+Beta(C, -1): 201.237
+
+
+[FOLDING] Total Time taken for iteration 0: 841ms
+[FOLDING] Total inside time for iteration 0: 796ms
+[FOLDING] Total outside time for iteration 0: 38ms
+
+-------------------------CURRENT ITERATION: 1-------------------------
+BEAM SIZE: 100
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 32 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 12.00 ms (32.43% of inside time)
+  - Visited Edges: 61026 (saved) + 29845 (pruned)
+  - Visited Nodes (25.94%): 30381 (visited) / 117102 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 6188 (saved) + 7608 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -661.075
+Beta(ALN, 0, 0): -661.077
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 39 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 46 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (23.91% of inside time)
+  - Visited Edges: 39883 (saved) + 19605 (pruned)
+  - Visited Nodes (14.39%): 19838 (visited) / 137890 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5042 (saved) + 3693 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -717.894
+Beta(ALN, 0, 0): -717.896
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 44 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 45 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (22.22% of inside time)
+  - Visited Edges: 39785 (saved) + 19385 (pruned)
+  - Visited Nodes (14.20%): 19750 (visited) / 139101 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4774 (saved) + 3760 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -745.549
+Beta(ALN, 0, 0): -745.552
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 39 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (21.43% of inside time)
+  - Visited Edges: 40616 (saved) + 18706 (pruned)
+  - Visited Nodes (14.54%): 19788 (visited) / 136070 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5103 (saved) + 3184 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -719.188
+Beta(ALN, 0, 0): -719.19
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 35 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 13.00 ms (35.14% of inside time)
+  - Visited Edges: 67451 (saved) + 35875 (pruned)
+  - Visited Nodes (29.59%): 34563 (visited) / 116816 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 6548 (saved) + 9714 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -665.77
+Beta(ALN, 0, 0): -665.773
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 33 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (30.56% of inside time)
+  - Visited Edges: 57391 (saved) + 27679 (pruned)
+  - Visited Nodes (24.11%): 28454 (visited) / 117994 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5980 (saved) + 6967 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -664.607
+Beta(ALN, 0, 0): -664.609
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 32 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (27.78% of inside time)
+  - Visited Edges: 51161 (saved) + 28345 (pruned)
+  - Visited Nodes (23.09%): 26558 (visited) / 115034 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5065 (saved) + 7346 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -651.556
+Beta(ALN, 0, 0): -651.559
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 39 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 43 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 8.00 ms (18.60% of inside time)
+  - Visited Edges: 30453 (saved) + 15432 (pruned)
+  - Visited Nodes (11.03%): 15305 (visited) / 138801 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 3695 (saved) + 2830 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -735.602
+Beta(ALN, 0, 0): -735.605
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 4.00 ms (9.52% of inside time)
+  - Visited Edges: 5423 (saved) + 3679 (pruned)
+  - Visited Nodes (2.24%): 3042 (visited) / 135788 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 1257 (saved) + 197 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -568.627
+Beta(ALN, 0, 0): -568.627
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 39 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 44 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 8.00 ms (18.18% of inside time)
+  - Visited Edges: 27771 (saved) + 14910 (pruned)
+  - Visited Nodes (10.39%): 14239 (visited) / 136980 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 3442 (saved) + 2683 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -725.452
+Beta(ALN, 0, 0): -725.455
+
+[ALIGNMENT] Total Time taken for iteration 1: 1008ms
+[ALIGNMENT] Total inside time for iteration 1: 408ms
+[ALIGNMENT] Total outside time for iteration 1: 96ms
+
+[LinearPartition] (Seq k_id: 0) Running Inside Algorithm:
+  - Execution Time: 562 ms
+  - Free Energy of the Ensemble: -102.099 kcal/mol
+
+[LinearPartition] (Seq k_id: 0) Running Outside Algorithm:
+  - Execution Time: 6.00 ms (1.07% of inside time)
+  - Visited Edges: 2242 (saved) + 82876 (pruned)
+  - Visited Nodes (1.52%): 1074 (visited) / 70888 (total)
+  - Effective Beam Size: 3.84%
+Alpha(C, n - 1): 165.659
+Beta(C, -1): 165.659
+
+[LinearPartition] (Seq k_id: 1) Running Inside Algorithm:
+  - Execution Time: 623 ms
+  - Free Energy of the Ensemble: -35.7847 kcal/mol
+
+[LinearPartition] (Seq k_id: 1) Running Outside Algorithm:
+  - Execution Time: 5.00 ms (0.80% of inside time)
+  - Visited Edges: 2878 (saved) + 98811 (pruned)
+  - Visited Nodes (3.26%): 1435 (visited) / 43956 (total)
+  - Effective Beam Size: 6.83%
+Alpha(C, n - 1): 58.0618
+Beta(C, -1): 58.0618
+
+[LinearPartition] (Seq k_id: 2) Running Inside Algorithm:
+  - Execution Time: 665 ms
+  - Free Energy of the Ensemble: -121.74 kcal/mol
+
+[LinearPartition] (Seq k_id: 2) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.60% of inside time)
+  - Visited Edges: 985 (saved) + 40985 (pruned)
+  - Visited Nodes (0.69%): 476 (visited) / 69001 (total)
+  - Effective Beam Size: 1.71%
+Alpha(C, n - 1): 197.527
+Beta(C, -1): 197.527
+
+[LinearPartition] (Seq k_id: 3) Running Inside Algorithm:
+  - Execution Time: 655 ms
+  - Free Energy of the Ensemble: -74.6259 kcal/mol
+
+[LinearPartition] (Seq k_id: 3) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.61% of inside time)
+  - Visited Edges: 1766 (saved) + 44309 (pruned)
+  - Visited Nodes (1.14%): 776 (visited) / 68299 (total)
+  - Effective Beam Size: 2.74%
+Alpha(C, n - 1): 121.083
+Beta(C, -1): 121.083
+
+[LinearPartition] (Seq k_id: 4) Running Inside Algorithm:
+  - Execution Time: 621 ms
+  - Free Energy of the Ensemble: -105.548 kcal/mol
+
+[LinearPartition] (Seq k_id: 4) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.64% of inside time)
+  - Visited Edges: 1089 (saved) + 39924 (pruned)
+  - Visited Nodes (0.71%): 477 (visited) / 67295 (total)
+  - Effective Beam Size: 1.75%
+Alpha(C, n - 1): 171.254
+Beta(C, -1): 171.254
+
+
+[FOLDING] Total Time taken for iteration 1: 3174ms
+[FOLDING] Total inside time for iteration 1: 3126ms
+[FOLDING] Total outside time for iteration 1: 23ms
+
+-------------------------CURRENT ITERATION: 2-------------------------
+BEAM SIZE: 100
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 29 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (29.73% of inside time)
+  - Visited Edges: 54082 (saved) + 23832 (pruned)
+  - Visited Nodes (22.25%): 26064 (visited) / 117132 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5488 (saved) + 6083 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -659.769
+Beta(ALN, 0, 0): -659.772
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 35 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 43 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (20.93% of inside time)
+  - Visited Edges: 42232 (saved) + 17293 (pruned)
+  - Visited Nodes (14.40%): 19849 (visited) / 137880 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5374 (saved) + 2866 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -718.243
+Beta(ALN, 0, 0): -718.246
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 34 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (21.43% of inside time)
+  - Visited Edges: 37028 (saved) + 19637 (pruned)
+  - Visited Nodes (13.59%): 18899 (visited) / 139092 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4456 (saved) + 3869 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -739.067
+Beta(ALN, 0, 0): -739.069
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 34 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 41 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (21.95% of inside time)
+  - Visited Edges: 37434 (saved) + 18028 (pruned)
+  - Visited Nodes (13.60%): 18500 (visited) / 136068 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4623 (saved) + 3445 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -710.95
+Beta(ALN, 0, 0): -710.953
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 29 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (27.78% of inside time)
+  - Visited Edges: 51371 (saved) + 25068 (pruned)
+  - Visited Nodes (21.90%): 25583 (visited) / 116844 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4927 (saved) + 6624 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -664.085
+Beta(ALN, 0, 0): -664.089
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 30 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (30.56% of inside time)
+  - Visited Edges: 50578 (saved) + 22634 (pruned)
+  - Visited Nodes (20.75%): 24498 (visited) / 118040 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5364 (saved) + 5363 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -657.92
+Beta(ALN, 0, 0): -657.922
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 28 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (30.56% of inside time)
+  - Visited Edges: 51883 (saved) + 25254 (pruned)
+  - Visited Nodes (22.41%): 25781 (visited) / 115062 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5081 (saved) + 6550 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -653.278
+Beta(ALN, 0, 0): -653.281
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 38 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 44 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 7.00 ms (15.91% of inside time)
+  - Visited Edges: 26052 (saved) + 14086 (pruned)
+  - Visited Nodes (9.65%): 13388 (visited) / 138801 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 2999 (saved) + 2897 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -721.705
+Beta(ALN, 0, 0): -721.708
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 32 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 4.00 ms (9.52% of inside time)
+  - Visited Edges: 5380 (saved) + 3689 (pruned)
+  - Visited Nodes (2.23%): 3031 (visited) / 135796 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 1197 (saved) + 256 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -544.067
+Beta(ALN, 0, 0): -544.067
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 35 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 43 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 8.00 ms (18.60% of inside time)
+  - Visited Edges: 25589 (saved) + 13949 (pruned)
+  - Visited Nodes (9.63%): 13190 (visited) / 136986 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 3078 (saved) + 2642 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -715.313
+Beta(ALN, 0, 0): -715.316
+
+[ALIGNMENT] Total Time taken for iteration 2: 1004ms
+[ALIGNMENT] Total inside time for iteration 2: 400ms
+[ALIGNMENT] Total outside time for iteration 2: 89ms
+
+[LinearPartition] (Seq k_id: 0) Running Inside Algorithm:
+  - Execution Time: 405 ms
+  - Free Energy of the Ensemble: -109.617 kcal/mol
+
+[LinearPartition] (Seq k_id: 0) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.99% of inside time)
+  - Visited Edges: 1378 (saved) + 46289 (pruned)
+  - Visited Nodes (1.06%): 660 (visited) / 62391 (total)
+  - Effective Beam Size: 2.36%
+Alpha(C, n - 1): 177.857
+Beta(C, -1): 177.857
+
+[LinearPartition] (Seq k_id: 1) Running Inside Algorithm:
+  - Execution Time: 408 ms
+  - Free Energy of the Ensemble: -40.9964 kcal/mol
+
+[LinearPartition] (Seq k_id: 1) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.98% of inside time)
+  - Visited Edges: 1531 (saved) + 61955 (pruned)
+  - Visited Nodes (1.68%): 669 (visited) / 39856 (total)
+  - Effective Beam Size: 3.19%
+Alpha(C, n - 1): 66.5179
+Beta(C, -1): 66.5179
+
+[LinearPartition] (Seq k_id: 2) Running Inside Algorithm:
+  - Execution Time: 475 ms
+  - Free Energy of the Ensemble: -127.734 kcal/mol
+
+[LinearPartition] (Seq k_id: 2) Running Outside Algorithm:
+  - Execution Time: 3.00 ms (0.63% of inside time)
+  - Visited Edges: 812 (saved) + 35373 (pruned)
+  - Visited Nodes (0.67%): 403 (visited) / 60484 (total)
+  - Effective Beam Size: 1.44%
+Alpha(C, n - 1): 207.252
+Beta(C, -1): 207.252
+
+[LinearPartition] (Seq k_id: 3) Running Inside Algorithm:
+  - Execution Time: 486 ms
+  - Free Energy of the Ensemble: -85.9816 kcal/mol
+
+[LinearPartition] (Seq k_id: 3) Running Outside Algorithm:
+  - Execution Time: 4.00 ms (0.82% of inside time)
+  - Visited Edges: 1019 (saved) + 35354 (pruned)
+  - Visited Nodes (0.74%): 457 (visited) / 61944 (total)
+  - Effective Beam Size: 1.61%
+Alpha(C, n - 1): 139.508
+Beta(C, -1): 139.508
+
+[LinearPartition] (Seq k_id: 4) Running Inside Algorithm:
+  - Execution Time: 510 ms
+  - Free Energy of the Ensemble: -119.678 kcal/mol
+
+[LinearPartition] (Seq k_id: 4) Running Outside Algorithm:
+  - Execution Time: 3.00 ms (0.59% of inside time)
+  - Visited Edges: 772 (saved) + 32721 (pruned)
+  - Visited Nodes (0.62%): 373 (visited) / 60081 (total)
+  - Effective Beam Size: 1.37%
+Alpha(C, n - 1): 194.181
+Beta(C, -1): 194.181
+
+
+[FOLDING] Total Time taken for iteration 2: 2329ms
+[FOLDING] Total inside time for iteration 2: 2284ms
+[FOLDING] Total outside time for iteration 2: 18ms
+
+-------------------------CURRENT ITERATION: 3-------------------------
+BEAM SIZE: 100
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 29 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 12.00 ms (32.43% of inside time)
+  - Visited Edges: 54504 (saved) + 24143 (pruned)
+  - Visited Nodes (22.45%): 26299 (visited) / 117128 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5485 (saved) + 6159 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -659.185
+Beta(ALN, 0, 0): -659.187
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 35 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 44 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (22.73% of inside time)
+  - Visited Edges: 39801 (saved) + 16823 (pruned)
+  - Visited Nodes (13.69%): 18882 (visited) / 137880 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5122 (saved) + 2672 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -713.614
+Beta(ALN, 0, 0): -713.617
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 34 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (21.43% of inside time)
+  - Visited Edges: 37433 (saved) + 19341 (pruned)
+  - Visited Nodes (13.61%): 18936 (visited) / 139088 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4594 (saved) + 3683 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -736.831
+Beta(ALN, 0, 0): -736.834
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 33 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 43 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 9.00 ms (20.93% of inside time)
+  - Visited Edges: 37735 (saved) + 17448 (pruned)
+  - Visited Nodes (13.53%): 18405 (visited) / 136070 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 4727 (saved) + 3153 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -709.706
+Beta(ALN, 0, 0): -709.709
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 29 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 36 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (27.78% of inside time)
+  - Visited Edges: 54169 (saved) + 25432 (pruned)
+  - Visited Nodes (22.78%): 26615 (visited) / 116846 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5195 (saved) + 6739 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -670.209
+Beta(ALN, 0, 0): -670.214
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 29 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 37 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 10.00 ms (27.03% of inside time)
+  - Visited Edges: 50376 (saved) + 23717 (pruned)
+  - Visited Nodes (20.98%): 24761 (visited) / 118040 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5194 (saved) + 5755 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -662.186
+Beta(ALN, 0, 0): -662.189
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 28 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 38 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 11.00 ms (28.95% of inside time)
+  - Visited Edges: 53923 (saved) + 25281 (pruned)
+  - Visited Nodes (23.00%): 26470 (visited) / 115062 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 5211 (saved) + 6548 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -659.853
+Beta(ALN, 0, 0): -659.857
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 34 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 43 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 8.00 ms (18.60% of inside time)
+  - Visited Edges: 25939 (saved) + 14190 (pruned)
+  - Visited Nodes (9.64%): 13385 (visited) / 138801 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 2996 (saved) + 2909 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -722.621
+Beta(ALN, 0, 0): -722.623
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 33 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 42 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 5.00 ms (11.90% of inside time)
+  - Visited Edges: 5325 (saved) + 3648 (pruned)
+  - Visited Nodes (2.21%): 2999 (visited) / 135796 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 1185 (saved) + 254 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -542.305
+Beta(ALN, 0, 0): -542.306
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 35 ms
+
+[LinearAlign] Running Inside Algorithm:
+  - Execution Time: 41 ms
+
+[LinearAlign] Running Outside Algorithm:
+  - Execution Time: 8.00 ms (19.51% of inside time)
+  - Visited Edges: 26507 (saved) + 14397 (pruned)
+  - Visited Nodes (9.96%): 13644 (visited) / 136982 (total)
+
+[LinearAlign] Coincidence Probabilities Computed: 3249 (saved) + 2648 (pruned)
+Alpha(ALN, n1 + 1, n2 + 1): -718.607
+Beta(ALN, 0, 0): -718.61
+
+Starting the Multi Sequence Alignment process
+Starting the Max Exp Accuracy for all pairs
+pair: (0,1)  lengths: 280,210  transform-size: 5x5
+completed running MEA
+pair: (0,2)  lengths: 280,279  transform-size: 5x5
+completed running MEA
+pair: (0,3)  lengths: 280,283  transform-size: 5x5
+completed running MEA
+pair: (0,4)  lengths: 280,273  transform-size: 5x5
+completed running MEA
+pair: (1,2)  lengths: 210,279  transform-size: 5x5
+completed running MEA
+pair: (1,3)  lengths: 210,283  transform-size: 5x5
+completed running MEA
+pair: (1,4)  lengths: 210,273  transform-size: 5x5
+completed running MEA
+pair: (2,3)  lengths: 279,283  transform-size: 5x5
+completed running MEA
+pair: (2,4)  lengths: 279,273  transform-size: 5x5
+completed running MEA
+pair: (3,4)  lengths: 283,273  transform-size: 5x5
+completed running MEA
+Starting the Probabilistic consistency transformation step

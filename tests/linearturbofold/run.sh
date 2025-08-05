@@ -51,7 +51,7 @@ for INPUT_FILE in "$INPUT_DIR"/*.fasta*; do
         EXIT_STATUS=0
 
         # Run the executable with `time` and redirect output
-        /usr/bin/time -l -p -o "$TIME_LOG" "$CPP_EXECUTABLE" "$INPUT_FILE" "$ENERGY_PARAMS" "3" "$LAZY_OUTSIDE" "$USE_OUTSIDE_SCORE" "$SHRINK_BEAM" > "$OUTPUT_FILE_STDOUT" 2> "$OUTPUT_FILE_STDERR" || EXIT_STATUS=$?
+        /usr/bin/time -p -o "$TIME_LOG" "$CPP_EXECUTABLE" "$INPUT_FILE" "$ENERGY_PARAMS" "3" "$LAZY_OUTSIDE" "$USE_OUTSIDE_SCORE" "$SHRINK_BEAM" > "$OUTPUT_FILE_STDOUT" 2> "$OUTPUT_FILE_STDERR" || EXIT_STATUS=$?
 
         # Check the exit status
         if [ "$EXIT_STATUS" -ne 0 ]; then

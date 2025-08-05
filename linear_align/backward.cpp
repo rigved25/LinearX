@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "./linear_align.hpp"
 
 MultiSeq LinearAlign::get_alignment() {

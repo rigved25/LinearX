@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "turbofold.hpp"
 
 TurboPartition::~TurboPartition() { turbofold = nullptr; }

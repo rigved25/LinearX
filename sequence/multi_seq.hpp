@@ -2,6 +2,7 @@
 #define MULTI_SEQ_HPP
 
 #include <vector>
+#include <set>
 #include "./seq.hpp"
 
 
@@ -24,6 +25,10 @@ public:
     Seq& at(size_t index);
     const Seq& at(size_t index) const;
 
+    //! Extracts all sequences from MultiSeq object whose index is given by a set. 
+    //! Projects the multiple sequences to subset and returns as a new MultiSequence object.
+    MultiSeq *Project(const std::set<int> &indices);
+
     // get all sequences
     const std::vector<Seq>& get_sequences() const;
 
@@ -42,6 +47,7 @@ public:
     // Read and Write functions
     bool read_fasta(const std::string& filepath);
     bool write_fasta(const std::string& filepath) const;
+    bool write_fasta(std::ostream& out) const;
 
     // print all sequences
     void print_sequences();

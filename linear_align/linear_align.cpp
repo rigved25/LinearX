@@ -1,3 +1,6 @@
+#include <chrono>
+#include <iomanip>
+
 #include "./linear_align.hpp"
 
 AlignBeam::~AlignBeam() { free(); }
@@ -192,7 +195,7 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
     }
 
     // dump the coincidence probabilities to the file
-    for (int i = 0; i < seq1->size(); ++i) {
+    for (int i = 0; i <= seq1->size(); ++i) {
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
             const double prob = item.second;

@@ -7,6 +7,7 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <iomanip>
 
 #include "./../energy_model.hpp"
 #include "./../sequence/seq.hpp"

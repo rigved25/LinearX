@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "turbofold.hpp"
 
 int LinearTurboFold::get_seq_pair_index(const int k1, const int k2) {
@@ -124,6 +126,7 @@ void LinearTurboFold::run() {
                 aln.prob_set2(seq_idnty);
                 if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
 
+                // equivalent to ml_alignment
                 auto align_inside_start_time = std::chrono::high_resolution_clock::now();
                 aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
                 auto align_inside_end_time = std::chrono::high_resolution_clock::now();
@@ -140,7 +143,15 @@ void LinearTurboFold::run() {
                                                 align_outside_end_time - align_outside_start_time)
                                                 .count();
 
+                // equivalent to cal_align_prob
                 aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
+
+                // needed only in last itr
+                // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
+                // only one way is saved (seq[i], seq[j]). Nsot saved (seq[j], seq[i])
+                consistency_transform[k1][k2] = aln.coinc_prob;
+                consistency_transform[k2][k1] = aln.coinc_prob;
+
                 if (verbose_state == VerboseState::DEBUG) {
                     aln.print_alpha_beta();
                 } else if (verbose_state == VerboseState::DETAIL) {
@@ -157,6 +168,21 @@ void LinearTurboFold::run() {
                 }
             }
             auto align_end_time = std::chrono::high_resolution_clock::now();
+
+            // Multi Seq Alignment
+            if(itr == num_itr)
+            {   
+                std::cerr << "Starting the Multi Sequence Alignment process" << std::endl;
+                multiple_sequence_alignment();
+                // add verbose
+
+                // save to file
+                std::cout
+                    << std::endl
+                    << "[Multi Sequence Alignment] "
+                    << std::endl;
+                multi_alignment->write_fasta(cout);
+            }
 
             if (verbose_state == VerboseState::DEBUG) {
                 std::cerr
@@ -232,4 +258,70 @@ void LinearTurboFold::run() {
 
         reset_extinf_cache();
     }
+}
+
+int LinearTurboFold::multiple_sequence_alignment()
+{
+    unsigned int seq_len = this->multi_seq->size();
+    unsigned int hmm_beam = 100; //naukarkr, make this a param
+    unsigned int num_consistency_reps = 2; //naukarkr, make this a param
+
+    vector<vector<float>> distances (seq_len, vector<float> (seq_len, 0));
+    ProbabilisticModel model;
+    
+    std::cerr << "Starting the Max Exp Accuracy for all pairs" << std::endl;
+    for(unsigned int i_seq1 = 0; i_seq1 < seq_len; i_seq1++)
+    {
+        for(unsigned int i_seq2 = i_seq1+1; i_seq2 < seq_len; i_seq2++)
+        {
+            if(i_seq1 != i_seq2)
+            {   
+                // Maximum Expected Accuracy calculation
+                std::cerr << "pair: ("<< i_seq1 <<","<< i_seq2 <<") "
+                            << " lengths: "<< multi_seq->at(i_seq1).length()
+                            << ","<< multi_seq->at(i_seq2).length()
+                            << "  transform-size: "<< consistency_transform.size()
+                            << "x"<< consistency_transform[i_seq1].size()
+                            //<< " posterior size: "<< consistency_transform[i_seq1][i_seq2]->size()
+                            << std::endl;
+
+                pair<vector<char> *, float> pair_alignment = model.LinearComputeAlignment(hmm_beam, multi_seq->at(i_seq1).length(), 
+                    multi_seq->at(i_seq2).length(), consistency_transform[i_seq1][i_seq2]);
+
+                std::cerr << "completed running MEA" << std::endl;
+
+                float distance = pair_alignment.second / min (multi_seq->at(i_seq1).length(), multi_seq->at(i_seq2).length());
+                distances[i_seq1][i_seq2] = distances[i_seq2][i_seq1] = distance;
+                delete pair_alignment.first;
+            }
+        } // i_seq2 loop.
+    } // i_seq1 loop.
+
+    std::cerr << "Starting the Probabilistic consistency transformation step" << std::endl;
+
+    // Probabilistic consistency transformation
+    for (int r = 0; r<num_consistency_reps; r++ ) {
+        model.LinearMultiConsistencyTransform(multi_seq, consistency_transform);
+    }
+
+    this->multi_alignment=NULL;
+    TreeNode *tree = TreeNode::ComputeTree(distances); // lisiz, guide tree 
+
+    // make the final alignment
+    // 1. Guide tree computation
+    // 2. Progressive alignment
+    // 3. Iterative Refinement
+    std::cerr << "Starting the final alignment step" << std::endl;
+
+    this->multi_alignment = model.LinearComputeFinalAlignment(tree, this->multi_seq, consistency_transform, model, hmm_beam);
+    
+    // int numSeqs = this->multi_alignment->size();
+    // for (int i = 0; i < numSeqs; i++){
+    //     mul_aln_results[i].clear();
+    // }
+    // mul_aln_results.clear();
+
+    delete tree;
+
+    return(0);
 }
