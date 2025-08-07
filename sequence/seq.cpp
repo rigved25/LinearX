@@ -97,8 +97,6 @@ Seq * Seq::add_gaps(std::vector<char> *alignment, char id){
     ret->id = id;
     ret->k_id = k_id;
 
-    //ret->sequence.push_back ('@');
-
     std::string::iterator dataIter = sequence.begin(); //naukarkr, why plus 1?
 
     for (std::vector<char>::iterator iter = alignment->begin(); iter != alignment->end(); ++iter){

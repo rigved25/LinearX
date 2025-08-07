@@ -64,8 +64,6 @@ class LinearTurboFold {
           verbose_state(verbose_state) {
         size_t num_pairs = (multi_seq->size() * (multi_seq->size() - 1)) / 2;
 
-        verbose_state = VerboseState::DETAIL;
-
         // reserve space for sequence pairs and sequence identities
         alns.reserve(num_pairs);
         pfs.reserve(multi_seq->size());

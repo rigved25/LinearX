@@ -178,13 +178,12 @@ void LinearTurboFold::run() {
 
                 if(itr == num_itr) {
                     
-                    // needed only in last itr
                     // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
                     consistency_transform[k1][k2] = aln.coinc_prob1;
                     consistency_transform[k2][k1] = aln.coinc_prob2;
 
-                    dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                            std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
+                    // dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                    //                         std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
 
                     if (verbose_state == VerboseState::DEBUG) {
                         aln.print_alpha_beta();
@@ -305,7 +304,7 @@ int LinearTurboFold::multiple_sequence_alignment()
     vector<vector<float>> distances (seq_len, vector<float> (seq_len, 0));
     ProbabilisticModel model;
     
-    std::cerr << "Starting the Max Exp Accuracy for all pairs" << std::endl;
+    std::cerr << "[Multi Seq Align] Starting the Max Exp Accuracy calculation for all pairs" << std::endl;
     for(unsigned int i_seq1 = 0; i_seq1 < seq_len; i_seq1++)
     {
         for(unsigned int i_seq2 = i_seq1+1; i_seq2 < seq_len; i_seq2++)
@@ -333,14 +332,14 @@ int LinearTurboFold::multiple_sequence_alignment()
         } // i_seq2 loop.
     } // i_seq1 loop.
 
-    std::cerr << "Starting the Probabilistic consistency transformation step" << std::endl;
+    std::cerr << "[Multi Seq Align] Probabilistic Consistency Transformation" << std::endl;
 
     // Probabilistic consistency transformation
     for (int r = 0; r<num_consistency_reps; r++ ) {
         model.LinearMultiConsistencyTransform(multi_seq, consistency_transform);
     }
 
-    std::cerr << "Starting the Computation of Guide Tree step" << std::endl;
+    std::cerr << "[Multi Seq Align] Computing the Guide Tree" << std::endl;
     this->multi_alignment=NULL;
     TreeNode *tree = TreeNode::ComputeTree(distances); // lisiz, guide tree 
 
@@ -348,7 +347,7 @@ int LinearTurboFold::multiple_sequence_alignment()
     // 1. Guide tree computation
     // 2. Progressive alignment
     // 3. Iterative Refinement
-    std::cerr << "Starting the final alignment step" << std::endl;
+    std::cerr << "[Multi Seq Align] Initiating Final Alignment" << std::endl;
 
     this->multi_alignment = model.LinearComputeFinalAlignment(tree, this->multi_seq, consistency_transform, model, hmm_beam);
     
