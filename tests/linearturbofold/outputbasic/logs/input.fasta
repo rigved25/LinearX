@@ -1,3 +1,5 @@
 Input File: ./input/input.fasta
-Error: Program execution failed.
-Exit Status: 139
+Output File (stdout): outputbasic//stdout/input.fasta
+Output File (stderr): outputbasic//stderr/input.fasta
+Elapsed Time (s): 34.03
+Exit Status: 0

@@ -178,7 +178,7 @@ void LinearAlign::compute_inside(bool best_only, int beam_size, bool verbose_out
 }
 
 void LinearAlign::dump_coinc_probs(const std::string &filepath, const float threshold) const {
-    if (coinc_prob == nullptr) {
+    if (coinc_prob1 == nullptr || coinc_prob2 == nullptr) {
         throw std::runtime_error(
             "[LinearAlign Error] Coincidence probabilities not computed yet! You must run "
             "compute_coincidence_probabilities() first.");
@@ -194,9 +194,25 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
                                  " for writing coincidence probabilities.");
     }
 
+    file << "Saving the requested conincidence probabilities" << std::endl;
+
     // dump the coincidence probabilities to the file
     for (int i = 0; i <= seq1->size(); ++i) {
-        for (const auto &item : coinc_prob[i]) {
+        for (const auto &item : coinc_prob1[i]) {
+            const int j = item.first;
+            const double prob = item.second;
+            if (prob < threshold) continue;
+
+            // output i, j, and the probability to the file
+            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+        }
+    }
+
+    file << "Saving the mirror of the requested conincidence probabilities" << std::endl;
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i <= seq2->size(); ++i) {
+        for (const auto &item : coinc_prob2[i]) {
             const int j = item.first;
             const double prob = item.second;
             if (prob < threshold) continue;

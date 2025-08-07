@@ -2,6 +2,36 @@
 
 #include "turbofold.hpp"
 
+void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen) {
+    if (coinc_prob == nullptr) {
+        throw std::runtime_error(
+            "[LinearAlign Error] Coincidence probabilities not computed yet! You must run "
+            "compute_coincidence_probabilities() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cerr
+            << "[Hint] The directory for the output file may not exist. Please create it before running the method."
+            << std::endl;
+        throw std::runtime_error("[LinearAlign Error] Unable to open the file " + filepath +
+                                 " for writing coincidence probabilities.");
+    }
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i < seqlen; ++i) {
+        for (const auto &item : coinc_prob[i]) {
+            const int j = item.first;
+            const double prob = item.second;
+            //if (prob < threshold) continue;
+
+            // output i, j, and the probability to the file
+            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+        }
+    }
+};
+
 int LinearTurboFold::get_seq_pair_index(const int k1, const int k2) {
     // ensure the indices are within bounds
     if (k1 >= multi_seq->size() || k2 >= multi_seq->size()) {
@@ -44,8 +74,8 @@ double LinearTurboFold::get_extrinsic_info(const Seq &x, const int i, const int 
         const TurboPartition &y_pf = pfs.at(y.k_id);
 
         if (x.k_id == aln.sequence1->k_id) {
-            for (const auto &itr1 : aln.coinc_prob[i]) {
-                for (const auto &itr2 : aln.coinc_prob[j]) {
+            for (const auto &itr1 : aln.coinc_prob1[i]) {
+                for (const auto &itr2 : aln.coinc_prob1[j]) {
                     const int k = itr1.first;
                     const int l = itr2.first;
                     const double aln_prob_ik = itr1.second;
@@ -146,19 +176,25 @@ void LinearTurboFold::run() {
                 // equivalent to cal_align_prob
                 aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
 
-                // needed only in last itr
-                // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
-                // only one way is saved (seq[i], seq[j]). Nsot saved (seq[j], seq[i])
-                consistency_transform[k1][k2] = aln.coinc_prob;
-                consistency_transform[k2][k1] = aln.coinc_prob;
+                if(itr == num_itr) {
+                    
+                    // needed only in last itr
+                    // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
+                    consistency_transform[k1][k2] = aln.coinc_prob1;
+                    consistency_transform[k2][k1] = aln.coinc_prob2;
 
-                if (verbose_state == VerboseState::DEBUG) {
-                    aln.print_alpha_beta();
-                } else if (verbose_state == VerboseState::DETAIL) {
-                    aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                         std::to_string(k2) + ".bpp.txt");
+                    dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                            std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
+
+                    if (verbose_state == VerboseState::DEBUG) {
+                        aln.print_alpha_beta();
+                    } else if (verbose_state == VerboseState::DETAIL) {
+                        cerr << "dumping consistency Matrix" << endl;
+                        aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                            std::to_string(k2) + ".bpp.txt", 0.0);
+                    }
                 }
-
+                
                 // save alignment beams for the next iteration
                 if (use_prev_outside_score) {
                     aln.ab.free();
@@ -304,6 +340,7 @@ int LinearTurboFold::multiple_sequence_alignment()
         model.LinearMultiConsistencyTransform(multi_seq, consistency_transform);
     }
 
+    std::cerr << "Starting the Computation of Guide Tree step" << std::endl;
     this->multi_alignment=NULL;
     TreeNode *tree = TreeNode::ComputeTree(distances); // lisiz, guide tree 
 

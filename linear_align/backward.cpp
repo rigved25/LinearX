@@ -276,9 +276,11 @@ HStateType LinearAlign::get_incoming_edges(const int i, const int j, const HStat
 
 void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
     // clear the previous matrix
-    delete[] coinc_prob;
+    delete[] coinc_prob1;
+    delete[] coinc_prob2;
     delete[] prob_rev_idx;
-    coinc_prob = new std::unordered_map<int, double>[seq1->size()];  // reallocate memory
+    coinc_prob1 = new std::unordered_map<int, double>[seq1->size()];  // reallocate memory
+    coinc_prob2 = new std::unordered_map<int, double>[seq2->size()];  // reallocate memory
     prob_rev_idx = new std::vector<int>[seq2->size()];               // reallocate memory
 
     double p_xy = bestALN[seq_len_sum + 2][{seq1->size() + 1, seq2->size() + 1}].alpha;
@@ -292,8 +294,11 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
 
                 const double prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
                 if (prob > -DEVIATION_THRESHOLD && i > 0 && j > 0) {
-                    auto [ptr_cprob_ij, inserted] = coinc_prob[i - 1].try_emplace(j - 1, LOG(0.0));
+                    auto [ptr_cprob_ij, inserted1] = coinc_prob1[i - 1].try_emplace(j - 1, LOG(0.0));
                     ptr_cprob_ij->second = LOG_SUM(ptr_cprob_ij->second, prob);
+
+                    auto [ptr_cprob_ji, inserted2] = coinc_prob2[j - 1].try_emplace(i - 1, LOG(0.0));
+                    ptr_cprob_ji->second = LOG_SUM(ptr_cprob_ij->second, prob);
                 }
             }
         }
@@ -302,18 +307,18 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
     unsigned long num_pruned = 0;  // for keeping track of pruned P(i,j)s
     unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
     for (int i = 0; i < seq1->size(); ++i) {
-        for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
+        for (auto it = coinc_prob1[i].begin(); it != coinc_prob1[i].end();) {
             const int j = it->first;
             double &prob = it->second;
 
             if (prob < phmm->get_fam_threshold()) {
-                it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
+                it = coinc_prob1[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {
                 prob = EXP(prob);
                 if (prob > 1.001) {
                     fprintf(stderr,
-                            "[LinearAlign: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
+                            "[LinearAlign: Warning] 1 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
                             prob);
                 }
                 prob = std::min(prob, 1.0);
@@ -324,6 +329,27 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
         }
     }
 
+    // for (int i = 0; i < seq2->size(); ++i) {
+    //     for (auto it = coinc_prob2[i].begin(); it != coinc_prob2[i].end();) {
+    //         const int j = it->first;
+    //         double &prob = it->second;
+
+    //         if (prob < phmm->get_fam_threshold()) {
+    //             it = coinc_prob2[i].erase(it);  // erase and get the next valid iterator
+    //         } else {
+    //             prob = EXP(prob);
+    //             if (prob > 1.001) {
+    //                 fprintf(stderr,
+    //                         "[LinearAlign: Warning] 2 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
+    //                         prob);
+    //             }
+    //             prob = std::min(prob, 1.0);
+    //             prob_rev_idx[j].push_back(i);
+    //             ++it;  // move to the next element if not erased
+    //         }
+    //     }
+    // }
+
     if (verbose_output) {
         fprintf(stderr, "[LinearAlign] Coincidence Probabilities Computed: %lu (saved) + %lu (pruned)\n", num_saved,
                 num_pruned);
@@ -331,11 +357,11 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
 }
 
 double LinearAlign::get_bpp(const int i, const int j) const {
-    if (coinc_prob == nullptr || prob_rev_idx == nullptr)
+    if (coinc_prob1 == nullptr || prob_rev_idx == nullptr)
         throw std::runtime_error("[LinearAlign: Error] Coincidence probability matrix not computed yet!");
 
-    const auto it = coinc_prob[i].find(j);
-    if (it == coinc_prob[i].end()) {
+    const auto it = coinc_prob1[i].find(j);
+    if (it == coinc_prob1[i].end()) {
         return 0.0;
     }
 

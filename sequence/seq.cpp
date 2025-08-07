@@ -97,9 +97,9 @@ Seq * Seq::add_gaps(std::vector<char> *alignment, char id){
     ret->id = id;
     ret->k_id = k_id;
 
-    ret->sequence.push_back ('@');
+    //ret->sequence.push_back ('@');
 
-    std::string::iterator dataIter = sequence.begin() + 1;
+    std::string::iterator dataIter = sequence.begin(); //naukarkr, why plus 1?
 
     for (std::vector<char>::iterator iter = alignment->begin(); iter != alignment->end(); ++iter){
         if (*iter == 'B' || *iter == id){
@@ -116,8 +116,8 @@ Seq * Seq::add_gaps(std::vector<char> *alignment, char id){
 //! Returns a SafeVector<int> containing the indices of every character in the sequence.
 //! For instance, if the data is "ATGCC---GT--CA", the method returns {1,2,3,4,5,9,10,13,14}.
 std::vector<int> * Seq::get_mapping() const {
-    std::vector<int> *ret = new std::vector<int>(1, 0);
-    for (int i = 1; i <= length(); i++){
+    std::vector<int> *ret = new std::vector<int>();
+    for (int i = 0; i < length(); i++){
         if (sequence[i] != '-') ret->push_back (i);
     }
     return ret;

@@ -49,7 +49,7 @@ class LinearTurboFold {
                     const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
                     const float lambda = 0.3, const float alignment_pruning_threshold = -DEVIATION_THRESHOLD,
                     const float folding_pruning_threshold = -DEVIATION_THRESHOLD, const float threshknot_threshold = 0.3,
-                    const float min_helix_size = 3, const VerboseState verbose_state = VerboseState::DEBUG)
+                    const float min_helix_size = 3, VerboseState verbose_state = VerboseState::DEBUG)
         : multi_seq(multi_seq),
           energy_model(energy_params),
           num_itr(num_itr),
@@ -63,6 +63,8 @@ class LinearTurboFold {
           min_helix_size(min_helix_size),
           verbose_state(verbose_state) {
         size_t num_pairs = (multi_seq->size() * (multi_seq->size() - 1)) / 2;
+
+        verbose_state = VerboseState::DETAIL;
 
         // reserve space for sequence pairs and sequence identities
         alns.reserve(num_pairs);
@@ -97,6 +99,8 @@ class LinearTurboFold {
     double get_extrinsic_info(const Seq &x, int i, int j);
     void reset_extinf_cache();
     int multiple_sequence_alignment();
+    void dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen);
+
 
     void run();
 };

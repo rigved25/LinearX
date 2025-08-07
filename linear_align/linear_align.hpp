@@ -73,7 +73,9 @@ class LinearAlign {
     std::vector<int> *seq2 = nullptr;
     int seq_len_sum;
 
-    std::unordered_map<int, double> *coinc_prob = nullptr;
+    std::unordered_map<int, double> *coinc_prob1 = nullptr;
+    std::unordered_map<int, double> *coinc_prob2 = nullptr;
+
     std::vector<int> *prob_rev_idx = nullptr;
 
     double alpha1, alpha2, alpha3;
@@ -114,7 +116,8 @@ class LinearAlign {
         delete[] bestALN;
         delete[] bestINS1;
         delete[] bestINS2;
-        delete[] coinc_prob;
+        delete[] coinc_prob1;
+        delete[] coinc_prob2;
         delete[] prob_rev_idx;
         // delete pm1;
         // delete pm2;

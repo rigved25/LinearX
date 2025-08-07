@@ -171,7 +171,7 @@ bool MultiSeq::write_fasta(std::ostream& out) const {
 //! Projects the multiple sequences to subset and returns as a new MultiSequence object.
 MultiSeq * MultiSeq::Project(const std::set<int> &indices){
     std::vector<std::string::iterator> oldPtrs(indices.size());
-    std::vector<std::string> newPtrs(indices.size(), "@");
+    std::vector<std::string> newPtrs(indices.size(), "");
 
     int i = 0;
     for(std::set<int>::const_iterator iter = indices.begin(); iter != indices.end(); ++iter){
@@ -181,7 +181,7 @@ MultiSeq * MultiSeq::Project(const std::set<int> &indices){
     // Computes new length.
     int oldLength = at(*indices.begin()).sequence.length();
     int newLength = 0;
-    for (i = 1; i <= oldLength; ++i) {
+    for (i = 0; i < oldLength; ++i) {
         bool found = false;
         for (int j = 0; j < (int) indices.size(); ++j) {
             if (oldPtrs[j][i] != '-') {
