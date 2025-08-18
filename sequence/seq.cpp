@@ -91,7 +91,7 @@ Seq * Seq::clone() const {
 //! Create a new sequence with all necesssary gaps added.
 //! For example: Given alignment = "XXXBBYYYBBYYXX", the new sequence is "ATGCC---GT--CA".
 //!                                                                      (XXXBBYYYBBYYXX)
-Seq * Seq::add_gaps(std::vector<char> *alignment, char id){
+Seq * Seq::add_gaps(std::vector<char> *alignment, char idd){
     Seq *ret = new Seq();
 
     ret->id = id;
@@ -100,7 +100,7 @@ Seq * Seq::add_gaps(std::vector<char> *alignment, char id){
     std::string::iterator dataIter = sequence.begin(); //naukarkr, why plus 1?
 
     for (std::vector<char>::iterator iter = alignment->begin(); iter != alignment->end(); ++iter){
-        if (*iter == 'B' || *iter == id){
+        if (*iter == 'B' || *iter == idd){
             ret->sequence.push_back(*dataIter);
             ++dataIter;
         }

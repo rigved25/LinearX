@@ -1,5 +1,5 @@
 Input File: ./input/input.fasta
 Output File (stdout): outputbasic//stdout/input.fasta
 Output File (stderr): outputbasic//stderr/input.fasta
-Elapsed Time (s): 15.18
+Elapsed Time (s): 4.54
 Exit Status: 0

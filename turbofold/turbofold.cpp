@@ -111,6 +111,98 @@ void LinearTurboFold::reset_extinf_cache() {
     }
 }
 
+void LinearTurboFold::run_phmm_alignment(){
+    auto align_start_time = std::chrono::high_resolution_clock::now();
+    int align_total_inside_time = 0;
+    int align_total_outside_time = 0;
+    for (TurboAlign &aln : alns) {
+        const int k1 = aln.sequence1->k_id;
+        const int k2 = aln.sequence2->k_id;
+        const int aln_pair_index = get_seq_pair_index(k1, k2);
+        float seq_idnty = seq_identities[aln_pair_index];
+
+        // get the alignments
+        aln.reset_beams(use_prev_outside_score ? false : true);
+        aln.prob_set1();
+        // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
+        if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+        aln.compute_inside(true, beam_size, verbose_state == VerboseState::DEBUG);
+        MultiSeq alignment = aln.get_alignment();
+        seq_idnty = alignment.get_seq_identity();    // get the new sequence identity using the new alignment
+        seq_identities[aln_pair_index] = seq_idnty;  // store the updated sequence identity
+
+        // if (verbose_state == VerboseState::DEBUG) {
+        // std::cout << "Alignment: " << k1 << " " << k2 << std::endl;
+        // std::cout << alignment[0].sequence << std::endl;
+        // std::cout << alignment[1].sequence << std::endl;
+        // aln.print_alpha_beta();
+        // std::cout << alignment.get_seq_identity() << std::endl;
+        // }
+
+        // compute partition function
+        aln.reset_beams(true);
+        aln.prob_set2(seq_idnty);
+        if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+
+        // equivalent to ml_alignment
+        auto align_inside_start_time = std::chrono::high_resolution_clock::now();
+        aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
+        auto align_inside_end_time = std::chrono::high_resolution_clock::now();
+
+        auto align_outside_start_time = std::chrono::high_resolution_clock::now();
+        aln.compute_outside(use_lazy_outside, alignment_pruning_threshold,
+                            verbose_state == VerboseState::DEBUG);
+        auto align_outside_end_time = std::chrono::high_resolution_clock::now();
+
+        align_total_inside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
+                                        align_inside_end_time - align_inside_start_time)
+                                        .count();
+        align_total_outside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
+                                        align_outside_end_time - align_outside_start_time)
+                                        .count();
+
+        // equivalent to cal_align_prob
+        aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
+
+        if(itr == num_itr) {
+            
+            // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
+            consistency_transform[k1][k2] = aln.coinc_prob1;
+            consistency_transform[k2][k1] = aln.coinc_prob2;
+
+            // dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+            //                         std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
+
+            if (verbose_state == VerboseState::DEBUG) {
+                aln.print_alpha_beta();
+            } else if (verbose_state == VerboseState::DETAIL) {
+                cerr << "dumping consistency Matrix" << endl;
+                aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                    std::to_string(k2) + ".bpp.txt", 0.0);
+            }
+        }
+        
+        // save alignment beams for the next iteration
+        if (use_prev_outside_score) {
+            aln.ab.free();
+            aln.ab.save(aln);
+        }
+    }
+    auto align_end_time = std::chrono::high_resolution_clock::now();
+
+    if (verbose_state == VerboseState::DEBUG) {
+        std::cerr
+            << "[ALIGNMENT] Total Time taken for iteration " << itr << ": "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(align_end_time - align_start_time).count()
+            << "ms" << std::endl;
+        std::cerr << "[ALIGNMENT] Total inside time for iteration " << itr << ": " << align_total_inside_time
+                    << "ms" << std::endl;
+        std::cerr << "[ALIGNMENT] Total outside time for iteration " << itr << ": " << align_total_outside_time
+                    << "ms\n"
+                    << std::endl;
+    }
+}
+
 void LinearTurboFold::run() {
     for (itr = 0; itr <= num_itr; ++itr) {
         // Utility::showProgressBar(itr, num_itr);
@@ -124,112 +216,8 @@ void LinearTurboFold::run() {
         std::cerr << "-------------------------CURRENT ITERATION: " << itr << "-------------------------\n"
                   << "BEAM SIZE: " << beam_size << std::endl;
         if (itr > 0) {
-            auto align_start_time = std::chrono::high_resolution_clock::now();
-            int align_total_inside_time = 0;
-            int align_total_outside_time = 0;
-            for (TurboAlign &aln : alns) {
-                const int k1 = aln.sequence1->k_id;
-                const int k2 = aln.sequence2->k_id;
-                const int aln_pair_index = get_seq_pair_index(k1, k2);
-                float seq_idnty = seq_identities[aln_pair_index];
-
-                // get the alignments
-                aln.reset_beams(use_prev_outside_score ? false : true);
-                aln.prob_set1();
-                // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
-                if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-                aln.compute_inside(true, beam_size, verbose_state == VerboseState::DEBUG);
-                MultiSeq alignment = aln.get_alignment();
-                seq_idnty = alignment.get_seq_identity();    // get the new sequence identity using the new alignment
-                seq_identities[aln_pair_index] = seq_idnty;  // store the updated sequence identity
-
-                // if (verbose_state == VerboseState::DEBUG) {
-                // std::cout << "Alignment: " << k1 << " " << k2 << std::endl;
-                // std::cout << alignment[0].sequence << std::endl;
-                // std::cout << alignment[1].sequence << std::endl;
-                // aln.print_alpha_beta();
-                // std::cout << alignment.get_seq_identity() << std::endl;
-                // }
-
-                // compute partition function
-                aln.reset_beams(true);
-                aln.prob_set2(seq_idnty);
-                if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-
-                // equivalent to ml_alignment
-                auto align_inside_start_time = std::chrono::high_resolution_clock::now();
-                aln.compute_inside(false, beam_size, verbose_state == VerboseState::DEBUG);
-                auto align_inside_end_time = std::chrono::high_resolution_clock::now();
-
-                auto align_outside_start_time = std::chrono::high_resolution_clock::now();
-                aln.compute_outside(use_lazy_outside, alignment_pruning_threshold,
-                                    verbose_state == VerboseState::DEBUG);
-                auto align_outside_end_time = std::chrono::high_resolution_clock::now();
-
-                align_total_inside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
-                                               align_inside_end_time - align_inside_start_time)
-                                               .count();
-                align_total_outside_time += std::chrono::duration_cast<std::chrono::milliseconds>(
-                                                align_outside_end_time - align_outside_start_time)
-                                                .count();
-
-                // equivalent to cal_align_prob
-                aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
-
-                if(itr == num_itr) {
-                    
-                    // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
-                    consistency_transform[k1][k2] = aln.coinc_prob1;
-                    consistency_transform[k2][k1] = aln.coinc_prob2;
-
-                    // dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                    //                         std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
-
-                    if (verbose_state == VerboseState::DEBUG) {
-                        aln.print_alpha_beta();
-                    } else if (verbose_state == VerboseState::DETAIL) {
-                        cerr << "dumping consistency Matrix" << endl;
-                        aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                            std::to_string(k2) + ".bpp.txt", 0.0);
-                    }
-                }
-                
-                // save alignment beams for the next iteration
-                if (use_prev_outside_score) {
-                    aln.ab.free();
-                    if (itr < num_itr) {
-                        aln.ab.save(aln);
-                    }
-                }
-            }
-            auto align_end_time = std::chrono::high_resolution_clock::now();
-
-            // Multi Seq Alignment
-            if(itr == num_itr)
-            {   
-                std::cerr << "Starting the Multi Sequence Alignment process" << std::endl;
-                multiple_sequence_alignment();
-                // add verbose
-
-                // save to file
-                std::cout
-                    << std::endl
-                    << "[Multi Sequence Alignment] "
-                    << std::endl;
-                multi_alignment->write_fasta(cout);
-            }
-
-            if (verbose_state == VerboseState::DEBUG) {
-                std::cerr
-                    << "[ALIGNMENT] Total Time taken for iteration " << itr << ": "
-                    << std::chrono::duration_cast<std::chrono::milliseconds>(align_end_time - align_start_time).count()
-                    << "ms" << std::endl;
-                std::cerr << "[ALIGNMENT] Total inside time for iteration " << itr << ": " << align_total_inside_time
-                          << "ms" << std::endl;
-                std::cerr << "[ALIGNMENT] Total outside time for iteration " << itr << ": " << align_total_outside_time
-                          << "ms\n"
-                          << std::endl;
-            }
+            // Alignment step
+            run_phmm_alignment();
         }
 
         // fold step
@@ -257,15 +245,14 @@ void LinearTurboFold::run() {
             // // save partition function beams for the next iteration
             if (use_prev_outside_score) {
                 pf.pfb.free();
-                if (itr < num_itr) {
-                    pf.pfb.save(pf);
-                }
+                pf.pfb.save(pf);
             }
 
             if (verbose_state == VerboseState::DEBUG) {
                 pf.print_alpha_beta();
             }
         }
+
         for (TurboPartition &pf : pfs) {
             pf.compute_bpp_matrix();
             pf.calc_prob_accm();
@@ -291,8 +278,35 @@ void LinearTurboFold::run() {
                       << std::endl;
         }
 
+        // Multi Seq Alignment
+        if(itr == num_itr)
+        {   
+            run_phmm_alignment();
+
+            auto msa_start_time = std::chrono::high_resolution_clock::now();
+
+            std::cerr << "Starting the Multi Sequence Alignment process" << std::endl;
+            multiple_sequence_alignment();
+            
+            auto msa_end_time = std::chrono::high_resolution_clock::now();
+            if (verbose_state == VerboseState::DEBUG) {
+                std::cerr
+                    << "[Multi Sequence Alignment] Total Time taken in iteration " << itr << ": "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(msa_end_time - msa_start_time).count()
+                    << "ms" << std::endl;
+            }
+
+            // save to file
+            std::cout
+                << std::endl
+                << "[Multi Sequence Alignment] "
+                << std::endl;
+            multi_alignment->write_fasta(cout);
+        }
+
         reset_extinf_cache();
     }
+
 }
 
 int LinearTurboFold::multiple_sequence_alignment()

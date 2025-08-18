@@ -3,11 +3,11 @@
 PartitionFunctionBeam::~PartitionFunctionBeam() { free(); }
 
 void PartitionFunctionBeam::free() {
-    delete[] bestH;
-    delete[] bestP;
-    delete[] bestM;
-    delete[] bestM2;
-    delete[] bestMulti;
+    // delete[] bestH;
+    // delete[] bestP;
+    // delete[] bestM;
+    // delete[] bestM2;
+    // delete[] bestMulti;
 
     bestH = nullptr;
     bestP = nullptr;

@@ -12,7 +12,7 @@
 #include <cerrno>
 #include <iomanip>
 #include <unordered_map>
-#include "./../../linear_align/utility.hpp"
+#include "./../../utility/random.h"
 
 using namespace std;
 
@@ -478,9 +478,14 @@ void ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unorde
                             const ProbabilisticModel &model, MultiSeq* &alignment, int i, int hmmBeam){
     set<int> groupOne, groupTwo;
 
+    randomnumber rn;
+    rn.seed(1234+i);
+
     // Create two separate groups
     for (int i = 0; i < alignment->size(); i++){
-        if (rand() % 2)
+        int x = rn.roll_int(1,10);
+
+        if (x % 2)
           groupOne.insert (i);
         else
           groupTwo.insert (i);
@@ -516,6 +521,8 @@ MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree,
     // Iterative refinement
     for (int i = 0; i < num_iterative_refinement_reps; i++)
         LinearDoIterativeRefinement (consistency_transform, model, alignment, i, hmmBeam);
+
+    cerr << endl << "[Multi Seq Align] Completed Iterative Refinement " << endl;
 
     return alignment;
 }

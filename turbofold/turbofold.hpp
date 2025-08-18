@@ -99,8 +99,52 @@ class LinearTurboFold {
     int multiple_sequence_alignment();
     void dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen);
 
-
+    void run_phmm_alignment();
     void run();
+
+    // ~LinearTurboFold() {
+    //     std::cerr << "~LinearTurboFold: start\n";
+
+    //     std::cerr << " clearing alns...\n";
+    //     alns.clear();            // runs ~TurboAlign / ~LinearAlign now
+    //     std::cerr << " cleared alns\n";
+
+    //     std::cerr << " clearing pfs...\n";
+    //     pfs.clear();             // runs ~TurboPartition / ~Partition now
+    //     std::cerr << " cleared pfs\n";
+
+    //     std::cerr << " deleting extinf_cache\n";
+
+    //     // extinf first too
+    //     extinf_cache.clear();
+
+    //     std::cerr << " deleting seq_identities\n";
+
+    //     seq_identities.clear();
+
+    //     std::cerr << " deleting consistency_transform\n";
+
+    //     // // only after alns/pfs are gone, free CT
+    //     // int n = multi_seq ? multi_seq->size() : 0;
+    //     // for (int i = 0; i < n; ++i) {
+    //     //     for (int j = 0; j < n; ++j) {
+    //     //         std::cerr << " deleting {i, j} " << i << " " << j << "\n";
+    //     //         delete[] consistency_transform[i][j];   // ok if nullptr
+    //     //         consistency_transform[i][j] = nullptr;
+    //     //     }
+    //     // }
+
+    //     // std::cerr << " consistency_transform.clear()\n";
+
+    //     // consistency_transform.clear();
+
+    //     std::cerr << " deleting multi_alignment\n";
+    //     delete multi_alignment; 
+    //     multi_alignment = nullptr;
+
+    //     std::cerr << "~LinearTurboFold: end\n";
+    // }
+
 };
 
 class TurboPartition final : public Partition {

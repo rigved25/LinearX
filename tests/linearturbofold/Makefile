@@ -20,6 +20,7 @@ SOURCES = ./../../sequence/seq.cpp ./../../sequence/multi_seq.cpp ./../../energy
 		  ./../../linear_align/linear_align.cpp ./../../linear_align/backward.cpp ./../../linear_align/phmm.cpp \
 		  ./../../turbofold/turbofold.cpp ./../../turbofold/turbo_align.cpp ./../../turbofold/turbo_partition.cpp \
 		  ./../../turbofold/utils/ProbabilisticModel.cpp ./../../turbofold/utils/GuideTree.cpp \
+		  ./../../utility/random.cpp \
 		  ./../../structure/structure.cpp ./main.cpp
 
 # Create object file paths in the temporary directory, preserving directory structure

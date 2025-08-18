@@ -6,9 +6,9 @@
 AlignBeam::~AlignBeam() { free(); }
 
 void AlignBeam::free() {
-    delete[] bestALN;
-    delete[] bestINS1;
-    delete[] bestINS2;
+    // delete[] bestALN;
+    // delete[] bestINS1;
+    // delete[] bestINS2;
 
     bestALN = nullptr;
     bestINS1 = nullptr;
