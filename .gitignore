@@ -35,9 +35,12 @@
 # ignore tmp directory
 tmp/
 vb*/
+parity_out/
 
 # ignore experiments data
-output/
+input*/
+output*/
+vb*/
 
 # ignore mac config files
 .DS_Store

@@ -5,7 +5,7 @@
 void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen) {
     if (coinc_prob == nullptr) {
         throw std::runtime_error(
-            "[LinearAlign Error] Coincidence probabilities not computed yet! You must run "
+            "[LinearTurboFold Error] Coincidence probabilities not computed yet! You must run "
             "compute_coincidence_probabilities() first.");
     }
 
@@ -15,7 +15,7 @@ void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float
         std::cerr
             << "[Hint] The directory for the output file may not exist. Please create it before running the method."
             << std::endl;
-        throw std::runtime_error("[LinearAlign Error] Unable to open the file " + filepath +
+        throw std::runtime_error("[LinearTurboFold Error] Unable to open the file " + filepath +
                                  " for writing coincidence probabilities.");
     }
 
@@ -27,7 +27,11 @@ void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float
             //if (prob < threshold) continue;
 
             // output i, j, and the probability to the file
-            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+            file << "i=" << i 
+                    << ", j=" << j 
+                    << ", probs=" << std::scientific << std::setprecision(4) << prob 
+                    << std::endl;
+
         }
     }
 };
@@ -169,19 +173,19 @@ void LinearTurboFold::run_phmm_alignment(){
             // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
             consistency_transform[k1][k2] = aln.coinc_prob1;
             consistency_transform[k2][k1] = aln.coinc_prob2;
-
-            // dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-            //                         std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
-
-            if (verbose_state == VerboseState::DEBUG) {
-                aln.print_alpha_beta();
-            } else if (verbose_state == VerboseState::DETAIL) {
-                cerr << "dumping consistency Matrix" << endl;
-                aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
-                                    std::to_string(k2) + ".bpp.txt", 0.0);
-            }
         }
+
+        dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                    std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
         
+        if (verbose_state == VerboseState::DEBUG) {
+            aln.print_alpha_beta();
+        } else if (verbose_state == VerboseState::DETAIL) {
+            cerr << "dumping consistency Matrix" << endl;
+            aln.dump_coinc_probs("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+                                std::to_string(k2) + ".bpp.txt", 0.0);
+        }
+
         // save alignment beams for the next iteration
         if (use_prev_outside_score) {
             aln.ab.free();
@@ -281,6 +285,7 @@ void LinearTurboFold::run() {
         // Multi Seq Alignment
         if(itr == num_itr)
         {   
+            itr++;
             run_phmm_alignment();
 
             auto msa_start_time = std::chrono::high_resolution_clock::now();
