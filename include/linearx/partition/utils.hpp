@@ -1,0 +1,140 @@
+// linearx/partition/utils.hpp
+#pragma once
+#include <linearx/math/log_math.hpp>
+
+enum StateType {
+    H,
+    Multi,
+    P,
+    M2,
+    M,
+    C,
+};
+
+struct PartitionInsideLog {
+    double energy;  // corresponds to bestC[seq_length - 1].alpha
+    double execution_time;
+    unsigned beam_size;
+    unsigned long nodes_pruned;
+};
+
+struct PartitionOutsideLog {
+    double energy;  // corresponds to bestC[-1].beta
+    double execution_time;
+    double deviation_threshold;
+    double effective_beam_size;
+    unsigned long nodes_visited;
+    unsigned long nodes_pruned;
+    unsigned long edges_saved;
+    unsigned long edges_pruned;
+};
+
+struct State {
+    double alpha;
+    double beta;
+    State() : alpha(linearx::math::xlog(0.0)), beta(linearx::math::xlog(0.0)) {};
+};
+
+struct TraceInfo {
+    int i;
+    int j;
+    int t;  // split point
+    StateType type_left;
+    StateType type_right;
+
+    constexpr TraceInfo() : i(-1), j(-1), t(-1), type_left(H), type_right(H) {}  // default constructor
+    constexpr TraceInfo(int i, int j, int t, StateType type_left, StateType type_right)
+        : i(i), j(j), t(t), type_left(type_left), type_right(type_right) {}  // parameterized constructor
+
+    inline void reset() {
+        i = -1;
+        j = -1;
+        t = -1;
+        type_left = H;
+        type_right = H;
+    }
+
+    inline void set(int i, int j, int t, StateType type_left, StateType type_right) {
+        this->i = i;
+        this->j = j;
+        this->t = t;
+        this->type_left = type_left;
+        this->type_right = type_right;
+    }
+
+    // TraceInfo(const TraceInfo &) = default;             // copy constructor
+    // TraceInfo &operator=(const TraceInfo &) = default;  // copy assignment
+    // TraceInfo(TraceInfo &&) = default;                  // move constructor
+    // TraceInfo &operator=(TraceInfo &&) = default;       // move assignment
+};
+
+struct HEdge {
+    double weight;
+    State *left;
+    State *right;  // right == nullptr <=> unary edge
+
+    HEdge() : weight(linearx::math::xlog(0.0)), left(nullptr), right(nullptr) {}  // default constructor
+
+    HEdge(double weight, State *left, State *right)
+        : weight(weight), left(left), right(right) {}  // parameterized constructor
+
+    // HEdge(const HEdge &) = default;             // copy constructor
+    // HEdge &operator=(const HEdge &) = default;  // copy assignment
+    // HEdge(HEdge &&) = default;                  // move constructor
+    // HEdge &operator=(HEdge &&) = default;       // move assignment
+
+    inline void reset() {
+        weight = linearx::math::xlog(0.0);
+        left = nullptr;
+        right = nullptr;
+    }
+
+    inline void set(double weight, State *left, State *right) {
+        this->weight = weight;
+        this->left = left;
+        this->right = right;
+    }
+};
+
+template <typename T>
+class VectorWithNegOneIndex {
+   private:
+    T specialCase;        // For index -1
+    std::vector<T> data;  // For non-negative indices
+
+   public:
+    // Constructor to initialize the vector with a given size and optional default value
+    VectorWithNegOneIndex(size_t size, const T &defaultValue = T())
+        : specialCase(defaultValue), data(size, defaultValue) {}
+
+    // Clear the vector and reset the special case
+    void clear(const T &defaultValue = T()) {
+        specialCase = defaultValue;  // Reset special case to the default value
+        data.clear();                // Clear the vector
+    }
+
+    void reset(const T &defaultValue = T()) {
+        specialCase = defaultValue;                         // Reset special case
+        std::fill(data.begin(), data.end(), defaultValue);  // Reset all vector elements
+    }
+
+    // Access operator (supports -1 and non-negative indices)
+    T &operator[](int index) {
+        if (index == -1) return specialCase;
+        if (index < 0 || static_cast<size_t>(index) >= data.size()) throw std::out_of_range("Index out of range");
+        return data[index];
+    }
+
+    // Const access operator
+    const T &operator[](int index) const {
+        if (index == -1) return specialCase;
+        if (index < 0 || static_cast<size_t>(index) >= data.size()) throw std::out_of_range("Index out of range");
+        return data[index];
+    }
+
+    // Get the size of the vector (excluding the special case)
+    size_t size() const { return data.size(); }
+
+    // Resize the vector (does not affect the special case)
+    void resize(size_t newSize, const T &defaultValue = T()) { data.resize(newSize, defaultValue); }
+};
