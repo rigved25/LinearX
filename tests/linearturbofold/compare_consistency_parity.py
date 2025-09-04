@@ -28,6 +28,27 @@ python compare_consistency_parity.py \
   --missing-policy zero \
   --aggregate
 
+python compare_consistency_parity.py \
+  --dir1 vb_info_new_pos \
+  --dir2 vb_info_old \
+  --out ./parity_out_pos \
+  --missing-policy zero \
+  --aggregate
+
+python compare_consistency_parity.py \
+  --dir1 vb_info_new_notlazy \
+  --dir2 vb_info_old \
+  --out ./parity_out_notlazy \
+  --missing-policy zero \
+  --aggregate
+
+python compare_consistency_parity.py \
+  --dir1 vb_info \
+  --dir2 vb_info_short_old \
+  --out ./parity_out_short \
+  --missing-policy zero \
+  --aggregate
+
 """
 
 import argparse

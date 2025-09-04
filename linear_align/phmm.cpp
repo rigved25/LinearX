@@ -88,18 +88,22 @@ void Phmm::print_parameters() {
     // dump emission probabilities
     for (int cnt1 = 0; cnt1 < N_OUTPUTS; cnt1++) {
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
-            printf("%.3f ", EXP(emission_probs[cnt1][cnt2]));
+            std::cerr << std::fixed << std::setprecision(6) 
+                    << EXP(emission_probs[cnt1][cnt2])
+                    << " ";
         }
-        printf("\n");
+        std::cerr << std::endl;
     }
 
     // dump transition probabilities
     printf("\n");
     for (int cnt1 = 0; cnt1 < N_STATES; cnt1++) {
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
-            printf("%.3f ", EXP(trans_probs[cnt1][cnt2]));
+            std::cerr << std::fixed << std::setprecision(6)
+                    << EXP(trans_probs[cnt1][cnt2])
+                    << " ";
         }
-        printf("\n");
+        std::cerr << std::endl;
     }
 }
 

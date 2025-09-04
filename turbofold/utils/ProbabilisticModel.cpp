@@ -82,7 +82,75 @@ double tmp_beam_prune(std::unordered_map<int, AlignState> &beamstep, int beamsiz
     return threshold;
 }
 
-pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, double>* posterior) const {
+void ProbabilisticModel::dump_coinc_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen) {
+    if (coinc_prob == nullptr) {
+        throw std::runtime_error(
+            "[LinearTurboFold Error] Coincidence probabilities not computed yet! You must run "
+            "compute_coincidence_probabilities() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cerr
+            << "[Hint] The directory for the output file may not exist. Please create it before running the method."
+            << std::endl;
+        throw std::runtime_error("[LinearTurboFold Error] Unable to open the file " + filepath +
+                                 " for writing coincidence probabilities.");
+    }
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i < seqlen; ++i) {
+        for (const auto &item : coinc_prob[i]) {
+            const int j = item.first;
+            const double prob = item.second.prob;
+            //if (prob < threshold) continue;
+
+            // output i, j, and the probability to the file
+            file << "i=" << i 
+                    << ", j=" << j 
+                    << ", probs=" << std::scientific << std::setprecision(6) << prob 
+                    << std::endl;
+
+        }
+    }
+}
+
+void ProbabilisticModel::dump_coinc_aln_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen) {
+    if (coinc_prob == nullptr) {
+        throw std::runtime_error(
+            "[LinearTurboFold Error] Coincidence probabilities not computed yet! You must run "
+            "compute_coincidence_probabilities() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cerr
+            << "[Hint] The directory for the output file may not exist. Please create it before running the method."
+            << std::endl;
+        throw std::runtime_error("[LinearTurboFold Error] Unable to open the file " + filepath +
+                                 " for writing coincidence probabilities.");
+    }
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i < seqlen; ++i) {
+        for (const auto &item : coinc_prob[i]) {
+            const int j = item.first;
+            const double prob = item.second.aln_prob;
+            //if (prob < threshold) continue;
+
+            // output i, j, and the probability to the file
+            file << "i=" << i 
+                    << ", j=" << j 
+                    << ", probs=" << std::scientific << std::setprecision(6) << prob 
+                    << std::endl;
+
+        }
+    }
+}
+
+pair<string *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, AlnProbs>* posterior) const {
     unordered_map<int, AlignState>* max_exp_acc = new unordered_map<int, AlignState>[seq1Length + seq2Length + 3];
     unsigned max_len = seq1Length > seq2Length ? seq1Length : seq2Length;
     // step 0
@@ -128,12 +196,16 @@ pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBe
                     if (next_i > 0 && next_i <= seq1Length && next_k > 0 && next_k <= seq2Length) {
                         // 0-based indexed in posterior 
                         if (posterior[next_i-1].find(next_k-1) == posterior[next_i-1].end()) continue;
-                        max_exp_acc[next_step][next_key].alpha = state.alpha + posterior[next_i-1].at(next_k-1);
+                        
+                        max_exp_acc[next_step][next_key].alpha = state.alpha + posterior[next_i-1].at(next_k-1).aln_prob;
                         max_exp_acc[next_step][next_key].i = next_i;
                         max_exp_acc[next_step][next_key].k = next_k;
                         max_exp_acc[next_step][next_key].step = next_step;
                         max_exp_acc[next_step][next_key].manner = m;
-                        // cout << i << " " << k << " " << next_i << " " << next_k << " " << tmp_aln_rets[next_step][next_key].alpha << endl;
+                        // cerr << i << " " << k << " " 
+                        //     << next_i << " " << next_k << " " 
+                        //     << posterior[next_i-1].at(next_k-1).aln_prob << " "
+                        //     << state.alpha << endl;
                     }
 
                     // if (next_i > 0 && next_i <= seq1Length && next_k > 0 && next_k <= seq2Length) {
@@ -165,7 +237,7 @@ pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBe
                             max_exp_acc[next_step][next_key].k = next_k;
                             max_exp_acc[next_step][next_key].step = next_step;
                             max_exp_acc[next_step][next_key].manner = m;
-                            // cout << next_i << " " << next_k << " " << max_exp_acc[next_step][next_key].alpha << endl;
+                            // cerr << next_i << " " << next_k << " " << max_exp_acc[next_step][next_key].alpha << endl;
                         }
                     }
                     break;
@@ -183,7 +255,7 @@ pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBe
                             max_exp_acc[next_step][next_key].k = next_k;
                             max_exp_acc[next_step][next_key].step = next_step;
                             max_exp_acc[next_step][next_key].manner = m;
-                            // cout << next_i << " " << next_k << " " << max_exp_acc[next_step][next_key].alpha << endl;
+                            // cerr << next_i << " " << next_k << " " << max_exp_acc[next_step][next_key].alpha << endl;
                         }
                     }
                     break;
@@ -195,8 +267,8 @@ pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBe
     }
 
     // compute traceback
-    vector<char> *alignment = new vector<char>; 
-    assert (alignment);
+    string* alignment = new string(); 
+    //assert (alignment);
 
     int seq1_pos = seq1Length;
     int seq2_pos = seq2Length;
@@ -252,16 +324,36 @@ pair<vector<char> *, float> ProbabilisticModel::LinearComputeAlignment(int hmmBe
     // cout << endl;
 
     // cout << "total: " << total - posterior[0][0].value << endl;
+
+        cerr << " Alignment: " << (*alignment)
+            << " MEA: " << total
+            << std::endl;
     delete[] max_exp_acc;
     return make_pair(alignment, total);
 }
 
 /// Equivalent to BuildPosterior from the Probcons 
-unordered_map<int, double> * ProbabilisticModel::LinearMultiAlnResults(MultiSeq *align1, MultiSeq *align2, const vector<vector<unordered_map<int, double>*>> &consistency_transform, float cutoff) const {
+/////////////////////////////////////////////////////////////////
+// ProbabilisticModel::BuildPosterior()
+//
+// Builds a posterior probability matrix needed to align a pair
+// of alignments.  Mathematically, the returned matrix M is
+// defined as follows:
+//    M[i,j] =     sum          sum      f(s,t,i,j)
+//             s in align1  t in align2
+// where
+//                  [  P(s[i'] <--> t[j'])
+//                  [       if s[i'] is a letter in the ith column of align1 and
+//                  [          t[j'] it a letter in the jth column of align2
+//    f(s,t,i,j) =  [
+//                  [  0    otherwise
+//
+/////////////////////////////////////////////////////////////////
+unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSeq *align1, MultiSeq *align2, const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform, float cutoff) const {
     const int seq1Length = align1->at(0).length();
     const int seq2Length = align2->at(0).length();
     
-    unordered_map<int, double>* sum_aln_ret = new unordered_map<int, double>[seq1Length + 1];
+    unordered_map<int, AlnProbs>* sum_aln_ret = new unordered_map<int, AlnProbs>[seq1Length + 1];
     // cout << seq1Length << " " << seq2Length << endl;
     for (int i = 0; i < align1->size(); i++){
         int first = align1->at(i).k_id;
@@ -274,32 +366,32 @@ unordered_map<int, double> * ProbabilisticModel::LinearMultiAlnResults(MultiSeq 
             // cout << "seqs: " << i << " " << j << " " << align1->GetSequence(i)->GetLength() << " " << align2->GetSequence(j)->GetLength() << endl;
 
             if(first < second){
-                unordered_map<int, double>* aln_ret = consistency_transform[first][second];
+                unordered_map<int, AlnProbs>* aln_ret = consistency_transform[first][second];
 
                 int seq1len = mapping1->size() - 1;
-                for (int ii = 0; ii < seq1len; ii++){
+                for (int ii = 0; ii <= seq1len; ii++){
                     int ibase = (*mapping1)[ii];
 
                     for (auto &item : aln_ret[ii]) {
                         // cout << "ii: " << ii << " " << item.first << endl;
                         int jbase = (*mapping2)[item.first];
-                        if (item.second < 0.01) continue;
+                        if (item.second.aln_prob < 0.01) continue;
 
-                        sum_aln_ret[ibase][jbase] += item.second;
-                        // cout << i <<  " "  << j <<  " "  << first << " "  << second << " " << ii << " "  << item.first << " " << ibase  << " " << jbase  << " " <<  item.second.value << " " << sum_aln_ret[ibase][jbase].value << endl;
+                        sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
+                        cerr << i <<  " "  << j <<  " "  << first << " "  << second  << " " << ibase  << " " << jbase  << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
             } else {
-                unordered_map<int, double>* aln_ret = consistency_transform[second][first];
+                unordered_map<int, AlnProbs>* aln_ret = consistency_transform[second][first];
 
                 int seq2len = mapping2->size() - 1;
                 for (int jj = 0; jj <= seq2len; jj++){
                     int jbase = (*mapping2)[jj];
                     for (auto &item : aln_ret[jj]) {
                         int ibase = (*mapping1)[item.first];
-                        if (item.second < 0.01) continue;
-                        sum_aln_ret[ibase][jbase] += item.second;
-                        // cout << i <<  " "  << j <<  " "  <<  first << " "  << second << " " << ibase  << " " << jbase <<  item.second.value << " " << sum_aln_ret[ibase][jbase].value << endl;
+                        if (item.second.aln_prob < 0.01) continue;
+                        sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
+                        cerr << i <<  " "  << j <<  " "  <<  first << " "  << second << " " << ibase  << " " << jbase << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
             }
@@ -312,7 +404,7 @@ unordered_map<int, double> * ProbabilisticModel::LinearMultiAlnResults(MultiSeq 
     return sum_aln_ret;
 }
 
-void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<int, double>* &xz_consistency_transform, unordered_map<int, double>* &zy_consistency_transform, unordered_map<int, double>* &new_xy_consistency_transform){
+void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<int, AlnProbs>* &xz_consistency_transform, unordered_map<int, AlnProbs>* &zy_consistency_transform, unordered_map<int, AlnProbs>* &new_xy_consistency_transform){
     // int lengthX = xz_consistency_transform->size();
     // cout << "lengthX: " << lengthX << endl;
     // int lengthZ = zy_consistency_transform->size();
@@ -328,7 +420,7 @@ void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<i
                 int j = zy_cand.first;
                 
                 //cerr << " j " << j << endl;
-                new_xy_consistency_transform[i][j] += xz_cand.second * zy_cand.second;
+                new_xy_consistency_transform[i][j].aln_prob += xz_cand.second.aln_prob * zy_cand.second.aln_prob;
                 // cerr << xz_cand.second * zy_cand.second << " ";
             }
         }
@@ -337,7 +429,7 @@ void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<i
 }
 
 // linearTurboFold
-vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsistencyTransform(MultiSeq *sequences, vector<vector<unordered_map<int, double>*>> &consistency_transform){
+vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiConsistencyTransform(MultiSeq *sequences, vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform){
     const int numSeqs = sequences->size();
 
     // For every pair of sequences
@@ -350,17 +442,17 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
             const int seq2Length = seq2.length();
 
             // allocate space for temporary results
-            unordered_map<int, double>* temp_pair_CT = new unordered_map<int, double>[seq1Length];
+            unordered_map<int, AlnProbs>* temp_pair_CT = new unordered_map<int, AlnProbs>[seq1Length];
 
             // Get the original alignment result
-            unordered_map<int, double>* &pair_CT = consistency_transform[i][j];
+            unordered_map<int, AlnProbs>* &pair_CT = consistency_transform[i][j];
 
             // Contribution from the summation where z = x and z = y
             // cout << "seq1length: " << seq1Length << endl;
             for (int k = 0; k < seq1Length; k++){
                 for(auto &item : pair_CT[k]){
                     int l = item.first;
-                    temp_pair_CT[k][l] = 2 * item.second;
+                    temp_pair_CT[k][l].aln_prob = 2 * item.second.aln_prob;
                     // cout << i << " " << j << " " << k << " " << l << " " << new_aln_ret[k][l].value << endl;
                 }
             }
@@ -385,7 +477,6 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
                 // cerr << "seqs: " << i << " " << j << " " << k << endl;
                 // LinearConsistencyTransform(seq1Length, xzCT, zyCT, temp_pair_CT);
 
-                // cout << "seqs: " << i << " " << j << " " << k << endl;
                 LinearConsistencyTransform(seq1Length, consistency_transform[i][k], consistency_transform[k][j], temp_pair_CT);
             }
 
@@ -393,7 +484,7 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
             for (int k = 0; k < seq1Length; k++){
                 for(auto &item : temp_pair_CT[k]){
                     int l = item.first;
-                    temp_pair_CT[k][l] /= numSeqs;
+                    temp_pair_CT[k][l].aln_prob /= numSeqs;
                 }
             }
 
@@ -401,8 +492,8 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
             for (int k = 0; k < seq1Length; k++){
                 for(auto &item : pair_CT[k]){
                     int l = item.first;
-                    if (temp_pair_CT[k].find(l) == temp_pair_CT[k].end()) continue; // N.B.
-                    if (temp_pair_CT[k][l] >= 0.01){
+                    if (temp_pair_CT[k].find(l) == temp_pair_CT[l].end()) continue; // N.B.
+                    if (temp_pair_CT[k][l].aln_prob >= 0.01){
                         consistency_transform[i][j][k][l] = temp_pair_CT[k][l];
                         consistency_transform[j][i][l][k] = temp_pair_CT[k][l];
                         // cout << i << " " << j << " " << k << " " << l << " " << temp_pair_CT[k][l].value << endl;
@@ -410,6 +501,13 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
                 }
             }
             delete[] temp_pair_CT;
+
+            dump_coinc_probs(("./vb_info/_msa_pct_" + std::to_string(i) + "_" +
+                                std::to_string(j) + ".bpp.txt"), 0.0, consistency_transform[i][j], seq1Length);
+        
+            dump_coinc_aln_probs(("./vb_info/_msa_pct_alnprobs_" + std::to_string(i) + "_" +
+                                std::to_string(j) + ".bpp.txt"), 0.0, consistency_transform[i][j], seq1Length);
+        
         }
     }
 
@@ -417,7 +515,7 @@ vector<vector<unordered_map<int, double>*>> ProbabilisticModel::LinearMultiConsi
 }
 
 MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq *align1, MultiSeq *align2,
-                                const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                                const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                 const ProbabilisticModel &model, int hmmBeam){
 
     // Print some info about the alignment
@@ -426,9 +524,13 @@ MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq *align1, MultiSeq 
     // delete posterior;
 
     // Choose the alignment routine depending on the "cosmetic" gap penalties used
-    const unordered_map<int, double> *sum_aln_ret = model.LinearMultiAlnResults(align1, align2, consistency_transform);
+    unordered_map<int, AlnProbs> *sum_aln_ret = model.LinearMultiAlnResults(align1, align2, consistency_transform);
 
-    pair<vector<char> *, float> alignment = LinearComputeAlignment(hmmBeam, align1->at(0).length(), align2->at(0).length(), sum_aln_ret);
+    dump_coinc_probs(("./vb_info/_msa_bpos_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
+
+    dump_coinc_aln_probs(("./vb_info/_msa_bpos_alnprobs_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
+
+    pair<string *, float> alignment = LinearComputeAlignment(hmmBeam, align1->at(0).length(), align2->at(0).length(), sum_aln_ret);
     delete[] sum_aln_ret;
 
     // Build final alignment
@@ -446,7 +548,7 @@ MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq *align1, MultiSeq 
 }
 
 MultiSeq* ProbabilisticModel::LinearProcessTree (const TreeNode *tree, MultiSeq *sequences,
-                            const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                            const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                             const ProbabilisticModel &model, int hmmBeam){
     MultiSeq *result;
     
@@ -474,7 +576,7 @@ MultiSeq* ProbabilisticModel::LinearProcessTree (const TreeNode *tree, MultiSeq 
     return result;
 }
 
-void ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+void ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                             const ProbabilisticModel &model, MultiSeq* &alignment, int i, int hmmBeam){
     set<int> groupOne, groupTwo;
 
@@ -506,7 +608,7 @@ void ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unorde
 }
 
 MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree, MultiSeq *sequences,
-                                      const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                                      const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                       const ProbabilisticModel &model, int hmmBeam){
     
     unsigned int num_iterative_refinement_reps = 100;

@@ -43,7 +43,7 @@ class LinearTurboFold {
     int itr;                                                                 // current iteration
     int beam_size = 100;                                                     // current beam size for beam pruning
     std::vector<std::vector<std::unordered_map<int, double>>> extinf_cache;  // cache for extrinsic information
-    vector<vector<unordered_map<int, double>*>> consistency_transform;
+    vector<vector<unordered_map<int, AlnProbs>*>> consistency_transform;
 
     LinearTurboFold(MultiSeq *multi_seq, const EnergyParamsType energy_params, const int num_itr,
                     const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
@@ -97,7 +97,8 @@ class LinearTurboFold {
     double get_extrinsic_info(const Seq &x, int i, int j);
     void reset_extinf_cache();
     int multiple_sequence_alignment();
-    void dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen);
+    void dump_coinc_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen);
+    void dump_coinc_aln_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen);
 
     void run_phmm_alignment();
     void run();

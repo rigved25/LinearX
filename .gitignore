@@ -41,6 +41,7 @@ parity_out/
 input*/
 output*/
 vb*/
+parity*/
 
 # ignore mac config files
 .DS_Store

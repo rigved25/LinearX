@@ -73,8 +73,8 @@ class LinearAlign {
     std::vector<int> *seq2 = nullptr;
     int seq_len_sum;
 
-    std::unordered_map<int, double> *coinc_prob1 = nullptr;
-    std::unordered_map<int, double> *coinc_prob2 = nullptr;
+    std::unordered_map<int, AlnProbs> *coinc_prob1 = nullptr;
+    std::unordered_map<int, AlnProbs> *coinc_prob2 = nullptr;
 
     std::vector<int> *prob_rev_idx = nullptr;
 
@@ -139,6 +139,7 @@ class LinearAlign {
             "./../../linear_align/parameters/fam_hmm_pars.dat";
         phmm = new Phmm(phmm_pars_fp.c_str());
         phmm->set_parameters_by_sim(similarity);
+        phmm->print_parameters();
     }
 
     void reset_beams(bool freeMemory = true);

@@ -2,6 +2,7 @@
 #define PHMM_HPP
 
 #include <iostream>
+#include <iomanip>
 #include <unistd.h>
 
 #include "./../utility/utility.hpp"

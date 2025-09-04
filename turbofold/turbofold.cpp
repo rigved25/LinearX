@@ -2,7 +2,7 @@
 
 #include "turbofold.hpp"
 
-void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float threshold, std::unordered_map<int, double>* coinc_prob, int seqlen) {
+void LinearTurboFold::dump_coinc_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen) {
     if (coinc_prob == nullptr) {
         throw std::runtime_error(
             "[LinearTurboFold Error] Coincidence probabilities not computed yet! You must run "
@@ -23,18 +23,52 @@ void LinearTurboFold::dump_coinc_probs2(const std::string &filepath, const float
     for (int i = 0; i < seqlen; ++i) {
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
-            const double prob = item.second;
+            const double prob = item.second.prob;
             //if (prob < threshold) continue;
 
             // output i, j, and the probability to the file
             file << "i=" << i 
                     << ", j=" << j 
-                    << ", probs=" << std::scientific << std::setprecision(4) << prob 
+                    << ", probs=" << std::scientific << std::setprecision(6) << prob 
                     << std::endl;
 
         }
     }
-};
+}
+
+void LinearTurboFold::dump_coinc_aln_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen) {
+    if (coinc_prob == nullptr) {
+        throw std::runtime_error(
+            "[LinearTurboFold Error] Coincidence probabilities not computed yet! You must run "
+            "compute_coincidence_probabilities() first.");
+    }
+
+    // open the file for writing
+    std::ofstream file(filepath);
+    if (!file) {
+        std::cerr
+            << "[Hint] The directory for the output file may not exist. Please create it before running the method."
+            << std::endl;
+        throw std::runtime_error("[LinearTurboFold Error] Unable to open the file " + filepath +
+                                 " for writing coincidence probabilities.");
+    }
+
+    // dump the coincidence probabilities to the file
+    for (int i = 0; i < seqlen; ++i) {
+        for (const auto &item : coinc_prob[i]) {
+            const int j = item.first;
+            const double prob = item.second.aln_prob;
+            //if (prob < threshold) continue;
+
+            // output i, j, and the probability to the file
+            file << "i=" << i 
+                    << ", j=" << j 
+                    << ", probs=" << std::scientific << std::setprecision(6) << prob 
+                    << std::endl;
+
+        }
+    }
+}
 
 int LinearTurboFold::get_seq_pair_index(const int k1, const int k2) {
     // ensure the indices are within bounds
@@ -82,8 +116,8 @@ double LinearTurboFold::get_extrinsic_info(const Seq &x, const int i, const int 
                 for (const auto &itr2 : aln.coinc_prob1[j]) {
                     const int k = itr1.first;
                     const int l = itr2.first;
-                    const double aln_prob_ik = itr1.second;
-                    const double aln_prob_jl = itr2.second;
+                    const double aln_prob_ik = itr1.second.prob;
+                    const double aln_prob_jl = itr2.second.prob;
                     const double y_bpp_kl = y_pf.get_bpp(k, l);
 
                     output += (1 - seq_idnty) * y_bpp_kl * aln_prob_ik * aln_prob_jl;
@@ -135,13 +169,13 @@ void LinearTurboFold::run_phmm_alignment(){
         seq_idnty = alignment.get_seq_identity();    // get the new sequence identity using the new alignment
         seq_identities[aln_pair_index] = seq_idnty;  // store the updated sequence identity
 
-        // if (verbose_state == VerboseState::DEBUG) {
-        // std::cout << "Alignment: " << k1 << " " << k2 << std::endl;
-        // std::cout << alignment[0].sequence << std::endl;
-        // std::cout << alignment[1].sequence << std::endl;
-        // aln.print_alpha_beta();
-        // std::cout << alignment.get_seq_identity() << std::endl;
-        // }
+        if (verbose_state == VerboseState::DEBUG) {
+            std::cerr << "Alignment: " << k1 << " " << k2 << std::endl;
+            std::cerr << alignment[0].sequence << std::endl;
+            std::cerr << alignment[1].sequence << std::endl;
+            // aln.print_alpha_beta();
+            std::cerr << "Sequence Identity: " << seq_idnty << std::endl;
+        }
 
         // compute partition function
         aln.reset_beams(true);
@@ -168,16 +202,20 @@ void LinearTurboFold::run_phmm_alignment(){
         // equivalent to cal_align_prob
         aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
 
-        if(itr == num_itr) {
+        if(itr == num_itr + 1) {
             
             // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
             consistency_transform[k1][k2] = aln.coinc_prob1;
             consistency_transform[k2][k1] = aln.coinc_prob2;
         }
 
-        dump_coinc_probs2(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
+        dump_coinc_probs(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
                                     std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
         
+        dump_coinc_aln_probs(("./vb_info/" + std::to_string(itr) + "_aln_prob_" + std::to_string(k1) + "_" +
+                                    std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
+        
+
         if (verbose_state == VerboseState::DEBUG) {
             aln.print_alpha_beta();
         } else if (verbose_state == VerboseState::DETAIL) {
@@ -330,21 +368,43 @@ int LinearTurboFold::multiple_sequence_alignment()
         {
             if(i_seq1 != i_seq2)
             {   
-                // Maximum Expected Accuracy calculation
-                std::cerr << "pair: ("<< i_seq1 <<","<< i_seq2 <<") "
-                            << " lengths: "<< multi_seq->at(i_seq1).length()
-                            << ","<< multi_seq->at(i_seq2).length()
-                            << "  transform-size: "<< consistency_transform.size()
-                            << "x"<< consistency_transform[i_seq1].size()
-                            //<< " posterior size: "<< consistency_transform[i_seq1][i_seq2]->size()
-                            << std::endl;
+                size_t seq1length = multi_seq->at(i_seq1).length();
+                size_t seq2length = multi_seq->at(i_seq2).length();
 
-                pair<vector<char> *, float> pair_alignment = model.LinearComputeAlignment(hmm_beam, multi_seq->at(i_seq1).length(), 
-                    multi_seq->at(i_seq2).length(), consistency_transform[i_seq1][i_seq2]);
+                // Maximum Expected Accuracy calculation
+                for (int i = 0; i < seq1length; ++i) {
+                    auto& cons_trans_i = consistency_transform[i_seq1][i_seq2][i]; // unordered_map<int, Node>
+
+                    for (auto it = cons_trans_i.begin(); it != cons_trans_i.end(); ) {
+                        int k = it->first;
+                        double value = it->second.aln_prob;
+
+                        if (value < 0.01) {
+                            it = cons_trans_i.erase(it); // returns iterator to next
+                            consistency_transform[i_seq2][i_seq1][k].erase(i);
+                        } else {
+                            ++it;
+                        }
+                    }
+                }
+
+
+                pair<string*, float> pair_alignment = model.LinearComputeAlignment(hmm_beam, seq1length, 
+                    seq2length, consistency_transform[i_seq1][i_seq2]);
+
+                std::cerr << "pair: ("<< i_seq1 <<","<< i_seq2 <<") "
+                    << " lengths: "<< seq1length
+                    << ","<< seq2length
+                    << "  transform-size: "<< consistency_transform.size()
+                    << "x"<< consistency_transform[i_seq1].size()
+                    //<< " posterior size: "<< consistency_transform[i_seq1][i_seq2]->size()
+                    << " Alignment: " << (*pair_alignment.first)
+                    << " MEA: " << pair_alignment.second
+                    << std::endl;
 
                 std::cerr << "completed running MEA" << std::endl;
 
-                float distance = pair_alignment.second / min (multi_seq->at(i_seq1).length(), multi_seq->at(i_seq2).length());
+                float distance = pair_alignment.second / min (seq1length, seq2length);
                 distances[i_seq1][i_seq2] = distances[i_seq2][i_seq1] = distance;
                 delete pair_alignment.first;
             }

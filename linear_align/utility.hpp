@@ -51,4 +51,9 @@ struct AlnEdge {
     }
 };
 
+struct AlnProbs {
+    double prob = xlog(0.0);
+    double aln_prob = 0.0;
+};
+
 #endif // LA_UTILS_HPP

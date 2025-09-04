@@ -6,10 +6,12 @@
 #include <cstdio>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
 
 #include "../../sequence/multi_seq.hpp"
 #include "./../../utility/log_math.hpp"
 #include "GuideTree.h"
+#include "./../../linear_align/utility.hpp"
 
 #ifdef TURBOHOMOLOGY
 	#define ChooseBestOfThree ChooseBestOfThreeturbohomology
@@ -43,44 +45,48 @@ public:
     vector<float> *LinearBuildPosterior(MultiSeq *align1, MultiSeq *align2,
                       const vector<vector<unordered_map<int, double>*>> &mul_aln_rets, float cutoff = 0.0f) const;
 
-    unordered_map<int, double> *LinearMultiAlnResults(MultiSeq *align1, MultiSeq *align2,
-                   const vector<vector<unordered_map<int, double>*>> &mul_aln_rets, float cutoff = 0.0f) const;
+    unordered_map<int, AlnProbs> *LinearMultiAlnResults(MultiSeq *align1, MultiSeq *align2,
+                   const vector<vector<unordered_map<int, AlnProbs>*>> &mul_aln_rets, float cutoff = 0.0f) const;
 
-    pair<vector<char> *, float> LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, double>* posterior) const;
+    pair<string *, float> LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, AlnProbs>* posterior) const;
 
     //! This function computes the consistency transformation for sequence Z by taking two posterior probabilities matrices of alignments between X-Z and Z-Y.
     //! For the case that sequence Z's index is larger than that of X.
     //! The transformed matrix is added to \param posterior.
-    void LinearConsistencyTransform(int lengthX, unordered_map<int, double>* &xz_aln_ret, unordered_map<int, double>* &zy_aln_ret, unordered_map<int, double>* &new_xy_ret);
+    void LinearConsistencyTransform(int lengthX, unordered_map<int, AlnProbs>* &xz_aln_ret, unordered_map<int, AlnProbs>* &zy_aln_ret, unordered_map<int, AlnProbs>* &new_xy_ret);
 
     //! This function takes multiple sequences and posterior probability matices to perform three-way probabilistic consistency transformation.
     //! Returns new re-estimated alignment score matrices. 
     //! The formula is: P'(x[i]-y[j])=(1/|S|)*sum_z_in_S{ sum_k{ P(x[i]-z[k]) * P(z[k]-y[j]) } }
-    vector<vector<unordered_map<int, double>*>> LinearMultiConsistencyTransform(MultiSeq *sequences, vector<vector<unordered_map<int, double>*>> &consistency_transform);
+    vector<vector<unordered_map<int, AlnProbs>*>> LinearMultiConsistencyTransform(MultiSeq *sequences, vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform);
 
     //! This function takes two multiple sequence alignments as input.
     //! Returns the alignment of the two MultiSequence objects.
     MultiSeq *LinearAlignAlignments (MultiSeq *align1, MultiSeq *align2,
-                                    const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                                    const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                     const ProbabilisticModel &model, int hmmBeam);
 
     //! This function takes guide tree (computed by distance) as input.
     //! Returns the aligned sequences corresponding to a node or leaf of a guide tree.
     MultiSeq *LinearProcessTree (const TreeNode *tree, MultiSeq *sequences,
-                                const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                                const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                 const ProbabilisticModel &model, int hmmBeam);
 
     //! This function computes the final alignment by calling ProcessTree() and performing iterative refinement.
     MultiSeq *LinearComputeFinalAlignment (const TreeNode *tree, MultiSeq *sequences,
-                                        const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+                                        const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                         const ProbabilisticModel &model, int hmmBeam);
 
     //! This function performs randomized partitioning iterative refinement. 
     //! Taking posterior probability matrices, parameters of probabilistic model, and multiple sequence alignments.
     //! Returns a new multiple sequence alignment.
-    void LinearDoIterativeRefinement (const vector<vector<unordered_map<int, double>*>> &consistency_transform,
+    void LinearDoIterativeRefinement (const vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform,
                                 const ProbabilisticModel &model, MultiSeq* &alignment, int i, int hmmBeam);
-                                
+
+    void dump_coinc_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen);
+    
+    void dump_coinc_aln_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen);
+
 };
 
 struct AlignState {

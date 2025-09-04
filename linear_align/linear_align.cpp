@@ -197,28 +197,28 @@ void LinearAlign::dump_coinc_probs(const std::string &filepath, const float thre
     file << "Saving the requested conincidence probabilities" << std::endl;
 
     // dump the coincidence probabilities to the file
-    for (int i = 0; i <= seq1->size(); ++i) {
+    for (int i = 0; i < seq1->size(); ++i) {
         for (const auto &item : coinc_prob1[i]) {
             const int j = item.first;
-            const double prob = item.second;
+            const double prob = item.second.prob;
             if (prob < threshold) continue;
 
             // output i, j, and the probability to the file
-            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+            file << i << " " << j << " " << std::fixed << std::setprecision(6) << prob << std::endl;
         }
     }
 
     file << "Saving the mirror of the requested conincidence probabilities" << std::endl;
 
     // dump the coincidence probabilities to the file
-    for (int i = 0; i <= seq2->size(); ++i) {
+    for (int i = 0; i < seq2->size(); ++i) {
         for (const auto &item : coinc_prob2[i]) {
             const int j = item.first;
-            const double prob = item.second;
+            const double prob = item.second.prob;
             if (prob < threshold) continue;
 
             // output i, j, and the probability to the file
-            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << std::endl;
+            file << i << " " << j << " " << std::fixed << std::setprecision(6) << prob << std::endl;
         }
     }
 };

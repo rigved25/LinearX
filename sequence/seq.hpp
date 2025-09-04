@@ -32,7 +32,7 @@ class Seq {
     void swap_nuc(const char nuc1, const char nuc2);  // swap all occurences of nuc1 with nuc2
     float compute_seq_identity(const Seq &seq2);      // compute sequence identity with another sequence
     Seq *clone() const ;
-    Seq *add_gaps(std::vector<char> *alignment, char id);
+    Seq *add_gaps(std::string *alignment, char id);
     std::vector<int> *get_mapping () const;
 
 
