@@ -178,7 +178,7 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
 }
 
 template <Mode mode>
-void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateType type, bool use_match_score) {
+inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateType type, bool use_match_score) {
     if constexpr (mode == Mode::BEST) {
         best_edge.reset();
     } else {
@@ -290,7 +290,7 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
                 100.0 * execution_time / max(_last_inside_exec_time, 1.0));
-        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_visited, 0);
+        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_visited, (unsigned long)0);
         fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
                 100.0 * nodes_visited / nodes_visited, nodes_visited, nodes_visited);
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);

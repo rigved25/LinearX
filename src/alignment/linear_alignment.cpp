@@ -8,8 +8,7 @@ using namespace linearx::constants::math;
 using namespace linearx::math;
 using namespace std;
 
-LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, float alpha1, float alpha2,
-                                 float alpha3)
+LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, float alpha1, float alpha2, float alpha3)
     : seq1(seq1),
       seq2(seq2),
       seq_len_sum(seq1.length() + seq2.length()),
@@ -106,10 +105,10 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
     for (int s = 0; s <= seq_len_sum; ++s) {
         for (const HStateType h : hstate_types) {
             vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beam(h);
-            for (const auto &item : beam[s]) {
+            for (auto &item : beam[s]) {
                 const int i = item.first.first;
                 const int j = item.first.second;
-                HState &state = beam[s][{i, j}];
+                HState &state = item.second;
 
                 const value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
                 if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD && i > 0 && j > 0) {
@@ -122,12 +121,13 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
 
     unsigned long num_pruned = 0;  // for keeping track of pruned P(i,j)s
     unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
+    const value_type fam_threshold = phmm->get_fam_threshold();
     for (int i = 0; i < seq1.length(); ++i) {
         for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
             const int j = it->first;
             value_type &prob = it->second;
 
-            if (prob < phmm->get_fam_threshold()) {
+            if (prob < fam_threshold) {
                 it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {

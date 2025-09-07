@@ -66,7 +66,7 @@ class LinearPartition {
     Structure get_mfe_structure();
     inline value_type get_bpp(const int i, const int j) const {
         const auto &bpp_j = bpp[j];
-        const auto &item = bpp_j.find(i);
+        const auto item = bpp_j.find(i);
         if (item == bpp_j.end()) {
             return 0.0;
         }

@@ -88,7 +88,7 @@ class LinearAlignment {
     void dump_coinc_probs(const std::string &filepath, const float threshold = 0.001f) const;
     inline value_type get_bpp(const int i, const int j) const {
         const auto &coinc_prob_i = coinc_prob[i];
-        const auto &it = coinc_prob_i.find(j);
+        const auto it = coinc_prob_i.find(j);
         if (it == coinc_prob_i.end()) {
             return 0.0;
         }

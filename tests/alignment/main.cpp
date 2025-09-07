@@ -20,8 +20,8 @@ TEST_CASE("LinearAlignment basic functionality", "[align][1]") {
     la.reset_beams();
     la.use_prob_set2(similarity);
     la.compute_inside(Mode::PARTITION);
-    // la.compute_outside(true);
+    la.compute_outside(true);
     // la.compute_outside(true, std::numeric_limits<value_type>::max());
-    la.compute_outside(false);
-    // la.compute_coincidence_probabilities();
+    // la.compute_outside(false);
+    la.compute_coincidence_probabilities();
 }
