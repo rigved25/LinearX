@@ -1,4 +1,5 @@
 // src/alignment/backward.cpp
+#include <iomanip>
 #include <linearx/alignment/linear_align.hpp>
 
 using namespace std;
@@ -6,8 +7,8 @@ using namespace linearx::utils;
 
 inline __attribute__((always_inline)) void LinearAlignment::update_best_trace(const AlnEdge &new_edge,
                                                                               const HStateType &new_trace) {
-    const double new_score = new_edge.weight + (new_edge.prev ? new_edge.prev->alpha : 0);
-    const double best_score = best_edge.weight + (best_edge.prev ? best_edge.prev->alpha : 0);
+    const value_type new_score = new_edge.weight + (new_edge.prev ? new_edge.prev->alpha : 0);
+    const value_type best_score = best_edge.weight + (best_edge.prev ? best_edge.prev->alpha : 0);
     if (new_score >= best_score) {
         best_edge = new_edge;
         best_trace = new_trace;
@@ -60,33 +61,33 @@ MultiSeq LinearAlignment::get_alignment() {
     return alignment;
 }
 
-inline __attribute__((always_inline)) void LinearAlignment::update_state_beta(HState &state, const double new_score) {
+inline __attribute__((always_inline)) void LinearAlignment::update_state_beta(HState &state,
+                                                                              const value_type new_score) {
     state.beta = LOG_SUM(state.beta, new_score);
 }
 
-void LinearAlignment::compute_outside(bool use_lazy_outside, double deviation_threshold, bool verbose_output) {
+void LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold, bool verbose_output) {
     if (!use_lazy_outside) {
         run_normal_outside(verbose_output);
         return;
     }
 
-    const double global_threshold =
-        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha + deviation_threshold;
-
-    unsigned long total_states = 0, states_visited = 0;
+    const value_type global_threshold =
+        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha - deviation_threshold;
+    unsigned long total_states = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
-
-    auto process_beam = [&](const int s, unordered_map<pair<int, int>, HState, PairHash> &beam, const HStateType type) {
+    incoming_edges.reserve(3 * bestALN[seq_len_sum].size());
+    auto process_beam = [&](unordered_map<pair<int, int>, HState, PairHash> &beam, const HStateType type) {
         for (auto &item : beam) {
             const int i = item.first.first;
             const int j = item.first.second;
             HState &state = item.second;
             if (state.alpha + state.beta > global_threshold) {
-                double edge_threshold = global_threshold - state.beta;
+                value_type edge_threshold = global_threshold - state.beta;
                 pair<int, int> local_edges_info = backward_update(i, j, state, type, edge_threshold);
                 edges_saved += local_edges_info.first;
                 edges_pruned += local_edges_info.second;
-                states_visited += 1;
+                nodes_visited += 1;
             }
             total_states += 1;
         }
@@ -96,33 +97,36 @@ void LinearAlignment::compute_outside(bool use_lazy_outside, double deviation_th
         cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
     }
     auto start_time = chrono::high_resolution_clock::now();
-    process_beam(seq_len_sum + 2, bestALN[seq_len_sum + 2], HStateType::ALN);
+    process_beam(bestALN[seq_len_sum + 2], HStateType::ALN);
     for (int s = seq_len_sum; s > 0; --s) {
         if (verbose_output) {
             linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum - 1);
         }
 
         // reverse topological order: ALN->INS2->INS1
-        process_beam(s, bestALN[s], HStateType::ALN);
-        process_beam(s, bestINS2[s], HStateType::INS2);
-        process_beam(s, bestINS1[s], HStateType::INS1);
+        process_beam(bestALN[s], HStateType::ALN);
+        process_beam(bestINS2[s], HStateType::INS2);
+        process_beam(bestINS1[s], HStateType::INS1);
     }
     auto end_time = chrono::high_resolution_clock::now();
-    const double execution_time =
-        chrono::duration_cast<chrono::microseconds>(end_time - start_time).count() / 1000.0;  // in milliseconds
-
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const float effective_beam_size = float(nodes_visited) / (3 * seq_len_sum);
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
                 100.0 * execution_time / max(_last_inside_exec_time, 1.0));
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
-        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n\n",
-                100.0 * states_visited / total_states, states_visited, total_states);
+        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
+                100.0 * nodes_visited / total_states, nodes_visited, total_states);
+        fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
+        fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
+                bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
+        fprintf(stderr, "\n");
     }
 }
 
 pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i, const int j, const HState &state,
                                                                     const HStateType type,
-                                                                    const double edge_threshold) {
+                                                                    const value_type edge_threshold) {
     if ((i == 0 || j == 0) && type == HStateType::ALN) {
         return make_pair(0, 0);
     }
@@ -136,16 +140,16 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
     saved_edges.reserve(incoming_edges.size());
     AlnEdge *best_edge = nullptr;
 
-    double best_inside = LOG(0.0);
-    double saved_inside = LOG(0.0);
+    value_type best_inside = LOG(0.0);
+    value_type saved_inside = LOG(0.0);
 
     unsigned long edges_pruned = 0;
     unsigned long edges_saved = 0;
 
     for (auto &edge : incoming_edges) {
-        double edge_inside = LOG_MUL(edge.prev->alpha, edge.weight);  // LOG_MUL(a, b) -> a + b
-        if (edge_inside > edge_threshold) {                           // keep the edge
-            saved_inside = LOG_SUM(saved_inside, edge_inside);        // Fast_LogPlusEquals(saved_inside, edge_inside);
+        value_type edge_inside = LOG_MUL(edge.prev->alpha, edge.weight);  // LOG_MUL(a, b) -> a + b
+        if (edge_inside > edge_threshold) {                               // keep the edge
+            saved_inside = LOG_SUM(saved_inside, edge_inside);
             saved_edges.push_back(&edge);
         } else {  // prune the edge
             edges_pruned++;
@@ -156,7 +160,7 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
         }
     }
 
-    double delta;  // scaling factor to compensate for edge pruning
+    value_type delta;  // scaling factor to compensate for edge pruning
     if (!saved_edges.empty()) {
         delta = LOG_DIV(state.alpha, saved_inside);  // LOG_DIV(a, b) -> a - b
     } else {
@@ -200,9 +204,9 @@ void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateT
         auto &mp = beam[p + q];
         auto it = mp.find({p, q});
         if (it != mp.end()) {
-            double edge_weight = get_trans_emit_prob(i, j, type, h_prev);
+            value_type edge_weight = get_trans_emit_prob(i, j, type, h_prev);
             if (use_match_score && type == HStateType::ALN) {
-                double match_score = get_match_score(i - 1, j - 1);
+                value_type match_score = get_match_score(i - 1, j - 1);
                 edge_weight = LOG_MUL(edge_weight, match_score);
             }
             // new_edge.set(&(it->second), edge_weight);
@@ -228,7 +232,8 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
         cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
     }
     bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
-    int states_visited = 0;
+    unsigned long nodes_visited = 0;
+    unsigned long edges_visited = 0;
     for (int s = seq_len_sum; s >= 0; --s) {
         if (verbose_output) {
             linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum);
@@ -239,13 +244,14 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
                 int i = item.first.first;
                 int j = item.first.second;
                 HState &state = beam[s][{i, j}];
-                states_visited += 1;
+                nodes_visited += 1;
                 // INS1
                 if (i < seq1.length() && j <= seq2.length()) {
                     auto it = bestINS1[s + 1].find({i + 1, j});
                     if ((it != bestINS1[s + 1].end())) {
-                        double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                        double score = LOG_MUL(prob, it->second.beta);
+                        edges_visited += 1;
+                        value_type prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                        value_type score = LOG_MUL(prob, it->second.beta);
                         update_state_beta(state, score);
                     }
                 }
@@ -253,8 +259,9 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
                 if (i <= seq1.length() && j < seq2.length()) {
                     auto it = bestINS2[s + 1].find({i, j + 1});
                     if ((it != bestINS2[s + 1].end())) {
-                        double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                        double score = LOG_MUL(prob, it->second.beta);
+                        edges_visited += 1;
+                        value_type prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                        value_type score = LOG_MUL(prob, it->second.beta);
                         update_state_beta(state, score);
                     }
                 }
@@ -263,10 +270,11 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
                 if ((i < seq1.length() && j < seq2.length()) || end_check) {
                     auto it = bestALN[s + 2].find({i + 1, j + 1});
                     if (it != bestALN[s + 2].end()) {
-                        double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                        double score = LOG_MUL(prob, it->second.beta);
+                        edges_visited += 1;
+                        value_type prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                        value_type score = LOG_MUL(prob, it->second.beta);
                         if (use_match_score) {
-                            double match_score = get_match_score(i, j);
+                            value_type match_score = get_match_score(i, j);
                             score = LOG_MUL(score, match_score);
                         }
                         update_state_beta(state, score);
@@ -276,11 +284,18 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
         }
     }
     // update/print time stats
-    const auto end_time = chrono::high_resolution_clock::now();
-    const double exec_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const float effective_beam_size = float(nodes_visited) / (3 * seq_len_sum);
     if (verbose_output) {
-        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", exec_time,
-                100.0 * exec_time / max(_last_inside_exec_time, 1.0));
-        fprintf(stderr, "  - Visited Nodes: %d\n\n", states_visited);
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
+                100.0 * execution_time / max(_last_inside_exec_time, 1.0));
+        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_visited, 0);
+        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
+                100.0 * nodes_visited / nodes_visited, nodes_visited, nodes_visited);
+        fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
+        fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
+                bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
+        fprintf(stderr, "\n");
     }
 }

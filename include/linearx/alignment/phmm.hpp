@@ -1,8 +1,10 @@
 // linearx/linear_align/phmm.hpp
 #pragma once
+
 #include <unistd.h>
 
 #include <iostream>
+#include <linearx/config.hpp>
 
 #define N_STATES (3)
 #define N_OUTPUTS (27)
@@ -10,7 +12,7 @@
 
 class Phmm {
    public:
-    inline static double EMIT_PROBS[27][3] = {
+    inline static value_type EMIT_PROBS[27][3] = {
         {0.000000, 0.000000, 0.134009},  // AA
         {0.000000, 0.000000, 0.027164},  // AC
         {0.000000, 0.000000, 0.049659},  // AG
@@ -40,33 +42,33 @@ class Phmm {
         {0.000000, 0.000000, 1.000000}   // END
     };
 
-    inline static double TRANS_PROBS[3][3] = {
+    inline static value_type TRANS_PROBS[3][3] = {
         {0.666439, 0.041319, 0.292242},  // INS1
         {0.041319, 0.666439, 0.292242},  // INS2
         {0.022666, 0.022666, 0.954668}   // ALIGN
     };
 
    private:
-    double **emission_probs;
-    double **trans_probs;
+    value_type **emission_probs;
+    value_type **trans_probs;
 
-    double *fam_hmm_pars;
-    double *fam_thresholds;
+    value_type *fam_hmm_pars;
+    value_type *fam_thresholds;
 
    public:
     // Replace the emission and transition probabilities.
-    Phmm(double new_emit_probs[N_OUTPUTS][N_STATES], double new_trans_probs[N_STATES][N_STATES]);
+    Phmm(value_type new_emit_probs[N_OUTPUTS][N_STATES], value_type new_trans_probs[N_STATES][N_STATES]);
     Phmm(const char *phmm_pars_file);
     ~Phmm();
 
     float similarity = -1.0f;
 
-    void set_parameters_by_sim(double similarity);
-    int get_bin_index(double similarity, int n_bins);
-    double get_fam_threshold();
+    void set_parameters_by_sim(float similarity);
+    int get_bin_index(float similarity, int n_bins);
+    value_type get_fam_threshold();
 
-    double get_emit_prob(int sym_index, int state);
-    double get_trans_prob(int prev, int next);
+    value_type get_emit_prob(int sym_index, int state);
+    value_type get_trans_prob(int prev, int next);
 
     void alloc_init_params();
     void free_params();

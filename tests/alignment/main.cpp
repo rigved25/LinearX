@@ -13,16 +13,15 @@ TEST_CASE("LinearAlignment basic functionality", "[align][1]") {
     la.print_alpha_beta();
 
     auto aln = la.get_alignment();
-    aln.print(std::cout, false);
+    // aln.print(std::cout, false);
     const float similarity = aln.average_seq_identity();
-    std::cout << "\nAverage sequence identity: " << similarity << std::endl;
+    std::cout << "\nAverage sequence identity: " << similarity << std::endl << std::endl;
 
     la.reset_beams();
     la.use_prob_set2(similarity);
     la.compute_inside(Mode::PARTITION);
     // la.compute_outside(true);
-    // la.compute_outside(true, -linearx::constants::math::VALUE_MAX * 100, true);
+    // la.compute_outside(true, std::numeric_limits<value_type>::max());
     la.compute_outside(false);
-    la.compute_coincidence_probabilities();
-    la.print_alpha_beta();
+    // la.compute_coincidence_probabilities();
 }

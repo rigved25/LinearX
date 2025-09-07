@@ -1,10 +1,9 @@
 // linearx/energy/BLParams.hpp
 #pragma once
-#include <linearx/utility/constants.hpp>
+#include <linearx/constants.hpp>
 
 
 struct BLParams {
-
   const static int ML_intern37 = 15;
   const static int ML_closing37 = 315;
   const static int ML_BASE37 = -2;

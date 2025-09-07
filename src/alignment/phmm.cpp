@@ -1,8 +1,8 @@
 #include <linearx/alignment/phmm.hpp>
 #include <linearx/alignment/utility.hpp>
-#include <linearx/utility/utils.hpp>
+#include <linearx/utility.hpp>
 
-Phmm::Phmm(double new_emission_probs[N_OUTPUTS][N_STATES], double new_trans_probs[N_STATES][N_STATES]) {
+Phmm::Phmm(value_type new_emission_probs[N_OUTPUTS][N_STATES], value_type new_trans_probs[N_STATES][N_STATES]) {
     this->alloc_init_params();
 
     // copy transition matrix
@@ -45,25 +45,25 @@ Phmm::Phmm(const char *phmm_pars_file) {
 
 void Phmm::alloc_init_params() {
     // Copy transition matrix.
-    this->trans_probs = (double **)malloc(sizeof(double *) * (N_STATES + 2));
+    this->trans_probs = (value_type **)malloc(sizeof(value_type *) * (N_STATES + 2));
     for (int cnt1 = 0; cnt1 < N_STATES; cnt1++) {
-        this->trans_probs[cnt1] = (double *)malloc(sizeof(double) * (N_STATES + 2));
+        this->trans_probs[cnt1] = (value_type *)malloc(sizeof(value_type) * (N_STATES + 2));
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
             trans_probs[cnt1][cnt2] = LOG(0.0f);
         }  // cnt2 loop
     }  // cnt1 loop
 
     // Copy emission probabilities.
-    this->emission_probs = (double **)malloc(sizeof(double *) * (N_OUTPUTS + 2));
+    this->emission_probs = (value_type **)malloc(sizeof(value_type *) * (N_OUTPUTS + 2));
     for (int cnt1 = 0; cnt1 < N_OUTPUTS; cnt1++) {
-        this->emission_probs[cnt1] = (double *)malloc(sizeof(double) * (N_STATES + 2));
+        this->emission_probs[cnt1] = (value_type *)malloc(sizeof(value_type) * (N_STATES + 2));
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
             emission_probs[cnt1][cnt2] = LOG(0.0f);
         }  // cnt2 loop
     }  // cnt1 loop
 
-    this->fam_hmm_pars = (double *)malloc(sizeof(double) * (N_BINZ * (N_STATES + N_OUTPUTS) * N_STATES + 2));
-    this->fam_thresholds = (double *)malloc(sizeof(double) * (N_BINZ + 2));
+    this->fam_hmm_pars = (value_type *)malloc(sizeof(value_type) * (N_BINZ * (N_STATES + N_OUTPUTS) * N_STATES + 2));
+    this->fam_thresholds = (value_type *)malloc(sizeof(value_type) * (N_BINZ + 2));
 }
 
 void Phmm::free_params() {
@@ -105,7 +105,7 @@ void Phmm::print_parameters() {
     }
 }
 
-void Phmm::set_parameters_by_sim(double similarity) {
+void Phmm::set_parameters_by_sim(float similarity) {
     this->similarity = similarity;
     int fam_par_set_index = get_bin_index(similarity, N_BINZ);
 
@@ -114,7 +114,7 @@ void Phmm::set_parameters_by_sim(double similarity) {
 
     // load emission probabilities
     int start_linear_index = (N_STATES + N_OUTPUTS) * N_STATES * get_bin_index(similarity, N_BINZ);
-    double *par_ptr = fam_hmm_pars + start_linear_index;
+    value_type *par_ptr = fam_hmm_pars + start_linear_index;
 
     for (int cnt1 = 0; cnt1 < N_OUTPUTS; cnt1++) {
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
@@ -134,7 +134,7 @@ void Phmm::set_parameters_by_sim(double similarity) {
 }
 
 // get index of bin of parameters for a sequence alignment
-int Phmm::get_bin_index(double similarity, int n_bins) {
+int Phmm::get_bin_index(float similarity, int n_bins) {
     if (similarity == 1.0) {
         return (n_bins - 1);
     } else {
@@ -142,11 +142,11 @@ int Phmm::get_bin_index(double similarity, int n_bins) {
     }
 }
 
-double Phmm::get_fam_threshold() {
+value_type Phmm::get_fam_threshold() {
     int bin_index = get_bin_index(this->similarity, N_BINZ);
     return (fam_thresholds[bin_index]);
 }
 
-double Phmm::get_trans_prob(int prev, int next) { return (this->trans_probs[prev][next]); }
+value_type Phmm::get_trans_prob(int prev, int next) { return (this->trans_probs[prev][next]); }
 
-double Phmm::get_emit_prob(int sym_index, int state) { return (this->emission_probs[sym_index][state]); }
+value_type Phmm::get_emit_prob(int sym_index, int state) { return (this->emission_probs[sym_index][state]); }

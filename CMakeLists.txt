@@ -11,6 +11,8 @@ add_compile_options(
     -O3
     -march=native
     -flto
+    -ffast-math
+    -fno-math-errno
     -funroll-loops
     -fomit-frame-pointer
 )

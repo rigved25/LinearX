@@ -1,13 +1,15 @@
 // src/alignment/linear_align.cpp
 #include <fstream>
 #include <linearx/alignment/linear_align.hpp>
+#include <set>
 
 using namespace linearx::utils;
 using namespace linearx::constants::math;
+using namespace linearx::math;
 using namespace std;
 
-LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, bool verbose, double alpha1, double alpha2,
-                                 double alpha3)
+LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, float alpha1, float alpha2,
+                                 float alpha3)
     : seq1(seq1),
       seq2(seq2),
       seq_len_sum(seq1.length() + seq2.length()),
@@ -17,11 +19,6 @@ LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, bool verbose, d
     reset_beams();
     seq1.randomize_N();
     seq2.randomize_N();
-
-    if (verbose) {
-        cout << "LinearAlignment initialized with sequences of lengths: " << seq1.length() << " and " << seq2.length()
-             << endl;
-    }
 }
 
 void LinearAlignment::use_prob_set1() {
@@ -36,23 +33,20 @@ void LinearAlignment::use_prob_set2(float similarity) {
     phmm->set_parameters_by_sim(similarity);
 }
 
-void LinearAlignment::reset_beams(bool freeMemory) {
-    if (freeMemory) {
-        bestALN.clear();
-        bestINS1.clear();
-        bestINS2.clear();
-    }
+void LinearAlignment::reset_beams() {
+    bestALN.clear();
+    bestINS1.clear();
+    bestINS2.clear();
+    bestALN.resize(seq_len_sum + 3);
+    bestINS1.resize(seq_len_sum + 1);
+    bestINS2.resize(seq_len_sum + 1);
 
-    bestALN = vector<unordered_map<pair<int, int>, HState, PairHash>>(seq_len_sum + 3);
-    bestINS1 = vector<unordered_map<pair<int, int>, HState, PairHash>>(seq_len_sum + 1);
-    bestINS2 = vector<unordered_map<pair<int, int>, HState, PairHash>>(seq_len_sum + 1);
-
-    bestALN[0][{0, 0}].alpha = LOG(1.0);
-    bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].beta = LOG(1.0);
+    bestALN[0][{0, 0}].alpha = LOG_ONE;
+    bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].beta = LOG_ONE;
 }
 
-double LinearAlignment::get_trans_emit_prob(const int i, const int j, const HStateType h,
-                                            const HStateType h_prev) const {
+value_type LinearAlignment::get_trans_emit_prob(const int i, const int j, const HStateType h,
+                                                const HStateType h_prev) const {
     int emit_idx;
 
     if (i == seq1.length() + 1 && j == seq2.length() + 1) {
@@ -76,23 +70,23 @@ double LinearAlignment::get_trans_emit_prob(const int i, const int j, const HSta
     int prev_h = static_cast<int>(h_prev);
     int curr_h = static_cast<int>(h);
 
-    const double tp_val = phmm->get_trans_prob(prev_h, curr_h);
-    const double ep_val = phmm->get_emit_prob(emit_idx, curr_h);
-    const double score = LOG_MUL(tp_val, ep_val);
+    const value_type tp_val = phmm->get_trans_prob(prev_h, curr_h);
+    const value_type ep_val = phmm->get_emit_prob(emit_idx, curr_h);
+    const value_type score = LOG_MUL(tp_val, ep_val);
     return score;
 }
 
-double LinearAlignment::get_match_score(const int i, const int j) const {
+value_type LinearAlignment::get_match_score(const int i, const int j) const {
     if (i >= seq1.length() || j >= seq2.length()) {
         return 0;
     }
 
-    const double t1 = sqrt(pm1->upstrm.at(i) * pm2->upstrm.at(j));
-    const double t2 = sqrt(pm1->dwnstrm.at(i) * pm2->dwnstrm.at(j));
-    const double t3 = sqrt(max(1 - pm1->upstrm.at(i) - pm1->dwnstrm.at(i), 0.0) *
-                           max(1 - pm2->upstrm.at(j) - pm2->dwnstrm.at(j), 0.0));
+    const value_type t1 = sqrt(pm1->upstrm.at(i) * pm2->upstrm.at(j));
+    const value_type t2 = sqrt(pm1->dwnstrm.at(i) * pm2->dwnstrm.at(j));
+    const value_type t3 = sqrt(max(1 - pm1->upstrm.at(i) - pm1->dwnstrm.at(i), 0.0) *
+                               max(1 - pm2->upstrm.at(j) - pm2->dwnstrm.at(j), 0.0));
 
-    const double output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
+    const value_type output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
     return LOG(output);
 }
 
@@ -108,7 +102,7 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
     coinc_prob.resize(seq1.length());
     prob_rev_idx.resize(seq2.length());
 
-    double p_xy = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
+    value_type p_xy = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
     for (int s = 0; s <= seq_len_sum; ++s) {
         for (const HStateType h : hstate_types) {
             vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beam(h);
@@ -117,9 +111,9 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
                 const int j = item.first.second;
                 HState &state = beam[s][{i, j}];
 
-                const double prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
+                const value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
                 if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD && i > 0 && j > 0) {
-                    auto [ptr_cprob_ij, inserted] = coinc_prob[i - 1].try_emplace(j - 1, LOG(0.0));
+                    auto [ptr_cprob_ij, inserted] = coinc_prob[i - 1].try_emplace(j - 1, LOG_ZERO);
                     ptr_cprob_ij->second = LOG_SUM(ptr_cprob_ij->second, prob);
                 }
             }
@@ -131,7 +125,7 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
     for (int i = 0; i < seq1.length(); ++i) {
         for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
             const int j = it->first;
-            double &prob = it->second;
+            value_type &prob = it->second;
 
             if (prob < phmm->get_fam_threshold()) {
                 it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
@@ -177,7 +171,7 @@ void LinearAlignment::dump_coinc_probs(const string &filepath, const float thres
     for (int i = 0; i < seq1.length(); ++i) {
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
-            const double prob = item.second;
+            const value_type prob = item.second;
             if (prob < threshold) continue;
 
             // output i, j, and the probability to the file

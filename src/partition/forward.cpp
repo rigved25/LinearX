@@ -19,10 +19,10 @@ unsigned LinearPartition::beam_prune(unordered_map<int, State> &beamstep, const 
         const int i = item.first;
         const State &cand = item.second;
         const int k = i - 1;
-        const double newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
+        const value_type newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
         beam_scores.emplace_back(newalpha, i);
     }
-    const double threshold = quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - beam_size);
+    const value_type threshold = quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - beam_size);
     for (auto &p : beam_scores) {
         if (p.first < threshold) {
             beamstep.erase(p.second);
@@ -32,14 +32,18 @@ unsigned LinearPartition::beam_prune(unordered_map<int, State> &beamstep, const 
     return num_pruned;
 }
 
-bool LinearPartition::check_state(const StateType type, const int i, const int j) const { return true; }
+inline __attribute__((always_inline)) bool LinearPartition::check_state(const StateType type, const int i,
+                                                                        const int j) {
+    return true;
+}
 
 inline __attribute__((always_inline)) void LinearPartition::update_score(const Mode mode, State &state,
-                                                                         const int new_score, const double prev_score) {
+                                                                         const int new_score,
+                                                                         const value_type prev_score) {
     if (mode == BEST) {
         state.alpha = max(state.alpha, prev_score + new_score);
     } else {
-        Fast_LogPlusEquals(state.alpha, prev_score + (((double)new_score) * INV_KT));
+        state.alpha = LOG_SUM(state.alpha, prev_score + (((value_type)new_score) * INV_KT));
     }
 }
 
@@ -50,15 +54,7 @@ PartitionInsideLog LinearPartition::compute_inside(const Mode mode, const unsign
         fprintf(stderr, "[LinearPartition] Running Inside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
                 seq.length(), seq.name.c_str());
     }
-    reset_beams(false);
-    bestC[-1].alpha = 0;
-    bestC[seq_length - 1].beta = 0;
-    if (seq_length > 0) {
-        bestC[0].alpha = 0;
-        if (seq_length > 1) {
-            bestC[1].alpha = 0;
-        }
-    }
+    reset_beams();
     unsigned long nodes_pruned = 0;
     for (int j = 0; j < seq_length; j++) {
         if (verbose_output) {

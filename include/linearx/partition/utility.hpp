@@ -1,4 +1,4 @@
-// linearx/partition/utils.hpp
+// linearx/partition/utility.hpp
 #pragma once
 #include <linearx/math/log_math.hpp>
 
@@ -12,17 +12,17 @@ enum StateType {
 };
 
 struct PartitionInsideLog {
-    double energy;  // corresponds to bestC[seq_length - 1].alpha
-    double execution_time;
+    value_type energy;  // corresponds to bestC[seq_length - 1].alpha
+    value_type execution_time;
     unsigned beam_size;
     unsigned long nodes_pruned;
 };
 
 struct PartitionOutsideLog {
-    double energy;  // corresponds to bestC[-1].beta
-    double execution_time;
-    double deviation_threshold;
-    double effective_beam_size;
+    value_type energy;  // corresponds to bestC[-1].beta
+    value_type execution_time;
+    value_type deviation_threshold;
+    float effective_beam_size;
     unsigned long nodes_visited;
     unsigned long nodes_pruned;
     unsigned long edges_saved;
@@ -30,9 +30,9 @@ struct PartitionOutsideLog {
 };
 
 struct State {
-    double alpha;
-    double beta;
-    State() : alpha(linearx::math::xlog(0.0)), beta(linearx::math::xlog(0.0)) {};
+    value_type alpha;
+    value_type beta;
+    State() : alpha(linearx::math::LOG_ZERO), beta(linearx::math::LOG_ZERO) {};
 };
 
 struct TraceInfo {
@@ -69,13 +69,13 @@ struct TraceInfo {
 };
 
 struct HEdge {
-    double weight;
+    value_type weight;
     State *left;
     State *right;  // right == nullptr <=> unary edge
 
-    HEdge() : weight(linearx::math::xlog(0.0)), left(nullptr), right(nullptr) {}  // default constructor
+    HEdge() : weight(linearx::math::LOG_ZERO), left(nullptr), right(nullptr) {}  // default constructor
 
-    HEdge(double weight, State *left, State *right)
+    HEdge(value_type weight, State *left, State *right)
         : weight(weight), left(left), right(right) {}  // parameterized constructor
 
     // HEdge(const HEdge &) = default;             // copy constructor
@@ -84,12 +84,12 @@ struct HEdge {
     // HEdge &operator=(HEdge &&) = default;       // move assignment
 
     inline void reset() {
-        weight = linearx::math::xlog(0.0);
+        weight = linearx::math::LOG_ZERO;
         left = nullptr;
         right = nullptr;
     }
 
-    inline void set(double weight, State *left, State *right) {
+    inline void set(value_type weight, State *left, State *right) {
         this->weight = weight;
         this->left = left;
         this->right = right;

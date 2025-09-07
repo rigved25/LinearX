@@ -42,24 +42,26 @@ LinearPartition::LinearPartition(const Sequence &seq, const EnergyModel &energy_
 
 State &LinearPartition::get_viterbi() { return bestC[seq_length - 1]; }
 
-void LinearPartition::reset_beams(bool freeMemory) {
-    // [TODO] Need to work on this!!
-    if (freeMemory) {
-        bestH.clear();
-        bestP.clear();
-        bestM.clear();
-        bestM2.clear();
-        bestMulti.clear();
-    }
-
-    bestH = vector<unordered_map<int, State>>(seq_length);
-    bestP = vector<unordered_map<int, State>>(seq_length);
-    bestM = vector<unordered_map<int, State>>(seq_length);
-    bestM2 = vector<unordered_map<int, State>>(seq_length);
-    bestMulti = vector<unordered_map<int, State>>(seq_length);
-
-    // bestC is not a pointer but unordered_map, [TODO] need to fix this!
+void LinearPartition::reset_beams() {
+    auto reset = [this](auto &vec) {
+        vec.clear();
+        vec.resize(seq_length);
+    };
+    reset(bestH);
+    reset(bestP);
+    reset(bestM);
+    reset(bestM2);
+    reset(bestMulti);
     bestC.reset();
+
+    bestC[-1].alpha = LOG_ONE;
+    bestC[seq_length - 1].beta = LOG_ONE;
+    if (seq_length > 0) {
+        bestC[0].alpha = LOG_ONE;
+        if (seq_length > 1) {
+            bestC[1].alpha = LOG_ONE;
+        }
+    }
 }
 
 void LinearPartition::compute_bpp_matrix() {
@@ -74,7 +76,7 @@ void LinearPartition::compute_bpp_matrix() {
             const int i = item.first;
             const State &state = item.second;
 
-            double prob = xlog_div(xlog_mul(state.alpha, state.beta), viterbi.alpha);
+            value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), viterbi.alpha);
             if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD) {
                 prob = xexp(prob);  // Convert log prob to regular prob
                 if (prob > 1.001) {
@@ -89,7 +91,7 @@ void LinearPartition::compute_bpp_matrix() {
     }
 }
 
-double LinearPartition::get_ensemble_energy() const {
+value_type LinearPartition::get_ensemble_energy() const {
     return -linearx::constants::energy::kT * (bestC[seq_length - 1].alpha) / 100.0;
 }  // -kT log(Q(x))
 
@@ -105,7 +107,7 @@ Structure LinearPartition::get_mfe_structure() {
 }
 
 string LinearPartition::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
-    vector<double> best_prob(seq_length, 0.0);
+    vector<value_type> best_prob(seq_length, 0.0);
     Structure structure(seq_length);
     set<int> visited;
 
@@ -115,7 +117,7 @@ string LinearPartition::get_threshknot_structure(float threshknot_threshold, int
             if (j - i < min_helix_size + 1) {
                 continue;
             }
-            const double prob = item.second;
+            const value_type prob = item.second;
             best_prob[i] = max(best_prob[i], prob);
             best_prob[j] = max(best_prob[j], prob);
         }
@@ -128,7 +130,7 @@ string LinearPartition::get_threshknot_structure(float threshknot_threshold, int
                 continue;
             }
 
-            const double prob = item.second;
+            const value_type prob = item.second;
             if (prob >= threshknot_threshold && prob == best_prob[i] && prob == best_prob[j]) {
                 if (visited.find(i) != visited.end() || visited.find(j) != visited.end()) {
                     continue;
@@ -164,7 +166,7 @@ void LinearPartition::dump_bpp(const string &filepath) const {
     for (int j = 0; j < seq_length; ++j) {
         for (const auto &item : bpp[j]) {
             const int i = item.first;
-            const double prob = item.second;
+            const value_type prob = item.second;
 
             // output i, j, and the probability to the file
             file << i << " " << j << " " << fixed << setprecision(8) << prob << endl;

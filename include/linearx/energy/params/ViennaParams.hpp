@@ -1,17 +1,16 @@
 // linearx/energy/ViennaParams.hpp
 #pragma once
-#include <linearx/utility/constants.hpp>
+#include <linearx/constants.hpp>
 
 
 struct ViennaParams {
-
   const static int ML_intern37 = -90;
   const static int ML_closing37 = 930;
   const static int ML_BASE37 = 0;
   const static int MAX_NINIO = 300;
   const static int ninio37 = 60;
   const static int TerminalAU37 = 50;
-  const static int POS_INF = 10000000;
+  const static int POS_INF = linearx::constants::math::INT_POS_INF;
 
   // special loops
   inline const static int Triloop37[2] = {680, 690};

@@ -1,9 +1,10 @@
-// linearx/utils.hpp
+// linearx/utility.hpp
 #pragma once
 
 #include <unistd.h>
 
-#include <linearx/utility/constants.hpp>
+#include <linearx/config.hpp>
+#include <linearx/constants.hpp>
 #include <sstream>
 #include <vector>
 
@@ -15,8 +16,8 @@ enum Mode {
 namespace linearx::utils {
 
 struct ProbAccm {
-    std::vector<double> upstrm;
-    std::vector<double> dwnstrm;
+    std::vector<value_type> upstrm;
+    std::vector<value_type> dwnstrm;
 };
 
 inline std::unordered_map<char, int> VIENNA_NUC_ENCODING_SCHEME = {{'N', 0}, {'A', 1}, {'C', 2}, {'G', 3}, {'U', 4},
@@ -44,8 +45,8 @@ struct PairHash {
 inline bool check_valid_pair(const int nuc1, const int nuc2) { return (nuc1 + nuc2) > 3 && (nuc1 + nuc2) % 2 != 0; }
 
 template <typename T>
-inline int quickselect_partition(std::vector<std::pair<double, T>> &scores, int lower, int upper) {
-    double pivot = scores[upper].first;
+inline int quickselect_partition(std::vector<std::pair<value_type, T>> &scores, int lower, int upper) {
+    value_type pivot = scores[upper].first;
     while (lower < upper) {
         while (scores[lower].first < pivot) ++lower;
         while (scores[upper].first > pivot) --upper;
@@ -58,7 +59,7 @@ inline int quickselect_partition(std::vector<std::pair<double, T>> &scores, int 
 }
 
 template <typename T>
-inline double quickselect(std::vector<std::pair<double, T>> &scores, int lower, int upper, int k) {
+inline value_type quickselect(std::vector<std::pair<value_type, T>> &scores, int lower, int upper, int k) {
     if (lower == upper) return scores[lower].first;
     int split = quickselect_partition(scores, lower, upper);
     int length = split - lower + 1;

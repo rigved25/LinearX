@@ -4,6 +4,7 @@
 using namespace std;
 using namespace linearx::utils;
 using namespace linearx::constants::math;
+using namespace linearx::math;
 
 unsigned LinearAlignment::beam_prune(unordered_map<pair<int, int>, HState, PairHash> &beamstep, const int beam_size) {
     if (beam_size == 0 || beamstep.size() <= beam_size) {
@@ -17,7 +18,7 @@ unsigned LinearAlignment::beam_prune(unordered_map<pair<int, int>, HState, PairH
         HState &cand = item.second;
         beam_scores.emplace_back(cand.alpha, aij);
     }
-    double threshold = quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - beam_size);
+    value_type threshold = quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - beam_size);
     for (auto &p : beam_scores) {
         if (p.first < threshold) {
             beamstep.erase(p.second);
@@ -28,7 +29,7 @@ unsigned LinearAlignment::beam_prune(unordered_map<pair<int, int>, HState, PairH
 }
 
 inline __attribute__((always_inline)) void LinearAlignment::update_state_alpha(const Mode mode, HState &state,
-                                                                               const double new_score) {
+                                                                               const value_type new_score) {
     if (mode == Mode::BEST) {
         if (new_score > state.alpha) {
             state.alpha = new_score;
@@ -60,15 +61,15 @@ void LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, 
 
                 // INS1
                 if (i < seq1.length() && j <= seq2.length() && check_state(i + 1, j, HStateType::INS1)) {
-                    const double prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                    const double new_score = LOG_MUL(state.alpha, prob);
+                    const value_type prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                    const value_type new_score = LOG_MUL(state.alpha, prob);
                     update_state_alpha(mode, bestINS1[s + 1][{i + 1, j}], new_score);
                 }
 
                 // INS2
                 if (i <= seq1.length() && j < seq2.length() && check_state(i, j + 1, HStateType::INS2)) {
-                    const double prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                    const double new_score = LOG_MUL(state.alpha, prob);
+                    const value_type prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                    const value_type new_score = LOG_MUL(state.alpha, prob);
                     update_state_alpha(mode, bestINS2[s + 1][{i, j + 1}], new_score);
                 }
 
@@ -76,10 +77,10 @@ void LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, 
                 const bool end_check = (i == seq1.length() && j == seq2.length());
                 if ((i < seq1.length() && j < seq2.length() && check_state(i + 1, j + 1, HStateType::ALN)) ||
                     end_check) {
-                    const double prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                    double new_score = LOG_MUL(state.alpha, prob);
+                    const value_type prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                    value_type new_score = LOG_MUL(state.alpha, prob);
                     if (use_match_score) {
-                        const double match_score = get_match_score(i, j);
+                        const value_type match_score = get_match_score(i, j);
                         new_score = LOG_MUL(new_score, match_score);
                     }
                     update_state_alpha(mode, bestALN[s + 2][{i + 1, j + 1}], new_score);
@@ -89,7 +90,7 @@ void LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, 
     }
     // update/print time stats
     const auto end_time = chrono::high_resolution_clock::now();
-    const double execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
     _last_inside_exec_time = execution_time;
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.3f ms\n", execution_time);

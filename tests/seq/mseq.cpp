@@ -1,7 +1,7 @@
 // linearx/tests/test_multi_seq.cpp
 #include <catch2/catch_all.hpp>
 #include <linearx/sequence/multi_sequence.hpp>
-#include <linearx/utility/utils.hpp>
+#include <linearx/utility.hpp>
 
 TEST_CASE("MultiSeq basic add/access", "[msq][1]") {
     MultiSeq ms;

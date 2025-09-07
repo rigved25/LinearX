@@ -1,37 +1,14 @@
 // linearx/energy/energy_model.hpp
 #pragma once
 
-#include <linearx/energy/params/energy_parameter.hpp>
-#include <linearx/energy/params/intl11.hpp>
-#include <linearx/energy/params/intl21.hpp>
-#include <linearx/energy/params/intl22.hpp>
-
 #include <iostream>
 #include <linearx/energy/params/EnergyParams.hpp>
 #include <vector>
-
-#define MAXLOOP 30
-
-inline int MIN2(int a, int b) {
-    if (a <= b)
-        return a;
-    else
-        return b;
-}
-inline int MAX2(int a, int b) {
-    if (a >= b)
-        return a;
-    else
-        return b;
-}
 
 #define NUC_TO_PAIR(x, y)                \
     (x == 1 ? (y == 4 ? 5 : 0)           \
             : (x == 2 ? (y == 3 ? 1 : 0) \
                       : (x == 3 ? (y == 2 ? 2 : (y == 4 ? 3 : 0)) : (x == 4 ? (y == 3 ? 4 : (y == 1 ? 6 : 0)) : 0))))
-
-// #define NUC_TO_PAIR(x,y) (x==0? (y==3?5:0) : (x==1? (y==2?1:0) : (x==2 ? (y==1?2:(y==3?3:0)) : (x==3 ?
-// (y==2?4:(y==0?6:0)) : 0))))
 
 class EnergyModel {
    private:
@@ -125,92 +102,11 @@ class EnergyModel {
                 }
                 return (energy + (type > 2 ? epm.TerminalAU37 : 0));
             }
-        }
+        }        
 
         energy += (*epm.mismatchH37)[type][nuci1][nucj_1];
         return energy;
     };
-
-#define NUM_TO_NUC(x) x
-
-    inline int v_score_single(int i, int j, int p, int q, int nuci, int nuci1, int nucj_1, int nucj, int nucp_1,
-                              int nucp, int nucq, int nucq1) const {
-        int si1 = NUM_TO_NUC(nuci1);
-        int sj1 = NUM_TO_NUC(nucj_1);
-        int sp1 = NUM_TO_NUC(nucp_1);
-        int sq1 = NUM_TO_NUC(nucq1);
-        int type = NUC_TO_PAIR(nuci, nucj);
-        int type_2 = NUC_TO_PAIR(nucq, nucp);
-        int n1 = p - i - 1;
-        int n2 = j - q - 1;
-        int nl, ns, u, energy;
-        energy = 0;
-
-        if (n1 > n2) {
-            nl = n1;
-            ns = n2;
-        } else {
-            nl = n2;
-            ns = n1;
-        }
-
-        if (n1 > n2) {
-            nl = n1;
-            ns = n2;
-        } else {
-            nl = n2;
-            ns = n1;
-        }
-
-        if (nl == 0) return tmp::stack37[type][type_2]; /* stack */
-
-        if (ns == 0) { /* bulge */
-            energy = (nl <= MAXLOOP) ? tmp::bulge37[nl] : (tmp::bulge37[30] + (int)(tmp::lxc37 * log(nl / 30.)));
-            if (nl == 1)
-                energy += tmp::stack37[type][type_2];
-            else {
-                if (type > 2) energy += tmp::TerminalAU37;
-                if (type_2 > 2) energy += tmp::TerminalAU37;
-            }
-            return energy;
-        } else { /* interior loop */
-            if (ns == 1) {
-                if (nl == 1) /* 1x1 loop */
-                    return tmp::int11_37[type][type_2][si1][sj1];
-                if (nl == 2) { /* 2x1 loop */
-                    if (n1 == 1)
-                        energy = tmp::int21_37[type][type_2][si1][sq1][sj1];
-                    else
-                        energy = tmp::int21_37[type_2][type][sq1][si1][sp1];
-                    return energy;
-                } else { /* 1xn loop */
-                    energy = (nl + 1 <= MAXLOOP) ? (tmp::internal_loop37[nl + 1])
-                                                 : (tmp::internal_loop37[30] + (int)(tmp::lxc37 * log((nl + 1) / 30.)));
-                    energy += MIN2(tmp::MAX_NINIO, (nl - ns) * tmp::ninio37);
-                    energy += tmp::mismatch1nI37[type][si1][sj1] + tmp::mismatch1nI37[type_2][sq1][sp1];
-                    return energy;
-                }
-            } else if (ns == 2) {
-                if (nl == 2) { /* 2x2 loop */
-                    return tmp::int22_37[type][type_2][si1][sp1][sq1][sj1];
-                } else if (nl == 3) { /* 2x3 loop */
-                    energy = tmp::internal_loop37[5] + tmp::ninio37;
-                    energy += tmp::mismatch23I37[type][si1][sj1] + tmp::mismatch23I37[type_2][sq1][sp1];
-                    return energy;
-                }
-            }
-            { /* generic interior loop (no else here!)*/
-                u = nl + ns;
-                energy = (u <= MAXLOOP) ? (tmp::internal_loop37[u]) : (tmp::internal_loop37[30] + (int)(tmp::lxc37 * log((u) / 30.)));
-
-                energy += MIN2(tmp::MAX_NINIO, (nl - ns) * tmp::ninio37);
-
-                energy += tmp::mismatchI37[type][si1][sj1] + tmp::mismatchI37[type_2][sq1][sp1];
-            }
-        }
-        // std::cout << i << " " << j << " " << p << " " << q << " " << energy << std::endl;
-        return energy;
-    }
 
     inline int score_single_loop(const int i, const int j, const int p, const int q, const int nuci, const int nuci1,
                                  const int nucj_1, const int nucj, const int nucp_1, const int nucp, const int nucq,

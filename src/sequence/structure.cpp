@@ -1,7 +1,7 @@
 // src/sequence/structure.cpp
 #include <iostream>
 #include <linearx/sequence/structure.hpp>
-#include <linearx/utility/utils.hpp>
+#include <linearx/utility.hpp>
 #include <set>
 #include <stack>
 #include <unordered_map>

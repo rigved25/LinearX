@@ -9,9 +9,9 @@ using namespace std;
 
 inline __attribute__((always_inline)) void LinearPartition::update_best_trace(const HEdge &new_hedge,
                                                                               const TraceInfo &new_trace) {
-    const double best_value = best_hedge.weight + (best_hedge.left ? best_hedge.left->alpha : 0) +
+    const value_type best_value = best_hedge.weight + (best_hedge.left ? best_hedge.left->alpha : 0) +
                               (best_hedge.right ? best_hedge.right->alpha : 0);
-    const double new_value = new_hedge.weight + (new_hedge.left ? new_hedge.left->alpha : 0) +
+    const value_type new_value = new_hedge.weight + (new_hedge.left ? new_hedge.left->alpha : 0) +
                              (new_hedge.right ? new_hedge.right->alpha : 0);
     if (new_value >= best_value) {
         best_hedge = new_hedge;
@@ -47,8 +47,8 @@ void LinearPartition::mfe_backtrack(const int i, const int j, const StateType ty
     mfe_backtrack(best_trace.t + 1, best_trace.j, best_trace.type_right, structure);
 }
 
-PartitionOutsideLog LinearPartition::compute_outside(double deviation_threshold, const bool verbose_output) {
-    const double global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
+PartitionOutsideLog LinearPartition::compute_outside(value_type deviation_threshold, const bool verbose_output) {
+    const value_type global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
     unsigned long total_nodes = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
     incoming_hedges.reserve(4 * bestP[seq_length - 1].size());
@@ -57,8 +57,8 @@ PartitionOutsideLog LinearPartition::compute_outside(double deviation_threshold,
             const int i = item.first;
             State &state = item.second;
             // if (state.beta > -deviation_threshold) {    // Major Bug Here (fixed!)
-            if (state.beta > LOG_OF_ZERO && state.alpha + state.beta > global_threshold) {
-                const double edge_threshold = global_threshold - state.beta;
+            if (state.beta > LOG_ZERO && state.alpha + state.beta > global_threshold) {
+                const value_type edge_threshold = global_threshold - state.beta;
                 const auto local_edges_info = backward_update(i, j, state, type, edge_threshold);
                 edges_saved += local_edges_info.first;
                 edges_pruned += local_edges_info.second;
@@ -79,7 +79,7 @@ PartitionOutsideLog LinearPartition::compute_outside(double deviation_threshold,
         }
         // if (bestC[j].beta > -deviation_threshold) {    // Major Bug Here (fixed!)
         if (bestC[j].alpha + bestC[j].beta > global_threshold) {
-            const double edge_threshold = global_threshold - bestC[j].beta;
+            const value_type edge_threshold = global_threshold - bestC[j].beta;
             backward_update(0, j, bestC[j], StateType::C, edge_threshold);
         }
         process_beam(j, bestM[j], StateType::M);
@@ -88,8 +88,8 @@ PartitionOutsideLog LinearPartition::compute_outside(double deviation_threshold,
         process_beam(j, bestMulti[j], StateType::Multi);
     }
     const auto end_time = chrono::high_resolution_clock::now();
-    const double execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-    const double effective_beam_size = double(nodes_visited) / (4 * seq_length);  // 4 beams (M, M2, P, Multi) per j
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const float effective_beam_size = float(nodes_visited) / (4 * seq_length);  // 4 beams (M, M2, P, Multi) per j
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
                 100.0 * execution_time / max(_last_inside_exec_time, 1.0));
@@ -132,7 +132,7 @@ inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_s
 }
 
 pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i, const int j, State &state,
-                                                                    const StateType type, const double edge_threshold) {
+                                                                    const StateType type, const value_type edge_threshold) {
     get_incoming_edges_state(i, j, type);
     if (incoming_hedges.empty()) {
         return make_pair(0, 0);
@@ -142,16 +142,16 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
     saved_hedges.reserve(incoming_hedges.size());
     HEdge *best_hedge = nullptr;
 
-    double best_inside = xlog(0.0);
-    double saved_inside = xlog(0.0);
+    value_type best_inside = LOG_ZERO;
+    value_type saved_inside = LOG_ZERO;
 
     unsigned long num_local_edges_pruned = 0;
     unsigned long num_local_edges_saved = 0;
 
     for (auto &hedge : incoming_hedges) {
-        double edge_inside = hedge.weight + hedge.left->alpha + (hedge.right ? hedge.right->alpha : 0);
+        value_type edge_inside = hedge.weight + hedge.left->alpha + (hedge.right ? hedge.right->alpha : 0);
         if (edge_inside > edge_threshold) {  // keep the edge
-            Fast_LogPlusEquals(saved_inside, edge_inside);
+            saved_inside = LOG_SUM(saved_inside, edge_inside);
             saved_hedges.push_back(&hedge);
         } else {  // prune the edge
             num_local_edges_pruned++;
@@ -162,7 +162,7 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
         }
     }
 
-    double delta;  // scaling factor to compensate for edge pruning
+    value_type delta;  // scaling factor to compensate for edge pruning
     if (!saved_hedges.empty()) {
         delta = state.alpha - saved_inside;
     } else {
@@ -174,10 +174,10 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
     for (auto &hedge : saved_hedges) {
         State *left = hedge->left, *right = hedge->right;
         if (!right) {
-            Fast_LogPlusEquals(left->beta, state.beta + hedge->weight + delta);
+            left->beta = LOG_SUM(left->beta, state.beta + hedge->weight + delta);
         } else {
-            Fast_LogPlusEquals(left->beta, state.beta + right->alpha + hedge->weight + delta);
-            Fast_LogPlusEquals(right->beta, state.beta + left->alpha + hedge->weight + delta);
+            left->beta = LOG_SUM(left->beta, state.beta + right->alpha + hedge->weight + delta);
+            right->beta = LOG_SUM(right->beta, state.beta + left->alpha + hedge->weight + delta);
         }
     }
 
