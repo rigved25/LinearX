@@ -53,7 +53,27 @@ struct AlnEdge {
 
 struct AlnProbs {
     double prob = xlog(0.0);
-    double aln_prob = 0.0;
+    double aln_prob = xlog(0.0);
+    
+    // Default constructor (log space initialization)
+    AlnProbs() = default;
+    
+    // Constructor for arithmetic operations (regular 0.0 initialization)
+    AlnProbs(double value) {
+        prob = value;
+        aln_prob = value;
+    }
+};
+
+class ArithmeticAlnMap : public std::unordered_map<int, AlnProbs> {
+public:
+    AlnProbs& operator[](const int& key) {
+        auto it = find(key);
+        if (it == end()) {
+            it = insert({key, AlnProbs(0.0)}).first;
+        }
+        return it->second;
+    }
 };
 
 #endif // LA_UTILS_HPP

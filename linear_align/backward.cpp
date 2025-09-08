@@ -317,16 +317,17 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
                 it = coinc_prob1[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {
-                prob = EXP(prob);
-                aln_prob = EXP(aln_prob);
+                // TOCHECK EXP
+                prob = Fast_Exp(prob);
+                aln_prob = Fast_Exp(aln_prob);
 
-                if (prob > 1.001 || aln_prob > 1.001) {
-                    fprintf(stderr,
-                            "[LinearAlign: Warning] 1 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
-                            prob);
-                }
-                prob = std::min(prob, 1.0);
-                aln_prob = std::min(aln_prob, 1.0);
+                // if (prob > 1.001 || aln_prob > 1.001) {
+                //     fprintf(stderr,
+                //             "[LinearAlign: Warning] 1 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
+                //             prob);
+                // }
+                // prob = std::min(prob, 1.0);
+                // aln_prob = std::min(aln_prob, 1.0);
 
                 prob_rev_idx[j].push_back(i);
                 ++num_saved;
@@ -344,16 +345,17 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
             if (prob < phmm->get_fam_threshold()) {
                 it = coinc_prob2[i].erase(it);  // erase and get the next valid iterator
             } else {
-                prob = EXP(prob);
-                aln_prob = EXP(aln_prob);
+                // TOCHECK EXP
+                prob = Fast_Exp(prob);
+                aln_prob = Fast_Exp(aln_prob);
 
-                if (prob > 1.001 || aln_prob > 1.001) {
-                    fprintf(stderr,
-                            "[LinearAlign: Warning] 2 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
-                            prob);
-                }
-                prob = std::min(prob, 1.0);
-                aln_prob = std::min(aln_prob, 1.0);
+                // if (prob > 1.001 || aln_prob > 1.001) {
+                //     fprintf(stderr,
+                //             "[LinearAlign: Warning] 2 BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i, j,
+                //             prob);
+                // }
+                // prob = std::min(prob, 1.0);
+                // aln_prob = std::min(aln_prob, 1.0);
 
                 ++it;  // move to the next element if not erased
             }

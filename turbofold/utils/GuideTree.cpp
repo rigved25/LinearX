@@ -3,6 +3,7 @@
 #include <string>
 #include <list>
 #include <stdio.h>
+#include <iostream>
 
 using namespace std;
 
@@ -83,6 +84,8 @@ TreeNode * TreeNode::ComputeTree(const vector<vector<float> > &distMatrix){
         }
 
         // merge the closest pair
+        cerr << "[GuideTree] merging: " << bestPair.first << " and " << bestPair.second
+             << " (distance=" << bestProb << ")" << endl;
         TreeNode *newParent = new TreeNode (-1);
         newParent->SetLeftChild (nodes[bestPair.first]);
         newParent->SetRightChild (nodes[bestPair.second]);

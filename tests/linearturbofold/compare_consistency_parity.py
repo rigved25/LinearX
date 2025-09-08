@@ -49,6 +49,13 @@ python compare_consistency_parity.py \
   --missing-policy zero \
   --aggregate
 
+python compare_consistency_parity.py \
+  --dir1 vb_info \
+  --dir2 vb_info_big_old \
+  --out ./parity_out_big \
+  --missing-policy zero \
+  --aggregate
+
 """
 
 import argparse

@@ -8,6 +8,7 @@
 #include "./../shared.hpp"
 #include "./phmm.hpp"
 #include "./utility.hpp"
+#include "./../utility/log_math.hpp"
 
 class LinearAlign;
 
@@ -116,8 +117,9 @@ class LinearAlign {
         delete[] bestALN;
         delete[] bestINS1;
         delete[] bestINS2;
-        delete[] coinc_prob1;
-        delete[] coinc_prob2;
+        // Expected that turbofold will free the coinc_prob1 and coinc_prob2
+        // delete[] coinc_prob1; 
+        // delete[] coinc_prob2;
         delete[] prob_rev_idx;
         // delete pm1;
         // delete pm2;
@@ -139,7 +141,7 @@ class LinearAlign {
             "./../../linear_align/parameters/fam_hmm_pars.dat";
         phmm = new Phmm(phmm_pars_fp.c_str());
         phmm->set_parameters_by_sim(similarity);
-        phmm->print_parameters();
+        //phmm->print_parameters();
     }
 
     void reset_beams(bool freeMemory = true);

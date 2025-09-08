@@ -353,7 +353,7 @@ unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSe
     const int seq1Length = align1->at(0).length();
     const int seq2Length = align2->at(0).length();
     
-    unordered_map<int, AlnProbs>* sum_aln_ret = new unordered_map<int, AlnProbs>[seq1Length + 1];
+    ArithmeticAlnMap* sum_aln_ret = new ArithmeticAlnMap[seq1Length];
     // cout << seq1Length << " " << seq2Length << endl;
     for (int i = 0; i < align1->size(); i++){
         int first = align1->at(i).k_id;
@@ -368,8 +368,8 @@ unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSe
             if(first < second){
                 unordered_map<int, AlnProbs>* aln_ret = consistency_transform[first][second];
 
-                int seq1len = mapping1->size() - 1;
-                for (int ii = 0; ii <= seq1len; ii++){
+                int seq1len = mapping1->size();
+                for (int ii = 0; ii < seq1len; ii++){
                     int ibase = (*mapping1)[ii];
 
                     for (auto &item : aln_ret[ii]) {
@@ -378,20 +378,24 @@ unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSe
                         if (item.second.aln_prob < 0.01) continue;
 
                         sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
-                        cerr << i <<  " "  << j <<  " "  << first << " "  << second  << " " << ibase  << " " << jbase  << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
+                        // TOCHECK
+                        //if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
+                        // cerr << i <<  " "  << j <<  " "  << first << " "  << second  << " " << ibase  << " " << jbase  << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
             } else {
                 unordered_map<int, AlnProbs>* aln_ret = consistency_transform[second][first];
 
-                int seq2len = mapping2->size() - 1;
-                for (int jj = 0; jj <= seq2len; jj++){
+                int seq2len = mapping2->size();
+                for (int jj = 0; jj < seq2len; jj++){
                     int jbase = (*mapping2)[jj];
                     for (auto &item : aln_ret[jj]) {
                         int ibase = (*mapping1)[item.first];
                         if (item.second.aln_prob < 0.01) continue;
                         sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
-                        cerr << i <<  " "  << j <<  " "  <<  first << " "  << second << " " << ibase  << " " << jbase << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
+                        // TOCHECK
+                        //if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
+                        // cerr << i <<  " "  << j <<  " "  <<  first << " "  << second << " " << ibase  << " " << jbase << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
             }
@@ -411,26 +415,37 @@ void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<i
 
     for(int i = 0; i < lengthX; i++){
 
-        //cerr << " i " << i << " xz_CT[i].size() " << xz_consistency_transform[i].size()  << endl;  
+        cerr << " i " << i << " xz_CT[i].size() " << xz_consistency_transform[i].size()  << endl;  
         for(auto &xz_cand : xz_consistency_transform[i]){
             int k = xz_cand.first;
 
-            //cerr << " k " << k << "zy_CT[k].size() " << zy_consistency_transform[k].size()  << endl;  
+            cerr << " k " << k << "zy_CT[k].size() " << zy_consistency_transform[k].size()  << endl;  
             for(auto &zy_cand : zy_consistency_transform[k]){
                 int j = zy_cand.first;
                 
-                //cerr << " j " << j << endl;
+                cerr << " j " << j << endl;
                 new_xy_consistency_transform[i][j].aln_prob += xz_cand.second.aln_prob * zy_cand.second.aln_prob;
-                // cerr << xz_cand.second * zy_cand.second << " ";
+                cerr << xz_cand.second.aln_prob * zy_cand.second.aln_prob << " " << endl;
             }
         }
-        // cerr << endl;
+        cerr << endl;
     }
 }
 
 // linearTurboFold
 vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiConsistencyTransform(MultiSeq *sequences, vector<vector<unordered_map<int, AlnProbs>*>> &consistency_transform){
     const int numSeqs = sequences->size();
+    // TOCHECK remove the new_aln_results
+    // cerr << "[PCT-DEBUG] LinearMultiConsistencyTransform: " << numSeqs << " sequences" << std::endl;
+    vector<vector<unordered_map<int, AlnProbs>*>> new_aln_results;
+    new_aln_results.resize(numSeqs);
+    for (int i = 0; i < numSeqs; i++){
+        new_aln_results[i].resize(numSeqs);
+        for (int j = 0; j < numSeqs; j++){
+            if (i == j) continue;
+            new_aln_results[i][j] = new unordered_map<int, AlnProbs>[sequences->at(i).length()];
+        }
+    }
 
     // For every pair of sequences
     for (int i = 0; i < numSeqs; i++){
@@ -488,30 +503,89 @@ vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiCon
                 }
             }
 
+            // // Optional per-row normalization to enforce probability mass constraint (sum <= 1)
+            // if (std::getenv("LTF_PCT_ROW_NORM")) {
+            //     size_t rows_scaled = 0;
+            //     double max_row_sum_before = 0.0;
+            //     for (int k = 0; k < seq1Length; k++){
+            //         double row_sum = 0.0;
+            //         for (auto &item : temp_pair_CT[k]) {
+            //             row_sum += item.second.aln_prob;
+            //         }
+            //         if (row_sum > max_row_sum_before) max_row_sum_before = row_sum;
+            //         if (row_sum > 1.0 && row_sum > 0.0) {
+            //             const double scale = 1.0 / row_sum;
+            //             for (auto &item : temp_pair_CT[k]) {
+            //                 item.second.aln_prob *= scale;
+            //             }
+            //             rows_scaled++;
+            //         }
+            //     }
+            //     if (rows_scaled > 0) {
+            //         std::cerr << "[PCT-ROW-NORM] pair(" << i << "," << j << ") scaled_rows=" << rows_scaled
+            //                   << " max_row_sum_before=" << std::setprecision(6) << max_row_sum_before << std::endl;
+            //     }
+            // }
+
+            size_t entries = 0;
+            size_t count_gt1 = 0;
+            double max_entry = 0.0;
+            double max_row_sum = 0.0;
+            for (int k = 0; k < seq1Length; k++){
+                double row_sum = 0.0;
+                for (auto &item : temp_pair_CT[k]) {
+                    const double v = item.second.aln_prob;
+                    entries++;
+                    row_sum += v;
+                    if (v > 1.0) count_gt1++;
+                    if (v > max_entry) max_entry = v;
+                }
+                if (row_sum > max_row_sum) max_row_sum = row_sum;
+            }
+            std::cerr << "[PCT-DEBUG] pair(" << i << "," << j << ") entries=" << entries
+                        << " gt1=" << count_gt1 << " max=" << std::setprecision(6) << max_entry
+                        << " max_row_sum=" << std::setprecision(6) << max_row_sum << std::endl;
+            
+
+            // // Clamp to [0, 1] to ensure valid probabilities and avoid MEA inflation
+            // size_t pct_total_entries = 0;
+            // size_t pct_clamped_entries = 0;
+            // for (int k = 0; k < seq1Length; k++){
+            //     for(auto &item : temp_pair_CT[k]){
+            //         pct_total_entries++;
+            //         if (item.second.aln_prob > 1.0) { item.second.aln_prob = 1.0; pct_clamped_entries++; }
+            //         if (item.second.aln_prob < 0.0) { item.second.aln_prob = 0.0; }
+            //     }
+            // }
+            // if (pct_clamped_entries > 0) {
+            //     cerr << "[PCT] Clamped " << pct_clamped_entries << " of " << pct_total_entries
+            //          << " entries to [0,1] for pair (" << i << "," << j << ")" << endl;
+            // }
+
             // Mask out positions not originally in the posterior matrix
             for (int k = 0; k < seq1Length; k++){
                 for(auto &item : pair_CT[k]){
                     int l = item.first;
-                    if (temp_pair_CT[k].find(l) == temp_pair_CT[l].end()) continue; // N.B.
+                    if (temp_pair_CT[k].find(l) == temp_pair_CT[k].end()) continue; // N.B.
                     if (temp_pair_CT[k][l].aln_prob >= 0.01){
-                        consistency_transform[i][j][k][l] = temp_pair_CT[k][l];
-                        consistency_transform[j][i][l][k] = temp_pair_CT[k][l];
+                        new_aln_results[i][j][k][l].aln_prob = temp_pair_CT[k][l].aln_prob;
+                        new_aln_results[j][i][l][k].aln_prob = temp_pair_CT[k][l].aln_prob;
                         // cout << i << " " << j << " " << k << " " << l << " " << temp_pair_CT[k][l].value << endl;
                     }
                 }
             }
             delete[] temp_pair_CT;
 
-            dump_coinc_probs(("./vb_info/_msa_pct_" + std::to_string(i) + "_" +
-                                std::to_string(j) + ".bpp.txt"), 0.0, consistency_transform[i][j], seq1Length);
+            // dump_coinc_probs(("./vb_info/_msa_pct_" + std::to_string(i) + "_" +
+            //                     std::to_string(j) + ".bpp.txt"), 0.0, new_aln_results[i][j], seq1Length);
         
-            dump_coinc_aln_probs(("./vb_info/_msa_pct_alnprobs_" + std::to_string(i) + "_" +
-                                std::to_string(j) + ".bpp.txt"), 0.0, consistency_transform[i][j], seq1Length);
+            // dump_coinc_aln_probs(("./vb_info/_msa_pct_alnprobs_" + std::to_string(i) + "_" +
+            //                     std::to_string(j) + ".bpp.txt"), 0.0, new_aln_results[i][j], seq1Length);
         
         }
     }
 
-    return consistency_transform;
+    return new_aln_results;
 }
 
 MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq *align1, MultiSeq *align2,
@@ -526,9 +600,9 @@ MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq *align1, MultiSeq 
     // Choose the alignment routine depending on the "cosmetic" gap penalties used
     unordered_map<int, AlnProbs> *sum_aln_ret = model.LinearMultiAlnResults(align1, align2, consistency_transform);
 
-    dump_coinc_probs(("./vb_info/_msa_bpos_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
+    // dump_coinc_probs(("./vb_info/_msa_bpos_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
 
-    dump_coinc_aln_probs(("./vb_info/_msa_bpos_alnprobs_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
+    // dump_coinc_aln_probs(("./vb_info/_msa_bpos_alnprobs_.bpp.txt"), 0.0, sum_aln_ret, align1->at(0).length());
 
     pair<string *, float> alignment = LinearComputeAlignment(hmmBeam, align1->at(0).length(), align2->at(0).length(), sum_aln_ret);
     delete[] sum_aln_ret;
