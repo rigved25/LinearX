@@ -1,3 +1,6 @@
 [submodule "external/Catch2"]
 	path = external/Catch2
 	url = https://github.com/catchorg/Catch2.git
+[submodule "external/LinearTurboFold"]
+	path = external/LinearTurboFold
+	url = https://github.com/1998apoorvmalik/LinearTurboFold-old
