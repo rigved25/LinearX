@@ -80,10 +80,10 @@ value_type LinearAlignment::get_match_score(const int i, const int j) const {
         return 0;
     }
 
-    const value_type t1 = sqrt(pm1->upstrm.at(i) * pm2->upstrm.at(j));
-    const value_type t2 = sqrt(pm1->dwnstrm.at(i) * pm2->dwnstrm.at(j));
-    const value_type t3 = sqrt(max(1 - pm1->upstrm.at(i) - pm1->dwnstrm.at(i), 0.0) *
-                               max(1 - pm2->upstrm.at(j) - pm2->dwnstrm.at(j), 0.0));
+    const value_type t1 = sqrt(pm1->upstrm[i] * pm2->upstrm[j]);
+    const value_type t2 = sqrt(pm1->dwnstrm[i] * pm2->dwnstrm[j]);
+    const value_type t3 =
+        sqrt(max(1 - pm1->upstrm[i] - pm1->dwnstrm[i], 0.0) * max(1 - pm2->upstrm[j] - pm2->dwnstrm[j], 0.0));
 
     const value_type output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
     return LOG(output);
@@ -126,7 +126,6 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
         for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
             const int j = it->first;
             value_type &prob = it->second;
-
             if (prob < fam_threshold) {
                 it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
@@ -151,34 +150,37 @@ void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
     }
 }
 
-void LinearAlignment::dump_coinc_probs(const string &filepath, const float threshold) const {
+#include <filesystem>  // Required for create_directories
+
+void LinearAlignment::dump_coinc_probs(const std::string &out_dir) const {
     if (coinc_prob.empty()) {
-        throw runtime_error(
+        throw std::runtime_error(
             "[LinearAlignment Error] Coincidence probabilities not computed yet! You must run "
             "compute_coincidence_probabilities() first.");
     }
 
-    // open the file for writing
-    ofstream file(filepath);
+    // create output directory if it doesn't exist
+    std::filesystem::create_directories(out_dir);
+
+    // construct output file path: cp_{seq1ID}_{seq2ID}.txt
+    std::string filename = out_dir + "/cp_" + std::to_string(seq1.id) + "_" + std::to_string(seq2.id) + ".txt";
+
+    // open file for writing
+    std::ofstream file(filename);
     if (!file) {
-        cerr << "[Hint] The directory for the output file may not exist. Please create it before running the method."
-             << endl;
-        throw runtime_error("[LinearAlignment Error] Unable to open the file " + filepath +
-                            " for writing coincidence probabilities.");
+        throw std::runtime_error("[LinearAlignment Error] Unable to open file " + filename +
+                                 " for writing coincidence probabilities.");
     }
 
-    // dump the coincidence probabilities to the file
+    // write all coincidence probabilities to the file
     for (int i = 0; i < seq1.length(); ++i) {
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
             const value_type prob = item.second;
-            if (prob < threshold) continue;
-
-            // output i, j, and the probability to the file
-            file << i << " " << j << " " << fixed << setprecision(4) << prob << endl;
+            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << "\n";
         }
     }
-};
+}
 
 void LinearAlignment::print_alpha_beta() const {
     cerr << "Alpha(ALN, n1 + 1, n2 + 1): " << bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha

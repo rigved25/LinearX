@@ -39,3 +39,17 @@ TEST_CASE("MultiSeq FASTA read/write", "[msq][3]") {
     ms.print(std::cout, false);
     ms.print(std::cout, true);
 }
+
+TEST_CASE("MultiSeq 10 Sequences FASTA read, ID and Sequence Identity", "[msq][4]") {
+    MultiSeq ms;
+    REQUIRE(ms.read_fasta("tests/data/s3.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME, true) == true);
+    REQUIRE(ms.size() == 20);
+
+    // check if the id is correctly assigned
+    for (size_t i = 0; i < ms.size(); i++) {
+        REQUIRE(ms[i].id == static_cast<int>(i));
+    }
+
+    // get average sequence identity
+    std::cout << "Average sequence identity: " << ms.average_seq_identity() << std::endl;
+}

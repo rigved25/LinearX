@@ -3,29 +3,11 @@
 
 using namespace linearx::math;
 
-TurboPartition::TurboPartition(const LinearTurbofold &turbofold, const Sequence &seq, const EnergyModel &energy_model,
-                               const bool allow_sharp_turn = false)
-    : LinearPartition(seq, energy_model, allow_sharp_turn), turbofold(turbofold) {}
-
-inline __attribute__((always_inline)) bool TurboPartition::check_state(StateType type, int i, int j) {
-    // Add extrinsic information to State P
-    if (type == StateType::P) {
-        auto &mp = bestP[j];
-        auto item = mp.find(i);
-        if (item == mp.end()) {
-            return false;
-        }
-        State &state = item->second;
-        const value_type ext_info = turbofold.get_extrinsic_info(seq, i, j);
-
-        if (ext_info <= LOG_ZERO) {
-            return false;
-        } else {
-            state.alpha = LOG_MUL(state.alpha, ext_info * turbofold.lambda);
-        }
-    }
-
-    return true;
+TurboPartition::TurboPartition(LinearTurbofold &turbofold, const Sequence &seq, const EnergyModel &energy_model,
+                               const bool allow_sharp_turn)
+    : LinearPartition(seq, energy_model, allow_sharp_turn), turbofold(turbofold) {
+    prob_accm.upstrm.resize(seq.length());
+    prob_accm.dwnstrm.resize(seq.length());
 }
 
 void TurboPartition::reset_saved_beams() {
@@ -58,9 +40,8 @@ void TurboPartition::save_partition_function(const bool move) {
 }
 
 void TurboPartition::calc_prob_accm() {
-    prob_accm.upstrm.assign(seq.length(), 0);
-    prob_accm.dwnstrm.assign(seq.length(), 0);
-
+    fill(prob_accm.upstrm.begin(), prob_accm.upstrm.end(), 0.0);
+    fill(prob_accm.dwnstrm.begin(), prob_accm.dwnstrm.end(), 0.0);
     for (int j = 0; j < seq.length(); ++j) {
         for (const auto &item : this->bpp[j]) {
             const int i = item.first;
@@ -70,7 +51,6 @@ void TurboPartition::calc_prob_accm() {
             prob_accm.dwnstrm[i] += prob;
         }
     }
-
     for (int j = 0; j < seq.length(); ++j) {
         if (prob_accm.upstrm[j] > 1.0) {
             prob_accm.upstrm[j] = 1.0;

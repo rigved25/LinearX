@@ -30,7 +30,7 @@ class LinearAlignment {
     template <Mode mode>
     void get_incoming_edges(const int i, const int j, const HStateType type, const bool use_match_score);
 
-    void run_normal_outside(const bool verbose_output);
+    AlignmentOutsideLog run_normal_outside(const bool verbose_output);
 
    protected:
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> bestALN;
@@ -78,21 +78,18 @@ class LinearAlignment {
     value_type get_match_score(const int i, const int j) const;
     MultiSeq get_alignment();  // [TODO] Can make it more efficient, by avoiding copy, or using move semantics
 
-    void compute_inside(const Mode mode, const unsigned beam_size = 100, bool verbose_output = true);
-    void compute_outside(const bool use_lazy_outside,
+    AlignmentInsideLog compute_inside(const Mode mode, const unsigned beam_size = 100, bool verbose_output = true);
+    AlignmentOutsideLog compute_outside(const bool use_lazy_outside,
                          const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                          const bool verbose_output = true);
 
     void compute_coincidence_probabilities(const bool verbose_output = true);
     void set_prob_accm(linearx::utils::ProbAccm &prob_accm1, linearx::utils::ProbAccm &prob_accm2);
-    void dump_coinc_probs(const std::string &filepath, const float threshold = 0.001f) const;
+    void dump_coinc_probs(const std::string &out_dir) const;
     inline value_type get_bpp(const int i, const int j) const {
         const auto &coinc_prob_i = coinc_prob[i];
         const auto it = coinc_prob_i.find(j);
-        if (it == coinc_prob_i.end()) {
-            return 0.0;
-        }
-        return it->second;
+        return it == coinc_prob_i.end() ? 0.0 : it->second;
     }
 
     void print_alpha_beta() const;

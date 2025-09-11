@@ -20,7 +20,7 @@ Sequence::Sequence(const std::string& seq_str, const std::string& name, int id) 
 
 // constructor with sequence, name, id, encoding
 Sequence::Sequence(const std::string& seq_str, const std::string& name, int id,
-         const std::unordered_map<char, int>& encoding_scheme, bool randomize_N)
+                   const std::unordered_map<char, int>& encoding_scheme, bool randomize_N)
     : name(name), id(id), seq(seq_str) {
     std::transform(seq.begin(), seq.end(), seq.begin(), ::toupper);
 
@@ -83,11 +83,18 @@ float Sequence::compute_seq_identity(const Sequence& seq2) const {
     if (this->length() != seq2.length()) {
         throw std::invalid_argument("Sequences must be of equal length");
     }
-    int matches = 0;
+    int valid_positions = 0, matches = 0;
     for (size_t i = 0; i < seq.size(); ++i) {
-        if (seq[i] == seq2.seq[i]) ++matches;
+        if (seq[i] == '-' && seq2.seq[i] == '-') {
+            continue;  // skip double-gap positions
+        }
+        ++valid_positions;
+        if (seq[i] == seq2.seq[i]) {
+            ++matches;
+        }
     }
-    return static_cast<float>(matches) / seq.size();
+    if (valid_positions == 0) return 0.0f;  // avoid division by zero
+    return static_cast<float>(matches) / valid_positions;
 }
 
 void Sequence::add_nuc(char nucleotide) { seq += nucleotide; }

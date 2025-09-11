@@ -148,31 +148,31 @@ string LinearPartition::get_threshknot_structure(float threshknot_threshold, int
     return dotBracket;
 }
 
-void LinearPartition::dump_bpp(const string &filepath) const {
+void LinearPartition::dump_bpp(const std::string &out_dir) const {
     if (bpp.empty()) {
-        throw runtime_error("[LinearPartition: Error] BPP matrix is empty! You must run compute_bpp_matrix() first.");
+        throw std::runtime_error(
+            "[LinearPartition: Error] BPP matrix is empty! You must run compute_bpp_matrix() first.");
     }
+
+    // create directory if it doesn't exist
+    std::filesystem::create_directories(out_dir);
+
+    // construct output filename
+    std::string filename = out_dir + "/bpp_" + std::to_string(seq.id) + ".txt";
 
     // open the file for writing
-    ofstream file(filepath);
+    std::ofstream file(filename);
     if (!file) {
-        cout << "[Hint] The directory for the output file may not exist. Please create it before running the method."
-             << endl;
-        throw runtime_error("[LinearPartition: Error] Unable to open the file " + filepath +
-                            " for writing BPP matrix.");
+        throw std::runtime_error("[LinearPartition: Error] Unable to open the file " + filename +
+                                 " for writing BPP matrix.");
     }
 
-    // dump the BPP matrix to the file
+    // write bpp matrix
     for (int j = 0; j < seq_length; ++j) {
         for (const auto &item : bpp[j]) {
             const int i = item.first;
             const value_type prob = item.second;
-
-            // output i, j, and the probability to the file
-            file << i << " " << j << " " << fixed << setprecision(8) << prob << endl;
+            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << "\n";
         }
     }
-
-    // file automatically closes when it goes out of scope
-    cout << "[LinearPartition] BPP matrix dumped to " << filepath << endl;
 }

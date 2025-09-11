@@ -12,14 +12,15 @@ enum StateType {
 };
 
 struct PartitionInsideLog {
-    value_type energy;  // corresponds to bestC[seq_length - 1].alpha
+    value_type energy;  // free energy of the ensemble
     value_type execution_time;
     unsigned beam_size;
     unsigned long nodes_pruned;
 };
 
 struct PartitionOutsideLog {
-    value_type energy;  // corresponds to bestC[-1].beta
+    value_type total_inside_energy;   // corresponds to bestC[seq_length - 1].alpha
+    value_type total_outside_energy;  // corresponds to bestC[-1].beta
     value_type execution_time;
     value_type deviation_threshold;
     float effective_beam_size;

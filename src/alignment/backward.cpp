@@ -33,20 +33,20 @@ MultiSeq LinearAlignment::get_alignment() {
             case HStateType::ALN:
                 i -= 1;
                 j -= 1;
-                aln1 += to_string(seq1.enc[i]);
-                aln2 += to_string(seq2.enc[j]);
+                aln1 += seq1[i];
+                aln2 += seq2[j];
                 break;
 
             case HStateType::INS1:
                 i -= 1;
-                aln1 += to_string(seq1.enc[i]);
+                aln1 += seq1[i];
                 aln2 += "-";
                 break;
 
             case HStateType::INS2:
                 j -= 1;
                 aln1 += "-";
-                aln2 += to_string(seq2.enc[j]);
+                aln2 += seq2[j];
                 break;
         }
         h = h_prev;
@@ -66,10 +66,10 @@ inline __attribute__((always_inline)) void LinearAlignment::update_state_beta(HS
     state.beta = LOG_SUM(state.beta, new_score);
 }
 
-void LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold, bool verbose_output) {
+AlignmentOutsideLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold,
+                                                     bool verbose_output) {
     if (!use_lazy_outside) {
-        run_normal_outside(verbose_output);
-        return;
+        return run_normal_outside(verbose_output);
     }
 
     const value_type global_threshold =
@@ -120,8 +120,10 @@ void LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviatio
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
                 bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
-        fprintf(stderr, "\n");
     }
+    return AlignmentOutsideLog{
+        bestALN[0][{0, 0}].beta,      execution_time, deviation_threshold, effective_beam_size, nodes_visited,
+        total_states - nodes_visited, edges_saved,    edges_pruned};
 }
 
 pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i, const int j, const HState &state,
@@ -178,7 +180,9 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
 }
 
 template <Mode mode>
-inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateType type, bool use_match_score) {
+inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(const int i, const int j,
+                                                                               const HStateType type,
+                                                                               bool use_match_score) {
     if constexpr (mode == Mode::BEST) {
         best_edge.reset();
     } else {
@@ -226,7 +230,7 @@ inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(c
 template void LinearAlignment::get_incoming_edges<Mode::BEST>(int, int, HStateType, bool);
 template void LinearAlignment::get_incoming_edges<Mode::PARTITION>(int, int, HStateType, bool);
 
-void LinearAlignment::run_normal_outside(bool verbose_output) {
+AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
@@ -296,6 +300,7 @@ void LinearAlignment::run_normal_outside(bool verbose_output) {
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
                 bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
-        fprintf(stderr, "\n");
     }
+    return AlignmentOutsideLog{
+        bestALN[0][{0, 0}].beta, execution_time, linearx::math::LOG_ZERO, effective_beam_size, nodes_visited, 0, edges_visited, 0};
 }

@@ -5,6 +5,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)  # Enables -flto globally
 
+# -------- OpenMP Setup for Apple Silicon --------
+# if(APPLE)
+#     # Use Homebrew LLVM
+#     set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
+#     set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+
+#     # Add OpenMP flags manually
+#     add_compile_options(-Xpreprocessor -fopenmp)
+#     add_link_options(-L/opt/homebrew/opt/libomp/lib -lomp)
+
+#     # Add include path manually
+#     include_directories(SYSTEM /opt/homebrew/opt/libomp/include)
+# endif()
+
 # Optimization flags
 add_compile_options(
     -Winline
@@ -12,13 +26,14 @@ add_compile_options(
     -march=native
     -flto
     -ffast-math
+    # -fno-rtti
     -fno-math-errno
     -funroll-loops
     -fomit-frame-pointer
 )
 
 # Optional: disable asserts
-add_compile_definitions(NDEBUG)
+# add_compile_definitions(NDEBUG)
 
 # Include paths
 include_directories(
@@ -32,6 +47,7 @@ file(GLOB_RECURSE CORE_SRC
     src/alignment/*.cpp
     src/partition/*.cpp
     src/sequence/*.cpp
+    src/turbofold/*.cpp
 )
 
 # Copy parameter file
@@ -50,3 +66,7 @@ add_subdirectory(tests)
 
 # Testing
 enable_testing()
+
+# Executable for linearturbofold
+add_executable(linearturbofold src/turbofold/main.cpp)
+target_link_libraries(linearturbofold PRIVATE linearx_core)

@@ -7,7 +7,6 @@
 #include <linearx/utility.hpp>
 #include <unordered_set>
 
-
 class LinearPartition {
     inline const static StateType state_types[6] = {H, Multi, P, M2, M, C};
 
@@ -15,6 +14,8 @@ class LinearPartition {
     std::vector<int> if_tetraloops;
     std::vector<int> if_hexaloops;
     std::vector<int> if_triloops;
+    Mode run_mode_;
+    int run_beam_size_;
     std::vector<std::pair<value_type, int>> beam_scores;
     std::vector<HEdge> incoming_hedges;
     std::vector<HEdge *> saved_hedges;
@@ -35,8 +36,6 @@ class LinearPartition {
     std::vector<std::unordered_map<int, State>> bestMulti;
     VectorWithNegOneIndex<State> bestC;
 
-    inline virtual bool check_state(const StateType type, const int i, const int j);
-
    public:
     friend struct PartitionFunctionBeam;
 
@@ -54,9 +53,10 @@ class LinearPartition {
     State &get_viterbi();
 
     void reset_beams();
-    virtual PartitionInsideLog compute_inside(const Mode mode, const unsigned beam_size = 100,
-                                              const bool verbose_output = true);
+    PartitionInsideLog compute_inside(const Mode mode, const unsigned beam_size = 100,
+                                      const bool verbose_output = true);
     PartitionOutsideLog compute_outside(
+        const bool use_lazy_outside = true,
         const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
         const bool verbose_output = true);
 
@@ -64,24 +64,53 @@ class LinearPartition {
     value_type get_ensemble_energy() const;
     void print_alpha_beta() const;
     Structure get_mfe_structure();
+
     inline value_type get_bpp(const int i, const int j) const {
         const auto &bpp_j = bpp[j];
         const auto item = bpp_j.find(i);
-        if (item == bpp_j.end()) {
-            return 0.0;
+        return item == bpp_j.end() ? 0.0 : item->second;
+    }
+    inline virtual unsigned long beam_prune(const int j, const StateType type,
+                                            std::unordered_map<int, State> &beamstep) {
+        if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
+            return 0;
         }
-        return item->second;
+        unsigned long num_pruned = 0;
+        beam_scores.clear();
+        beam_scores.reserve(beamstep.size());
+        for (auto &item : beamstep) {
+            const int i = item.first;
+            const State &cand = item.second;
+            const int k = i - 1;
+            const value_type newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
+            beam_scores.emplace_back(newalpha, i);
+        }
+        const value_type threshold =
+            linearx::utils::quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - run_beam_size_);
+        for (auto &p : beam_scores) {
+            if (p.first < threshold) {
+                beamstep.erase(p.second);
+                num_pruned++;
+            }
+        }
+        return num_pruned;
+    }
+    inline virtual void update_score(const StateType type, const int i, const int j, State &state, int new_score,
+                                     value_type prev_score = 0) {
+        if (run_mode_ == BEST) {
+            state.alpha = std::max(state.alpha, prev_score + new_score);
+        } else {
+            state.alpha = LOG_SUM(state.alpha, prev_score + (new_score * linearx::constants::energy::INV_KT));
+        }
     }
 
     // methods declared in file forward.cpp
-    unsigned beam_prune(std::unordered_map<int, State> &beamstep, const int beam_size);
-    inline void update_score(const Mode mode, State &state, const int new_score, const value_type prev_score = 0);
-    void beamstep_H(const int j, const Mode mode);
-    void beamstep_Multi(const int j, const Mode mode);
-    void beamstep_P(const int j, const Mode mode);
-    void beamstep_M2(const int j, const Mode mode);
-    void beamstep_M(const int j, const Mode mode);
-    void beamstep_C(const int j, const Mode mode);
+    unsigned long beamstep_H(const int j);
+    unsigned long beamstep_Multi(const int j);
+    unsigned long beamstep_P(const int j);
+    unsigned long beamstep_M2(const int j);
+    unsigned long beamstep_M(const int j);
+    void beamstep_C(const int j);
 
     // methods declared in file backward.cpp
     std::pair<unsigned long, unsigned long> backward_update(const int i, const int j, State &state,
@@ -103,7 +132,7 @@ class LinearPartition {
     std::string get_threshknot_structure(float threshknot_threshold = 0.3f,
                                          int min_helix_size = linearx::constants::energy::MIN_HELIX_SIZE) const;
 
-    void dump_bpp(const std::string &filename) const;
+    void dump_bpp(const std::string &out_dir) const;
 
     inline void debug_states() const {
         // printf("\n");

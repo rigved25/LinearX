@@ -10,9 +10,9 @@ using namespace std;
 inline __attribute__((always_inline)) void LinearPartition::update_best_trace(const HEdge &new_hedge,
                                                                               const TraceInfo &new_trace) {
     const value_type best_value = best_hedge.weight + (best_hedge.left ? best_hedge.left->alpha : 0) +
-                              (best_hedge.right ? best_hedge.right->alpha : 0);
+                                  (best_hedge.right ? best_hedge.right->alpha : 0);
     const value_type new_value = new_hedge.weight + (new_hedge.left ? new_hedge.left->alpha : 0) +
-                             (new_hedge.right ? new_hedge.right->alpha : 0);
+                                 (new_hedge.right ? new_hedge.right->alpha : 0);
     if (new_value >= best_value) {
         best_hedge = new_hedge;
         best_trace = new_trace;
@@ -47,8 +47,9 @@ void LinearPartition::mfe_backtrack(const int i, const int j, const StateType ty
     mfe_backtrack(best_trace.t + 1, best_trace.j, best_trace.type_right, structure);
 }
 
-PartitionOutsideLog LinearPartition::compute_outside(value_type deviation_threshold, const bool verbose_output) {
-    const value_type global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
+PartitionOutsideLog LinearPartition::compute_outside(const bool use_lazy_outside, const value_type deviation_threshold,
+                                                     const bool verbose_output) {
+    const value_type global_threshold = use_lazy_outside ? bestC[seq_length - 1].alpha - deviation_threshold : LOG_ZERO;
     unsigned long total_nodes = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
     incoming_hedges.reserve(4 * bestP[seq_length - 1].size());
@@ -98,11 +99,10 @@ PartitionOutsideLog LinearPartition::compute_outside(value_type deviation_thresh
                 100.0 * nodes_visited / total_nodes, nodes_visited, total_nodes);
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
-        fprintf(stderr, "\n");
     }
-    return PartitionOutsideLog{bestC[-1].beta,      execution_time, deviation_threshold,
-                               effective_beam_size, nodes_visited,  total_nodes - nodes_visited,
-                               edges_saved,         edges_pruned};
+    return PartitionOutsideLog{bestC[seq_length - 1].alpha, bestC[-1].beta,      execution_time,
+                               deviation_threshold,         effective_beam_size, nodes_visited,
+                               total_nodes - nodes_visited, edges_saved,         edges_pruned};
 }
 
 inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_state(const int i, const int j,
@@ -132,7 +132,8 @@ inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_s
 }
 
 pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i, const int j, State &state,
-                                                                    const StateType type, const value_type edge_threshold) {
+                                                                    const StateType type,
+                                                                    const value_type edge_threshold) {
     get_incoming_edges_state(i, j, type);
     if (incoming_hedges.empty()) {
         return make_pair(0, 0);

@@ -39,7 +39,7 @@ inline __attribute__((always_inline)) void LinearAlignment::update_state_alpha(c
     }
 }
 
-void LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, bool verbose_output) {
+AlignmentInsideLog LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         cerr << "[LinearAlignment] Running Inside Algorithm:" << endl;
@@ -96,6 +96,7 @@ void LinearAlignment::compute_inside(const Mode mode, const unsigned beam_size, 
         fprintf(stderr, "  - Execution Time: %.3f ms\n", execution_time);
         fprintf(stderr, "  - Nodes Pruned: %lu\n", nodes_pruned);
         fprintf(stderr, "  - Score: %.4f\n", bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha);
-        fprintf(stderr, "\n");
     }
+    return AlignmentInsideLog{bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, execution_time,
+                              beam_size, nodes_pruned};
 }

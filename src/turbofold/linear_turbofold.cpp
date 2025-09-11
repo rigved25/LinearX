@@ -1,5 +1,8 @@
 #include <linearx/turbofold/linear_turbofold.hpp>
 
+using namespace std;
+using namespace linearx::utils::io;
+
 LinearTurbofold::LinearTurbofold(MultiSeq &msa, EnergyModel &energy_model, float lambda,
                                  float alignment_pruning_threshold, float folding_pruning_threshold,
                                  float threshknot_threshold, float min_helix_size, bool allow_sharp_turn, float alpha1,
@@ -28,7 +31,7 @@ LinearTurbofold::LinearTurbofold(MultiSeq &msa, EnergyModel &energy_model, float
     }
 }
 
-int LinearTurbofold::get_seq_pair_index(const int k1, const int k2) {
+int LinearTurbofold::get_seq_pair_index(const int k1, const int k2) const {
     // ensure the indices are within bounds
     if (k1 >= msa.size() || k2 >= msa.size()) {
         throw std::out_of_range("Seq index k out of range");
@@ -52,7 +55,119 @@ int LinearTurbofold::get_seq_pair_index(const int k1, const int k2) {
     return index;
 }
 
-value_type LinearTurbofold::get_extrinsic_info(const Sequence &x, int i, int j) const {
-    value_type ext_info = 1.0;
-    return ext_info;
+value_type LinearTurbofold::get_extrinsic_info(const Sequence &x, const int i, const int j) {
+    value_type result = 0.0;
+    for (const Sequence &y : msa) {
+        if (x.id == y.id) {
+            continue;
+        }
+        const int seq_pair_idx = get_seq_pair_index(x.id, y.id);
+        const double seq_idnty = seq_identities[seq_pair_idx];
+        const TurboAlignment &aln = alns[seq_pair_idx];
+        const TurboPartition &y_pf = pfs[y.id];
+
+        // [FOR DEBUGGING: REMOVE LATER IF NO ERROR] ------
+        // assert that we have the correct aln object
+        assert((aln.seq1.id == x.id && aln.seq2.id == y.id) || (aln.seq1.id == y.id && aln.seq2.id == x.id));
+        // assert that we have the correct partition function object
+        assert(y_pf.seq.id == y.id);
+        // ------------------------------------------------
+
+        if (x.id == aln.seq1.id) {  // x is the first sequence in the alignment object
+            for (const auto itr1 : aln.coinc_prob[i]) {
+                for (const auto itr2 : aln.coinc_prob[j]) {
+                    const int k = itr1.first;
+                    const int l = itr2.first;
+                    const value_type aln_prob_ik = itr1.second;
+                    const value_type aln_prob_jl = itr2.second;
+                    const value_type y_bpp_kl = y_pf.get_bpp(k, l);
+                    result += (1.0 - seq_idnty) * y_bpp_kl * aln_prob_ik * aln_prob_jl;
+                }
+            }
+        } else {  // x is the second sequence in the alignment object
+            for (const int k : aln.prob_rev_idx[i]) {
+                for (const int l : aln.prob_rev_idx[j]) {
+                    const value_type aln_prob_ik = aln.get_bpp(k, i);
+                    const value_type aln_prob_jl = aln.get_bpp(l, j);
+                    const value_type y_bpp_kl = y_pf.get_bpp(k, l);
+                    result += (1.0 - seq_idnty) * y_bpp_kl * aln_prob_ik * aln_prob_jl;
+                }
+            }
+        }
+    }
+    result = LOG(2 * result);
+    return result;
+}
+
+void LinearTurbofold::run(const int num_itr, const bool use_lazy_outside, const bool use_prev_itr_beta,
+                          const bool restrict_search, const bool verbose_output, const bool save_logs,
+                          const bool save_probs, const std::string out_dir) {
+    int beam_size = 100;
+    TurboFoldLog log(num_itr, use_lazy_outside, use_prev_itr_beta, restrict_search);
+    std::cout << "Running LinearTurboFold with " << msa.size() << " sequences\n";
+    for (curr_itr = 0; curr_itr <= num_itr; ++curr_itr) {
+        showProgressBar(curr_itr, num_itr, 1);
+        if (verbose_output) {
+            fprintf(stderr, "\n------------------------------ LTF Iteration %d / %d ------------------------------\n\n",
+                    curr_itr, num_itr);
+        }
+
+        // align step
+        if (curr_itr > 0) {
+            auto start_time = std::chrono::high_resolution_clock::now();
+            for (TurboAlignment &aln : alns) {
+                // BEST MODE
+                const int k1 = aln.seq1.id;
+                const int k2 = aln.seq2.id;
+                const int aln_pair_index = get_seq_pair_index(k1, k2);
+                aln.reset_beams();
+                curr_itr <= 1 ? aln.use_prob_set1() : aln.use_prob_set2(seq_identities[aln_pair_index]);
+                aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+                aln.compute_inside(Mode::BEST, beam_size, verbose_output);
+                seq_identities[aln_pair_index] = aln.get_alignment().average_seq_identity();
+
+                // PARTITION MODE
+                aln.reset_beams();
+                aln.use_prob_set2(seq_identities[aln_pair_index]);
+                aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+                log.aln_logs[curr_itr].emplace_back(
+                    aln.compute_inside(Mode::PARTITION, beam_size, verbose_output),
+                    aln.compute_outside(use_lazy_outside, alignment_pruning_threshold, verbose_output));
+                aln.compute_coincidence_probabilities(verbose_output);
+            }
+            auto end_time = std::chrono::high_resolution_clock::now();
+            log.aln_itr_exec_times[curr_itr] =
+                chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+            if (save_probs) {
+                for (TurboAlignment &aln : alns) {
+                    aln.dump_coinc_probs(out_dir + "/aln_cp_itr_" + std::to_string(curr_itr));
+                }
+            }
+        }
+
+        // fold step
+        auto start_time = std::chrono::high_resolution_clock::now();
+        for (TurboPartition &pf : pfs) {
+            pf.reset_beams();
+            log.pf_logs[curr_itr].emplace_back(
+                pf.compute_inside(Mode::PARTITION, beam_size, verbose_output),
+                pf.compute_outside(use_lazy_outside, folding_pruning_threshold, verbose_output));
+        }
+        for (TurboPartition &pf : pfs) {
+            pf.compute_bpp_matrix();
+            pf.calc_prob_accm();
+        }
+        auto end_time = std::chrono::high_resolution_clock::now();
+        log.pf_itr_exec_times[curr_itr] = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+        if (save_probs) {
+            for (TurboPartition &pf : pfs) {
+                pf.dump_bpp(out_dir + "/pf_bpp_itr_" + std::to_string(curr_itr));
+            }
+        }
+    }  // iterations loop
+
+    if (save_logs || save_probs) {
+        std::cout << "\nSaving output to " << out_dir << "\n";
+        if (save_logs) log.save_logs(out_dir);
+    }
 }
