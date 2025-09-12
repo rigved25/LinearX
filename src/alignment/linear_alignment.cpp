@@ -8,14 +8,15 @@ using namespace linearx::constants::math;
 using namespace linearx::math;
 using namespace std;
 
-LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, float alpha1, float alpha2, float alpha3)
+LinearAlignment::LinearAlignment(Sequence &seq1, Sequence &seq2, function<value_type(int, int)> get_match_score,
+                                 float alpha1, float alpha2, float alpha3)
     : seq1(seq1),
       seq2(seq2),
       seq_len_sum(seq1.length() + seq2.length()),
+      get_match_score(get_match_score),
       alpha1(alpha1),
       alpha2(alpha2),
       alpha3(alpha3) {
-    reset_beams();
     seq1.randomize_N();
     seq2.randomize_N();
 }
@@ -32,13 +33,10 @@ void LinearAlignment::use_prob_set2(float similarity) {
     phmm->set_parameters_by_sim(similarity);
 }
 
-void LinearAlignment::reset_beams() {
-    bestALN.clear();
-    bestINS1.clear();
-    bestINS2.clear();
-    bestALN.resize(seq_len_sum + 3);
-    bestINS1.resize(seq_len_sum + 1);
-    bestINS2.resize(seq_len_sum + 1);
+void LinearAlignment::reset_beams(unsigned beam_size) {
+    reset_beam_vector(bestALN, seq_len_sum + 3, beam_size);
+    reset_beam_vector(bestINS1, seq_len_sum + 1, beam_size);
+    reset_beam_vector(bestINS2, seq_len_sum + 1, beam_size);
 
     bestALN[0][{0, 0}].alpha = LOG_ONE;
     bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].beta = LOG_ONE;
@@ -75,36 +73,15 @@ value_type LinearAlignment::get_trans_emit_prob(const int i, const int j, const 
     return score;
 }
 
-value_type LinearAlignment::get_match_score(const int i, const int j) const {
-    if (i >= seq1.length() || j >= seq2.length()) {
-        return 0;
-    }
-
-    const value_type t1 = sqrt(pm1->upstrm[i] * pm2->upstrm[j]);
-    const value_type t2 = sqrt(pm1->dwnstrm[i] * pm2->dwnstrm[j]);
-    const value_type t3 =
-        sqrt(max(1 - pm1->upstrm[i] - pm1->dwnstrm[i], 0.0) * max(1 - pm2->upstrm[j] - pm2->dwnstrm[j], 0.0));
-
-    const value_type output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
-    return LOG(output);
-}
-
-void LinearAlignment::set_prob_accm(ProbAccm &prob_accm1, ProbAccm &prob_accm2) {
-    pm1 = &prob_accm1;
-    pm2 = &prob_accm2;
-}
-
 void LinearAlignment::compute_coincidence_probabilities(bool verbose_output) {
     // clear the previous matrix
-    coinc_prob.clear();
-    prob_rev_idx.clear();
-    coinc_prob.resize(seq1.length());
-    prob_rev_idx.resize(seq2.length());
+    reset_beam_vector(coinc_prob, seq1.length(), run_beam_size_);
+    reset_beam_vector(prob_rev_idx, seq2.length(), run_beam_size_);
 
     value_type p_xy = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
     for (int s = 0; s <= seq_len_sum; ++s) {
         for (const HStateType h : hstate_types) {
-            vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beam(h);
+            vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beams(h);
             for (auto &item : beam[s]) {
                 const int i = item.first.first;
                 const int j = item.first.second;
@@ -177,7 +154,7 @@ void LinearAlignment::dump_coinc_probs(const std::string &out_dir) const {
         for (const auto &item : coinc_prob[i]) {
             const int j = item.first;
             const value_type prob = item.second;
-            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << "\n";
+            file << i + 1 << " " << j + 1 << " " << std::fixed << std::setprecision(4) << prob << "\n";
         }
     }
 }

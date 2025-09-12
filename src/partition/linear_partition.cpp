@@ -42,16 +42,12 @@ LinearPartition::LinearPartition(const Sequence &seq, const EnergyModel &energy_
 
 State &LinearPartition::get_viterbi() { return bestC[seq_length - 1]; }
 
-void LinearPartition::reset_beams() {
-    auto reset = [this](auto &vec) {
-        vec.clear();
-        vec.resize(seq_length);
-    };
-    reset(bestH);
-    reset(bestP);
-    reset(bestM);
-    reset(bestM2);
-    reset(bestMulti);
+void LinearPartition::reset_beams(const unsigned beam_size) {
+    reset_beam_vector(bestH, seq_length, beam_size);
+    reset_beam_vector(bestP, seq_length, beam_size);
+    reset_beam_vector(bestM, seq_length, beam_size);
+    reset_beam_vector(bestM2, seq_length, beam_size);
+    reset_beam_vector(bestMulti, seq_length, beam_size);
     bestC.reset();
 
     bestC[-1].alpha = LOG_ONE;
@@ -64,12 +60,10 @@ void LinearPartition::reset_beams() {
     }
 }
 
-void LinearPartition::compute_bpp_matrix() {
+void LinearPartition::compute_bpp_matrix(const unsigned beam_size) {
     // clear the existing bpp matrix
-    bpp.clear();
+    reset_beam_vector(bpp, seq_length, beam_size);
 
-    // compute the new bpp matrix
-    bpp.resize(seq_length);
     State &viterbi = get_viterbi();
     for (int j = 0; j < seq_length; ++j) {
         for (const auto &item : bestP[j]) {
@@ -84,8 +78,7 @@ void LinearPartition::compute_bpp_matrix() {
                             "[LinearPartition Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
                             j, prob);
                 }
-                prob = min(prob, 1.0);   // Clamp the probability to [0, 1]
-                this->bpp[j][i] = prob;  // Set the bpp value
+                this->bpp[j][i] = min(prob, 1.0);  // Clamp the probability to [0, 1]
             }
         }
     }
@@ -172,7 +165,7 @@ void LinearPartition::dump_bpp(const std::string &out_dir) const {
         for (const auto &item : bpp[j]) {
             const int i = item.first;
             const value_type prob = item.second;
-            file << i << " " << j << " " << std::fixed << std::setprecision(4) << prob << "\n";
+            file << i + 1 << " " << j + 1 << " " << std::fixed << std::setprecision(4) << prob << "\n";
         }
     }
 }

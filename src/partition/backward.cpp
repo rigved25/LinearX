@@ -47,9 +47,12 @@ void LinearPartition::mfe_backtrack(const int i, const int j, const StateType ty
     mfe_backtrack(best_trace.t + 1, best_trace.j, best_trace.type_right, structure);
 }
 
-PartitionOutsideLog LinearPartition::compute_outside(const bool use_lazy_outside, const value_type deviation_threshold,
-                                                     const bool verbose_output) {
-    const value_type global_threshold = use_lazy_outside ? bestC[seq_length - 1].alpha - deviation_threshold : LOG_ZERO;
+PartitionLog LinearPartition::compute_outside(const bool use_lazy_outside, const value_type deviation_threshold,
+                                              const bool verbose_output) {
+    if (!use_lazy_outside) {
+        return run_regular_outside(verbose_output);
+    }
+    const value_type global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
     unsigned long total_nodes = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
     incoming_hedges.reserve(4 * bestP[seq_length - 1].size());
@@ -100,9 +103,17 @@ PartitionOutsideLog LinearPartition::compute_outside(const bool use_lazy_outside
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
     }
-    return PartitionOutsideLog{bestC[seq_length - 1].alpha, bestC[-1].beta,      execution_time,
-                               deviation_threshold,         effective_beam_size, nodes_visited,
-                               total_nodes - nodes_visited, edges_saved,         edges_pruned};
+    return PartitionLog{get_ensemble_energy(),
+                        bestC[seq_length - 1].alpha,
+                        bestC[-1].beta,
+                        _last_inside_exec_time,
+                        execution_time,
+                        effective_beam_size,
+                        "Lazy Outside",
+                        nodes_visited,
+                        total_nodes - nodes_visited,
+                        edges_saved,
+                        edges_pruned};
 }
 
 inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_state(const int i, const int j,
@@ -111,19 +122,19 @@ inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_s
         case H:
             break;
         case Multi:
-            get_incoming_hedges_Multi<Mode::PARTITION>(i, j);
+            get_incoming_hedges_Multi<Mode::PARTITION_OUTSIDE>(i, j);
             break;
         case P:
-            get_incoming_hedges_P<Mode::PARTITION>(i, j);
+            get_incoming_hedges_P<Mode::PARTITION_OUTSIDE>(i, j);
             break;
         case M2:
-            get_incoming_hedges_M2<Mode::PARTITION>(i, j);
+            get_incoming_hedges_M2<Mode::PARTITION_OUTSIDE>(i, j);
             break;
         case M:
-            get_incoming_hedges_M<Mode::PARTITION>(i, j);
+            get_incoming_hedges_M<Mode::PARTITION_OUTSIDE>(i, j);
             break;
         case C:
-            get_incoming_hedges_C<Mode::PARTITION>(j);
+            get_incoming_hedges_C<Mode::PARTITION_OUTSIDE>(j);
             break;
     }
     for (auto &hedge : incoming_hedges) {
@@ -420,16 +431,56 @@ void LinearPartition::get_incoming_hedges_Multi(const int i, const int j) {
 }
 
 template void LinearPartition::get_incoming_hedges_C<Mode::BEST>(int);
-template void LinearPartition::get_incoming_hedges_C<Mode::PARTITION>(int);
+template void LinearPartition::get_incoming_hedges_C<Mode::PARTITION_OUTSIDE>(int);
 
 template void LinearPartition::get_incoming_hedges_M<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_M<Mode::PARTITION>(int, int);
+template void LinearPartition::get_incoming_hedges_M<Mode::PARTITION_OUTSIDE>(int, int);
 
 template void LinearPartition::get_incoming_hedges_M2<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_M2<Mode::PARTITION>(int, int);
+template void LinearPartition::get_incoming_hedges_M2<Mode::PARTITION_OUTSIDE>(int, int);
 
 template void LinearPartition::get_incoming_hedges_P<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_P<Mode::PARTITION>(int, int);
+template void LinearPartition::get_incoming_hedges_P<Mode::PARTITION_OUTSIDE>(int, int);
 
 template void LinearPartition::get_incoming_hedges_Multi<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_Multi<Mode::PARTITION>(int, int);
+template void LinearPartition::get_incoming_hedges_Multi<Mode::PARTITION_OUTSIDE>(int, int);
+
+PartitionLog LinearPartition::run_regular_outside(const bool verbose_output) {
+    if (verbose_output) {
+        fprintf(stderr, "[LinearPartition] Running Outside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
+                seq.length(), seq.name.c_str());
+    }
+    const auto start_time = chrono::high_resolution_clock::now();
+    bestC[seq_length - 1].beta = 0;
+    for (int j = seq_length - 1; j >= -1; --j) {
+        if (verbose_output) {
+            showProgressBar(seq_length - 1 - j, seq_length);
+        }
+        // reverse topological order: C->M->M2->P->Multi
+        beamstep_C<Mode::PARTITION_OUTSIDE>(j);
+        if (j <= 0) continue;
+        beamstep_M<Mode::PARTITION_OUTSIDE>(j);
+        beamstep_M2<Mode::PARTITION_OUTSIDE>(j);
+        beamstep_P<Mode::PARTITION_OUTSIDE>(j);
+        beamstep_Multi<Mode::PARTITION_OUTSIDE>(j);
+    }
+
+    const auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    if (verbose_output) {
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
+                100.0 * execution_time / max(_last_inside_exec_time, 1.0));
+        fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
+    }
+    return PartitionLog{get_ensemble_energy(),
+                        bestC[seq_length - 1].alpha,
+                        bestC[-1].beta,
+                        _last_inside_exec_time,
+                        execution_time,
+                        0,
+                        "Regular Outside",
+                        0,
+                        0,
+                        0,
+                        0};
+}

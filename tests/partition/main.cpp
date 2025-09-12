@@ -11,6 +11,7 @@ TEST_CASE("[LinearPartition] MFE Basic Seq", "[mfe][1]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
+    partition.reset_beams(100);
     partition.compute_inside(Mode::BEST, 100, true);
     Structure mfe_structure = partition.get_mfe_structure();
     std::cout << "MFE Structure: " << mfe_structure.getDotBracket() << std::endl;
@@ -23,10 +24,9 @@ TEST_CASE("[LinearPartition] Partition Basic Seq", "[part][1]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
-    partition.compute_inside(Mode::PARTITION, 100, true);
-    partition.print_alpha_beta();
-    Structure mfe_structure = partition.get_mfe_structure();
-    partition.debug_states();
+    partition.reset_beams(100);
+    partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
+    partition.compute_outside(false);
 }
 
 TEST_CASE("[LinearPartition] Big Seq", "[mfe][2]") {
@@ -36,6 +36,7 @@ TEST_CASE("[LinearPartition] Big Seq", "[mfe][2]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
+    partition.reset_beams(100);
     partition.compute_inside(Mode::BEST, 100, true);
     Structure mfe_structure = partition.get_mfe_structure();
     std::cout << "MFE Structure: " << mfe_structure.getDotBracket() << std::endl;
@@ -48,8 +49,10 @@ TEST_CASE("[LinearPartition] Big Seq", "[part][2]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
-    partition.compute_inside(Mode::PARTITION, 100, true);
-    partition.compute_outside(linearx::constants::limits::DEVIATION_THRESHOLD, true);
+    partition.reset_beams(100);
+    partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
+    // partition.compute_outside(true, linearx::constants::limits::DEVIATION_THRESHOLD, true);
+    partition.compute_outside(false);
     // partition.compute_outside(linearx::constants::math::VALUE_MAX * 100, true);
 }
 
@@ -60,6 +63,7 @@ TEST_CASE("[LinearPartition] Covid Seq", "[mfe][3]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
+    partition.reset_beams(100);
     partition.compute_inside(Mode::BEST, 100, true);
 }
 
@@ -70,7 +74,8 @@ TEST_CASE("[LinearPartition] Covid Seq", "[part][3]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
-    partition.compute_inside(Mode::PARTITION, 100, true);
+    partition.reset_beams(100);
+    partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
 }
 
 TEST_CASE("[LinearPartition] Covid Seq", "[part][out][3]") {
@@ -80,7 +85,9 @@ TEST_CASE("[LinearPartition] Covid Seq", "[part][out][3]") {
 
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearPartition partition(seq, energy_model);
-    partition.compute_inside(Mode::PARTITION, 100, true);
-    // partition.compute_outside(linearx::constants::limits::DEVIATION_THRESHOLD, true);
-    partition.compute_outside(linearx::constants::math::VALUE_MAX * 100, true);
+    partition.reset_beams(100);
+    partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
+    partition.compute_outside(false);
+    // partition.compute_outside(true, linearx::constants::limits::DEVIATION_THRESHOLD, true);
+    // partition.compute_outside(true, linearx::constants::math::VALUE_MAX, true);
 }

@@ -12,19 +12,22 @@ struct TurboFoldLog {
     bool use_lazy_outside;
     bool use_prev_itr_beta;
     bool restrict_search;
-    std::vector<std::vector<std::pair<AlignmentInsideLog, AlignmentOutsideLog>>>
-        aln_logs;  // aln_logs[iteration][pair_index]
-    std::vector<std::vector<std::pair<PartitionInsideLog, PartitionOutsideLog>>>
-        pf_logs;  // pf_logs[iteration][sequence_index]
+    float alignment_pruning_threshold;
+    float folding_pruning_threshold;
+    std::vector<std::vector<AlignmentLog>> aln_logs;  // aln_logs[iteration][pair_index]
+    std::vector<std::vector<PartitionLog>> pf_logs;   // pf_logs[iteration][sequence_index]
     std::vector<value_type> aln_itr_exec_times;
     std::vector<value_type> pf_itr_exec_times;
     value_type itrs_exec_time;
 
-    TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool use_prev_itr_beta, bool restrict_search)
+    TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool use_prev_itr_beta, bool restrict_search,
+                 float alignment_pruning_threshold, float folding_pruning_threshold)
         : num_iterations(num_iterations),
           use_lazy_outside(use_lazy_outside),
           use_prev_itr_beta(use_prev_itr_beta),
-          restrict_search(restrict_search) {
+          restrict_search(restrict_search),
+          alignment_pruning_threshold(alignment_pruning_threshold),
+          folding_pruning_threshold(folding_pruning_threshold) {
         aln_logs.resize(num_iterations + 1);
         pf_logs.resize(num_iterations + 1);
         aln_itr_exec_times.resize(num_iterations + 1);
@@ -39,7 +42,7 @@ struct TurboFoldLog {
         for (const auto &t : aln_itr_exec_times) itrs_exec_time += t;
         for (const auto &t : pf_itr_exec_times) itrs_exec_time += t;
 
-        // write top-level summary file
+        // --- write top-level summary file
         std::ofstream summary(out_dir + "/turbofold_log.txt");
         if (!summary) {
             throw std::runtime_error("Failed to open summary log file for writing: " + out_dir + "/turbofold_log.txt");
@@ -49,6 +52,8 @@ struct TurboFoldLog {
         summary << "use_lazy_outside: " << use_lazy_outside << "\n";
         summary << "use_prev_itr_beta: " << use_prev_itr_beta << "\n";
         summary << "restrict_search: " << restrict_search << "\n";
+        summary << "alignment_pruning_threshold: " << alignment_pruning_threshold << "\n";
+        summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
 
         summary << "aln_itr_exec_times (ms): ";
         for (const auto &t : aln_itr_exec_times) summary << t << " ";
@@ -61,7 +66,7 @@ struct TurboFoldLog {
         summary << "itrs_exec_time (ms): " << itrs_exec_time << "\n";
         summary.close();
 
-        // log directories
+        // --- log directories
         std::string aln_log_dir = out_dir + "/logs/alignment";
         std::string pf_log_dir = out_dir + "/logs/partition";
         std::filesystem::create_directories(aln_log_dir);
@@ -76,23 +81,17 @@ struct TurboFoldLog {
 
                 aln_log << "=== Alignment Logs: Iteration " << itr << " ===\n\n";
                 int pair_idx = 0;
-                for (const auto &[inside, outside] : aln_logs[itr]) {
+                for (const auto &log : aln_logs[itr]) {
                     aln_log << "-- Pair Index: " << pair_idx++ << " --\n";
-                    aln_log << "[Alignment Inside Log]\n";
-                    aln_log << "  score: " << inside.score << "\n";
-                    aln_log << "  execution_time: " << inside.execution_time << " ms\n";
-                    aln_log << "  beam_size: " << inside.beam_size << "\n";
-                    aln_log << "  nodes_pruned: " << inside.nodes_pruned << "\n";
-
-                    aln_log << "[Alignment Outside Log]\n";
-                    aln_log << "  score: " << outside.score << "\n";
-                    aln_log << "  execution_time: " << outside.execution_time << " ms\n";
-                    aln_log << "  deviation_threshold: " << outside.deviation_threshold << "\n";
-                    aln_log << "  effective_beam_size: " << outside.effective_beam_size << "\n";
-                    aln_log << "  nodes_visited: " << outside.nodes_visited << "\n";
-                    aln_log << "  nodes_pruned: " << outside.nodes_pruned << "\n";
-                    aln_log << "  edges_saved: " << outside.edges_saved << "\n";
-                    aln_log << "  edges_pruned: " << outside.edges_pruned << "\n\n";
+                    aln_log << "  seq_identity: " << log.seq_identity << "\n";
+                    aln_log << "  total_inside_score: " << log.total_inside_score << "\n";
+                    aln_log << "  total_outside_score: " << log.total_outside_score << "\n";
+                    aln_log << "  inside_exec_time: " << log.inside_exec_time << " ms\n";
+                    double outside_pct =
+                        (log.inside_exec_time > 0.0) ? (100.0 * log.outside_exec_time / log.inside_exec_time) : 0.0;
+                    aln_log << "  outside_exec_time: " << log.outside_exec_time << " ms (" << outside_pct
+                            << "% of inside)\n";
+                    aln_log << "  effective_beam_size: " << log.effective_beam_size << "\n";
                 }
                 aln_log.close();
             }
@@ -104,24 +103,17 @@ struct TurboFoldLog {
 
             pf_log << "=== Partition Logs: Iteration " << itr << " ===\n\n";
             int seq_idx = 0;
-            for (const auto &[inside, outside] : pf_logs[itr]) {
+            for (const auto &log : pf_logs[itr]) {
                 pf_log << "-- Sequence Index: " << seq_idx++ << " --\n";
-                pf_log << "[Partition Inside Log]\n";
-                pf_log << "  energy: " << inside.energy << "\n";
-                pf_log << "  execution_time: " << inside.execution_time << " ms\n";
-                pf_log << "  beam_size: " << inside.beam_size << "\n";
-                pf_log << "  nodes_pruned: " << inside.nodes_pruned << "\n";
-
-                pf_log << "[Partition Outside Log]\n";
-                pf_log << "  total_inside_energy: " << outside.total_inside_energy << "\n";
-                pf_log << "  total_outside_energy: " << outside.total_outside_energy << "\n";
-                pf_log << "  execution_time: " << outside.execution_time << " ms\n";
-                pf_log << "  deviation_threshold: " << outside.deviation_threshold << "\n";
-                pf_log << "  effective_beam_size: " << outside.effective_beam_size << "\n";
-                pf_log << "  nodes_visited: " << outside.nodes_visited << "\n";
-                pf_log << "  nodes_pruned: " << outside.nodes_pruned << "\n";
-                pf_log << "  edges_saved: " << outside.edges_saved << "\n";
-                pf_log << "  edges_pruned: " << outside.edges_pruned << "\n\n";
+                pf_log << "  free_energy_of_ensemble: " << log.free_energy_of_ensemble << "\n";
+                pf_log << "  total_inside_energy: " << log.total_inside_energy << "\n";
+                pf_log << "  total_outside_energy: " << log.total_outside_energy << "\n";
+                pf_log << "  inside_exec_time: " << log.inside_exec_time << " ms\n";
+                double outside_pct =
+                    (log.inside_exec_time > 0.0) ? (100.0 * log.outside_exec_time / log.inside_exec_time) : 0.0;
+                pf_log << "  outside_exec_time: " << log.outside_exec_time << " ms (" << outside_pct
+                       << "% of inside)\n";
+                pf_log << "  effective_beam_size: " << log.effective_beam_size << "\n";
             }
             pf_log.close();
         }

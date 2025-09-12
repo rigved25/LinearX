@@ -14,8 +14,6 @@ class LinearPartition {
     std::vector<int> if_tetraloops;
     std::vector<int> if_hexaloops;
     std::vector<int> if_triloops;
-    Mode run_mode_;
-    int run_beam_size_;
     std::vector<std::pair<value_type, int>> beam_scores;
     std::vector<HEdge> incoming_hedges;
     std::vector<HEdge *> saved_hedges;
@@ -25,8 +23,8 @@ class LinearPartition {
 
     // methods declared in file backward.cpp
     void update_best_trace(const HEdge &new_hedge, const TraceInfo &new_trace);
-
     void mfe_backtrack(const int i, const int j, const StateType type, Structure &structure);
+    PartitionLog run_regular_outside(const bool verbose_output);
 
    protected:
     std::vector<std::unordered_map<int, State>> bestH;
@@ -35,6 +33,42 @@ class LinearPartition {
     std::vector<std::unordered_map<int, State>> bestM2;
     std::vector<std::unordered_map<int, State>> bestMulti;
     VectorWithNegOneIndex<State> bestC;
+    // unsigned run_beam_size_;
+
+    inline virtual State *check_state(const StateType type, const int i, const int j) {
+        return get_state(type, i, j, true);
+    }
+
+    inline virtual void update_state_beta(HEdge hedge, State *state, const StateType type, const int i, const int j) {
+        hedge.weight *= linearx::constants::energy::INV_KT;
+        hedge.update_state_beta(*state);
+    }
+
+    inline virtual unsigned long beam_prune(std::unordered_map<int, State> &beamstep, const unsigned beam_size,
+                                            const StateType type, const int j) {
+        if (beam_size == 0 || beamstep.size() <= beam_size) {
+            return 0;
+        }
+        unsigned long num_pruned = 0;
+        beam_scores.clear();
+        beam_scores.reserve(beamstep.size());
+        for (auto &item : beamstep) {
+            const int i = item.first;
+            const State &cand = item.second;
+            const int k = i - 1;
+            const value_type newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
+            beam_scores.emplace_back(newalpha, i);
+        }
+        const value_type threshold =
+            linearx::utils::quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - beam_size);
+        for (auto &p : beam_scores) {
+            if (p.first < threshold) {
+                beamstep.erase(p.second);
+                num_pruned++;
+            }
+        }
+        return num_pruned;
+    }
 
    public:
     friend struct PartitionFunctionBeam;
@@ -52,64 +86,68 @@ class LinearPartition {
     LinearPartition(const Sequence &seq, const EnergyModel &energy_model, const bool allow_sharp_turn = false);
     State &get_viterbi();
 
-    void reset_beams();
-    PartitionInsideLog compute_inside(const Mode mode, const unsigned beam_size = 100,
-                                      const bool verbose_output = true);
-    PartitionOutsideLog compute_outside(
-        const bool use_lazy_outside = true,
-        const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-        const bool verbose_output = true);
+    void reset_beams(const unsigned beam_size);
+    PartitionLog compute_inside(const Mode mode, const unsigned beam_size = 100, const bool verbose_output = true);
+    PartitionLog compute_outside(const bool use_lazy_outside = true,
+                                 const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                                 const bool verbose_output = true);
 
-    void compute_bpp_matrix();
+    void compute_bpp_matrix(const unsigned beam_size);
     value_type get_ensemble_energy() const;
     void print_alpha_beta() const;
     Structure get_mfe_structure();
+
+    inline State *get_state(const StateType type, const int i, const int j, const bool create = false) noexcept {
+        std::unordered_map<int, State> *beam = nullptr;
+        switch (type) {
+            case H:
+                beam = &bestH[j];
+                break;
+            case Multi:
+                beam = &bestMulti[j];
+                break;
+            case P:
+                beam = &bestP[j];
+                break;
+            case M2:
+                beam = &bestM2[j];
+                break;
+            case M:
+                beam = &bestM[j];
+                break;
+            case C:
+                return &bestC[j];  // special case
+            default:
+                return nullptr;
+        }
+        const auto it = beam->find(i);
+        if (it != beam->end()) {
+            return &it->second;
+        } else if (create) {
+            return &(*beam)[i];
+        } else {
+            return nullptr;
+        }
+    }
 
     inline value_type get_bpp(const int i, const int j) const {
         const auto &bpp_j = bpp[j];
         const auto item = bpp_j.find(i);
         return item == bpp_j.end() ? 0.0 : item->second;
     }
-    inline virtual unsigned long beam_prune(const int j, const StateType type,
-                                            std::unordered_map<int, State> &beamstep) {
-        if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
-            return 0;
-        }
-        unsigned long num_pruned = 0;
-        beam_scores.clear();
-        beam_scores.reserve(beamstep.size());
-        for (auto &item : beamstep) {
-            const int i = item.first;
-            const State &cand = item.second;
-            const int k = i - 1;
-            const value_type newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
-            beam_scores.emplace_back(newalpha, i);
-        }
-        const value_type threshold =
-            linearx::utils::quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - run_beam_size_);
-        for (auto &p : beam_scores) {
-            if (p.first < threshold) {
-                beamstep.erase(p.second);
-                num_pruned++;
-            }
-        }
-        return num_pruned;
-    }
-    inline virtual void update_score(const StateType type, const int i, const int j, State &state, int new_score,
-                                     value_type prev_score = 0) {
-        if (run_mode_ == BEST) {
-            state.alpha = std::max(state.alpha, prev_score + new_score);
-        } else {
-            state.alpha = LOG_SUM(state.alpha, prev_score + (new_score * linearx::constants::energy::INV_KT));
-        }
-    }
 
     // methods declared in file forward.cpp
+    template <Mode mode>
     unsigned long beamstep_H(const int j);
+    template <Mode mode>
     unsigned long beamstep_Multi(const int j);
+    template <Mode mode>
     unsigned long beamstep_P(const int j);
+    template <Mode mode>
     unsigned long beamstep_M2(const int j);
+    template <Mode mode>
     unsigned long beamstep_M(const int j);
+    template <Mode mode>
     void beamstep_C(const int j);
 
     // methods declared in file backward.cpp
@@ -133,34 +171,34 @@ class LinearPartition {
                                          int min_helix_size = linearx::constants::energy::MIN_HELIX_SIZE) const;
 
     void dump_bpp(const std::string &out_dir) const;
-
-    inline void debug_states() const {
-        // printf("\n");
-        // for (int j = 0; j < seq.length(); ++j) {
-        //     for (const auto &item : bestP[j]) {
-        //         int i = item.first;
-        //         const State &state = item.second;
-        //         printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
-        //     }
-        // }
-        // printf("\n");
-
-        // print all p for last j
-        for (const auto &item : bestP[seq_length - 1]) {
-            int i = item.first;
-            const State &state = item.second;
-            printf("P[%d][%d]: %.5f\t%.5f\n", i, seq_length - 1, state.alpha, state.beta);
-        }
-        // for (int j = -1; j < (int)seq.length(); ++j) {
-        //     printf("C[%d]: %.5f\t%.5f\n", j, bestC[j].alpha, bestC[j].beta);
-        // }
-        // printf("\n");
-        // for (int j = 0; j < seq.length(); ++j) {
-        //     for (const auto &item : bestM[j]) {
-        //         int i = item.first;
-        //         const State &state = item.second;
-        //         printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
-        //     }
-        // }
-    }
 };
+
+// inline void debug_states() const {
+// printf("\n");
+// for (int j = 0; j < seq.length(); ++j) {
+//     for (const auto &item : bestP[j]) {
+//         int i = item.first;
+//         const State &state = item.second;
+//         printf("P[%d][%d]: %.5f\t%.5f\n", i, j, state.alpha, state.beta);
+//     }
+// }
+// printf("\n");
+
+// print all p for last j
+// for (const auto &item : bestP[seq_length - 1]) {
+// int i = item.first;
+// const State &state = item.second;
+// printf("P[%d][%d]: %.5f\t%.5f\n", i, seq_length - 1, state.alpha, state.beta);
+
+// for (int j = -1; j < (int)seq.length(); ++j) {
+//     printf("C[%d]: %.5f\t%.5f\n", j, bestC[j].alpha, bestC[j].beta);
+// }
+// printf("\n");
+// for (int j = 0; j < seq.length(); ++j) {
+//     for (const auto &item : bestM[j]) {
+//         int i = item.first;
+//         const State &state = item.second;
+//         printf("M[%d][%d]: %.5f\n", i, j, state.alpha);
+//     }
+// }
+// }

@@ -2,18 +2,33 @@ import argparse
 import math
 import matplotlib.pyplot as plt
 import os
-
+import re
 
 def read_probs(filepath):
     probs = {}
     with open(filepath) as f:
         for line in f:
-            parts = line.strip().split()
-            if len(parts) != 3:
+            line = line.strip()
+            if not line:
                 continue
-            i, j = int(parts[0]), int(parts[1])
-            p = float(parts[2])
-            probs[(i, j)] = p
+
+            # Format 1: labeled format like i=1, j=360, probs=9.9906e-01
+            if "i=" in line and "j=" in line and "probs=" in line:
+                match = re.match(r"i=(\d+),\s*j=(\d+),\s*probs=([\deE\.\+-]+)", line)
+                if match:
+                    i, j, p = int(match[1]), int(match[2]), float(match[3])
+                    probs[(i, j)] = p
+                continue
+
+            # Format 2: whitespace-separated i j prob
+            parts = line.split()
+            if len(parts) == 3:
+                try:
+                    i, j, p = int(parts[0]), int(parts[1]), float(parts[2])
+                    probs[(i, j)] = p
+                except ValueError:
+                    continue  # skip bad lines
+
     return probs
 
 

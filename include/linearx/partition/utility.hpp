@@ -11,19 +11,14 @@ enum StateType {
     C,
 };
 
-struct PartitionInsideLog {
-    value_type energy;  // free energy of the ensemble
-    value_type execution_time;
-    unsigned beam_size;
-    unsigned long nodes_pruned;
-};
-
-struct PartitionOutsideLog {
-    value_type total_inside_energy;   // corresponds to bestC[seq_length - 1].alpha
-    value_type total_outside_energy;  // corresponds to bestC[-1].beta
-    value_type execution_time;
-    value_type deviation_threshold;
+struct PartitionLog {
+    value_type free_energy_of_ensemble;  // should be equal to -energy
+    value_type total_inside_energy;      // corresponds to bestC[seq_length - 1].alpha
+    value_type total_outside_energy;     // corresponds to bestC[-1].beta
+    value_type inside_exec_time;
+    value_type outside_exec_time;
     float effective_beam_size;
+    std::string run_mode;
     unsigned long nodes_visited;
     unsigned long nodes_pruned;
     unsigned long edges_saved;
@@ -94,6 +89,23 @@ struct HEdge {
         this->weight = weight;
         this->left = left;
         this->right = right;
+    }
+
+    // set next_state alpha using current states and the edge
+    inline void update_state_alpha(State &next_state) {
+        value_type prev_score = (left ? left->alpha : 0) + (right ? right->alpha : 0);
+        // std::cout << prev_score << " " << weight << std::endl;
+        next_state.alpha = LOG_SUM(next_state.alpha, prev_score + (weight * linearx::constants::energy::INV_KT));
+    }
+
+    // set current states beta using next_state and the edge
+    inline void update_state_beta(State &next_state) {
+        if (!right) {
+            left->beta = LOG_SUM(left->beta, weight + next_state.beta);
+        } else {
+            left->beta = LOG_SUM(left->beta, right->alpha + weight + next_state.beta);
+            right->beta = LOG_SUM(right->beta, left->alpha + weight + next_state.beta);
+        }
     }
 };
 

@@ -8,69 +8,37 @@ using namespace linearx::constants::energy;
 using namespace linearx::constants::math;
 using namespace std;
 
-// unsigned long LinearPartition::beam_prune(const int j, const StateType type, std::unordered_map<int, State> &beamstep) {
-//     if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
-//         return 0;
-//     }
-//     unsigned long num_pruned = 0;
-//     beam_scores.clear();
-//     beam_scores.reserve(beamstep.size());
-//     for (auto &item : beamstep) {
-//         const int i = item.first;
-//         const State &cand = item.second;
-//         const int k = i - 1;
-//         const value_type newalpha = ((k >= 0 ? bestC[k].alpha : 0) + cand.alpha);
-//         beam_scores.emplace_back(newalpha, i);
-//     }
-//     const value_type threshold =
-//         linearx::utils::quickselect(beam_scores, 0, beam_scores.size() - 1, beam_scores.size() - run_beam_size_);
-//     for (auto &p : beam_scores) {
-//         if (p.first < threshold) {
-//             beamstep.erase(p.second);
-//             num_pruned++;
-//         }
-//     }
-//     return num_pruned;
-// }
-// void LinearPartition::update_score(const StateType type, const int i, const int j, State &state, int new_score,
-//                                    value_type prev_score) {
-//     if (run_mode_ == BEST) {
-//         state.alpha = std::max(state.alpha, prev_score + new_score);
-//     } else {
-//         state.alpha = LOG_SUM(state.alpha, prev_score + (new_score * linearx::constants::energy::INV_KT));
-//     }
-// }
-
-PartitionInsideLog LinearPartition::compute_inside(const Mode mode, const unsigned beam_size,
-                                                   const bool verbose_output) {
+PartitionLog LinearPartition::compute_inside(const Mode mode, const unsigned beam_size, const bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
-    run_mode_ = mode;
-    run_beam_size_ = beam_size;
     if (verbose_output) {
         fprintf(stderr, "[LinearPartition] Running Inside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
                 seq.length(), seq.name.c_str());
     }
-    reset_beams();
     unsigned long nodes_pruned = 0;
     for (int j = 0; j < seq_length; j++) {
         if (verbose_output) {
             showProgressBar(j, seq_length - 1);
         }
         // beam of H
-        nodes_pruned += beamstep_H(j);
+        nodes_pruned += beam_prune(bestH[j], beam_size, StateType::H, j);
+        beamstep_H<PARTITION_INSIDE>(j);
         if (j == 0) {
             continue;
         }
         // beam of Multi
-        nodes_pruned += beamstep_Multi(j);
+        nodes_pruned += beam_prune(bestMulti[j], beam_size, StateType::Multi, j);
+        beamstep_Multi<PARTITION_INSIDE>(j);
         // beam of P
-        nodes_pruned += beamstep_P(j);
+        nodes_pruned += beam_prune(bestP[j], beam_size, StateType::P, j);
+        beamstep_P<PARTITION_INSIDE>(j);
         // beam of M2
-        nodes_pruned += beamstep_M2(j);
+        nodes_pruned += beam_prune(bestM2[j], beam_size, StateType::M2, j);
+        beamstep_M2<PARTITION_INSIDE>(j);
         // beam of M
-        nodes_pruned += beamstep_M(j);
+        nodes_pruned += beam_prune(bestM[j], beam_size, StateType::M, j);
+        beamstep_M<PARTITION_INSIDE>(j);
         // beam of C
-        beamstep_C(j);  // beam of C
+        beamstep_C<PARTITION_INSIDE>(j);
     }
     // update/print time stats
     const auto end_time = chrono::high_resolution_clock::now();
@@ -86,11 +54,21 @@ PartitionInsideLog LinearPartition::compute_inside(const Mode mode, const unsign
             fprintf(stderr, "  - Free Energy of the Ensemble: %.5f kcal/mol\n", score);
         }
     }
-    return PartitionInsideLog{score, execution_time, beam_size, nodes_pruned};
+    return PartitionLog{get_ensemble_energy(),
+                        bestC[seq_length - 1].alpha,
+                        LOG_ZERO,
+                        execution_time,
+                        -LOG_ZERO,
+                        float(beam_size),
+                        "Inside",
+                        0,
+                        nodes_pruned,
+                        0,
+                        0};
 }
 
+template <Mode mode>
 unsigned long LinearPartition::beamstep_H(const int j) {
-    unsigned long nodes_pruned = beam_prune(j, StateType::H, bestH[j]);
     int jnext = next_pair[seq.enc[j]][j];
     while (!allow_sharp_turn && jnext < seq_length && (jnext - j) < 4) {
         jnext = next_pair[seq.enc[j]][jnext];
@@ -103,16 +81,26 @@ unsigned long LinearPartition::beamstep_H(const int j) {
             tetra_hex_tri = if_hexaloops[j];
         else if (jnext - j - 1 == 3)  // 5:tri
             tetra_hex_tri = if_triloops[j];
-        const int score = -energy_model.score_hairpin(j, jnext, seq.enc[j], seq.enc[j + 1], seq.enc[jnext - 1],
-                                                      seq.enc[jnext], tetra_hex_tri);
-        update_score(StateType::H, j, jnext, bestH[jnext][j], score);
+
+        if constexpr (mode != Mode::PARTITION_OUTSIDE) {
+            const int new_score = -energy_model.score_hairpin(j, jnext, seq.enc[j], seq.enc[j + 1], seq.enc[jnext - 1],
+                                                              seq.enc[jnext], tetra_hex_tri);
+            if constexpr (mode == Mode::BEST) {
+                bestH[jnext][j].alpha = std::max(bestH[jnext][j].alpha, static_cast<value_type>(new_score));
+            } else {
+                State *next_state = check_state(StateType::H, j, jnext);
+                if (next_state) {
+                    HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
+                }
+            }
+        }
     }
     // for every state h in H[j]
     //   1. extend H(i, j) to H(i, jnext)
     //   2. generate P(i, j)
     for (auto &item : bestH[j]) {
         const int i = item.first;
-        const State &state = item.second;
+        State &state = item.second;
         // 1. extend H(i, j) to H(i, jnext)
         jnext = next_pair[seq.enc[i]][j];
         if (jnext < seq_length) {
@@ -123,128 +111,309 @@ unsigned long LinearPartition::beamstep_H(const int j) {
                 tetra_hex_tri = if_hexaloops[i];
             else if (jnext - i - 1 == 3)  // 5:tri
                 tetra_hex_tri = if_triloops[i];
-            const int score = -energy_model.score_hairpin(i, jnext, seq.enc[i], seq.enc[i + 1], seq.enc[jnext - 1],
-                                                          seq.enc[jnext], tetra_hex_tri);
-            update_score(StateType::H, i, jnext, bestH[jnext][i], score);
+
+            // update_score(StateType::H, i, jnext, score);
+            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                continue;  // do nothing
+            } else {
+                const int new_score = -energy_model.score_hairpin(i, jnext, seq.enc[i], seq.enc[i + 1],
+                                                                  seq.enc[jnext - 1], seq.enc[jnext], tetra_hex_tri);
+                if constexpr (mode == Mode::BEST) {
+                    bestH[jnext][i].alpha = std::max(bestH[jnext][i].alpha, static_cast<value_type>(new_score));
+                } else {
+                    State *next_state = check_state(StateType::H, i, jnext);
+                    if (next_state) {
+                        HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
+                    }
+                }
+            }
         }
-        // 2. generate P(i, j)
-        update_score(StateType::P, i, j, bestP[j][i], 0, state.alpha);
+        // 2. H(i, j) -> P(i, j)
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            continue;  // do nothing
+        } else {
+            const int new_score = 0;
+            if constexpr (mode == Mode::BEST) {
+                bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
+            } else {
+                State *next_state = check_state(StateType::P, i, j);
+                if (next_state) {
+                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                }
+            }
+        }
     }
-    return nodes_pruned;
+    return 0;
 }
 
+template <Mode mode>
 unsigned long LinearPartition::beamstep_Multi(const int j) {
-    unsigned long nodes_pruned = beam_prune(j, StateType::Multi, bestMulti[j]);
     for (auto &item : bestMulti[j]) {
         const int i = item.first;
-        const State &state = item.second;
-        // 1. extend Multi(i, j) to Multi(i, jnext)
+        State &state = item.second;
+        // 1. Multi(i, j) -> Multi(i, jnext)
         const int jnext = next_pair[seq.enc[i]][j];
         if (jnext < seq_length) {
-            const int new_score = -energy_model.score_multi_unpaired(j, jnext);
-            update_score(StateType::Multi, i, jnext, bestMulti[jnext][i], new_score, state.alpha);
+            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                auto it = bestMulti[jnext].find(i);
+                if (it != bestMulti[jnext].end()) {
+                    const int new_score = -energy_model.score_multi_unpaired(j, jnext);
+                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::Multi, i, jnext);
+                }
+            } else {
+                const int new_score = -energy_model.score_multi_unpaired(j, jnext);
+                if constexpr (mode == Mode::BEST) {
+                    bestMulti[jnext][i].alpha = std::max(bestMulti[jnext][i].alpha, state.alpha + new_score);
+                } else {
+                    State *next_state = check_state(StateType::Multi, i, jnext);
+                    if (next_state) {
+                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                    }
+                }
+            }
         }
+
         // 2. generate P(i, j)
-        const int new_score =
-            -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
-        update_score(StateType::P, i, j, bestP[j][i], new_score, state.alpha);
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            auto it = bestP[j].find(i);
+            if (it != bestP[j].end()) {
+                const int new_score =
+                    -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
+                update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::P, i, j);
+            }
+        } else {
+            const int new_score =
+                -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
+            if constexpr (mode == Mode::BEST) {
+                bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
+            } else {
+                State *next_state = check_state(StateType::P, i, j);
+                if (next_state) {
+                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                }
+            }
+        }
     }
-    return nodes_pruned;
+    return 0;
 }
 
+template <Mode mode>
 unsigned long LinearPartition::beamstep_P(const int j) {
-    unsigned long nodes_pruned = beam_prune(j, StateType::P, bestP[j]);
-    // for every state in P[j]
-    //   1. generate new P (helix/bulge)
-    //   2. M = P
-    //   3. M2 = M + P
-    //   4. C = C + P
     const int nucj1 = (j + 1 < seq_length ? seq.enc[j + 1] : -1);
     for (auto &item : bestP[j]) {
         const int i = item.first;
-        const State &state = item.second;
-        // 1. generate new P (helix/bulge)
+        State &state = item.second;
+        // 1. P(i, j) -> P(p, q) [scan left & jump right, generate new P (helix/bulge)]
         int q = seq_length;
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
             q = next_pair[seq.enc[p]][j];
             while (q < seq_length && ((i - p) + (q - j) - 2) <= MAXLOOPSIZE) {
                 // current shape is: p...i (pair) j...q
-                const int new_score =
-                    -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1], seq.enc[q],
-                                                    seq.enc[i - 1], seq.enc[i], seq.enc[j], seq.enc[j + 1]);
-                update_score(StateType::P, p, q, bestP[q][p], new_score, state.alpha);
+                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                    auto it = bestP[q].find(p);
+                    if (it != bestP[q].end()) {
+                        const int new_score =
+                            -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
+                                                            seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
+                        update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::P, p, q);
+                    }
+                } else {
+                    const int new_score =
+                        -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
+                                                        seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
+                    if constexpr (mode == Mode::BEST) {
+                        bestP[q][p].alpha = std::max(bestP[q][p].alpha, state.alpha + new_score);
+                    } else {
+                        State *next_state = check_state(StateType::P, p, q);
+                        if (next_state) {
+                            HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                        }
+                    }
+                }
                 q = next_pair[seq.enc[p]][q];
             }
         }
-        // 2. M = P
+        // 2. P -> M
         if (i > 0 && j < seq_length - 1) {
-            const int new_score =
-                -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
-            update_score(StateType::M, i, j, bestM[j][i], new_score, state.alpha);
+            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                auto it = bestM[j].find(i);
+                if (it != bestM[j].end()) {
+                    const int new_score =
+                        -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
+                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j);
+                }
+            } else {
+                const int new_score =
+                    -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
+                if constexpr (mode == Mode::BEST) {
+                    bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
+                } else {
+                    State *next_state = check_state(StateType::M, i, j);
+                    if (next_state) {
+                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                    }
+                }
+            }
         }
-        // 3. M2 = M + P
+        // 3. M + P -> M2
         const int h = i - 1;
         if (h > 0 && !bestM[h].empty()) {
             const int new_score =
                 -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
             for (auto &m_item : bestM[h]) {
                 const int g = m_item.first;
-                const State &m_state = m_item.second;
-                update_score(StateType::M2, g, j, bestM2[j][g], new_score, m_state.alpha + state.alpha);
+                State &m_state = m_item.second;
+                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                    auto it = bestM2[j].find(g);
+                    if (it != bestM2[j].end()) {
+                        update_state_beta(HEdge(new_score, &m_state, &state), &it->second, StateType::M2, g, j);
+                    }
+                } else {
+                    if constexpr (mode == Mode::BEST) {
+                        bestM2[j][g].alpha = std::max(bestM2[j][g].alpha, m_state.alpha + state.alpha + new_score);
+                    } else {
+                        State *next_state = check_state(StateType::M2, g, j);
+                        if (next_state) {
+                            HEdge(new_score, &m_state, &state).update_state_alpha(*next_state);
+                        }
+                    }
+                }
             }
         }
-        // 4. C = C + P
-        if (h >= 0) {
-            const State &prefix_C = bestC[h];
-            const int new_score =
-                -energy_model.score_external_paired(i, j, seq.enc[h], seq.enc[h + 1], seq.enc[j], nucj1, seq_length);
-            update_score(StateType::C, 0, j, bestC[j], new_score, prefix_C.alpha + state.alpha);
+
+        // // 4. C + P -> C
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            const int new_score = -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i],
+                                                                      seq.enc[j], nucj1, seq_length);
+            update_state_beta(HEdge(new_score, &bestC[h], &state), &bestC[j], StateType::C, 0, j);
         } else {
-            const int new_score =
-                -energy_model.score_external_paired(0, j, -1, seq.enc[0], seq.enc[j], nucj1, seq_length);
-            update_score(StateType::C, 0, j, bestC[j], new_score, state.alpha);
+            const int new_score = -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i],
+                                                                      seq.enc[j], nucj1, seq_length);
+            if constexpr (mode == Mode::BEST) {
+                bestC[j].alpha = std::max(bestC[j].alpha, bestC[h].alpha + state.alpha + new_score);
+            } else {
+                HEdge(new_score, &bestC[h], &state).update_state_alpha(bestC[j]);
+            }
         }
     }
-    return nodes_pruned;
+    return 0;
 }
 
+template <Mode mode>
 unsigned long LinearPartition::beamstep_M2(const int j) {
-    unsigned long nodes_pruned = beam_prune(j, StateType::M2, bestM2[j]);
     for (auto &item : bestM2[j]) {
         const int i = item.first;
-        const State &state = item.second;
-        // 1. multi-loop = M2
+        State &state = item.second;
+        // 1. M2 -> Multi
         int q = seq_length;
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
             q = next_pair[seq.enc[p]][j];
             if (q < seq_length) {
-                const int new_score =
-                    -(energy_model.score_multi_unpaired(p, i - 1) + energy_model.score_multi_unpaired(j, q - 1));
-                update_score(StateType::Multi, p, q, bestMulti[q][p], new_score, state.alpha);
+                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                    auto it = bestMulti[q].find(p);
+                    if (it != bestMulti[q].end()) {
+                        const int new_score = -(energy_model.score_multi_unpaired(p, i - 1) +
+                                                energy_model.score_multi_unpaired(j, q - 1));
+                        update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::Multi, p, q);
+                    }
+                } else {
+                    const int new_score =
+                        -(energy_model.score_multi_unpaired(p, i - 1) + energy_model.score_multi_unpaired(j, q - 1));
+                    if constexpr (mode == Mode::BEST) {
+                        bestMulti[q][p].alpha = std::max(bestMulti[q][p].alpha, state.alpha + new_score);
+                    } else {
+                        State *next_state = check_state(StateType::Multi, p, q);
+                        if (next_state) {
+                            HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                        }
+                    }
+                }
             }
         }
-        // 2. M = M2
-        update_score(StateType::M, i, j, bestM[j][i], 0, state.alpha);
-    }
-    return nodes_pruned;
-}
-
-unsigned long LinearPartition::beamstep_M(const int j) {
-    unsigned long nodes_pruned = beam_prune(j, StateType::M, bestM[j]);
-    for (auto &item : bestM[j]) {
-        const int i = item.first;
-        const State &state = item.second;
-        if (j < seq_length - 1) {
-            const int new_score = -energy_model.score_multi_unpaired(j, j + 1);
-            update_score(StateType::M, i, j + 1, bestM[j + 1][i], new_score, state.alpha);
+        // 2. M2 -> M
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            auto it = bestM[j].find(i);
+            if (it != bestM[j].end()) {
+                const int new_score = 0;
+                update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j);
+            }
+        } else {
+            const int new_score = 0;
+            if constexpr (mode == Mode::BEST) {
+                bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
+            } else {
+                State *next_state = check_state(StateType::M, i, j);
+                if (next_state) {
+                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                }
+            }
         }
     }
-    return nodes_pruned;
+    return 0;
 }
 
+template <Mode mode>
+unsigned long LinearPartition::beamstep_M(const int j) {
+    // M -> M + U
+    for (auto &item : bestM[j]) {
+        const int i = item.first;
+        State &state = item.second;
+        if (j < seq_length - 1) {
+            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+                auto it = bestM[j + 1].find(i);
+                if (it != bestM[j + 1].end()) {
+                    const int new_score = -energy_model.score_multi_unpaired(j, j + 1);
+                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j + 1);
+                }
+            } else {
+                const int new_score = -energy_model.score_multi_unpaired(j, j + 1);
+                if constexpr (mode == Mode::BEST) {
+                    bestM[j + 1][i].alpha = std::max(bestM[j + 1][i].alpha, state.alpha + new_score);
+                } else {
+                    State *next_state = check_state(StateType::M, i, j + 1);
+                    if (next_state) {
+                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+template <Mode mode>
 void LinearPartition::beamstep_C(const int j) {
+    // C -> C + U
     if (j < seq_length - 1) {
         const int new_score = -energy_model.score_external_unpaired(j + 1, j + 1);
-        update_score(StateType::C, 0, j + 1, bestC[j + 1], new_score, bestC[j].alpha);
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            update_state_beta(HEdge(new_score, &bestC[j], nullptr), &bestC[j + 1], StateType::C, 0, j + 1);
+        } else {
+            if constexpr (mode == Mode::BEST) {
+                bestC[j + 1].alpha = std::max(bestC[j + 1].alpha, bestC[j].alpha + new_score);
+            } else {
+                HEdge(new_score, &bestC[j], nullptr).update_state_alpha(bestC[j + 1]);
+            }
+        }
     }
 }
+
+// explicit template instantiation
+template unsigned long LinearPartition::beamstep_H<Mode::BEST>(const int j);
+template unsigned long LinearPartition::beamstep_H<Mode::PARTITION_INSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_H<Mode::PARTITION_OUTSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_Multi<Mode::BEST>(const int j);
+template unsigned long LinearPartition::beamstep_Multi<Mode::PARTITION_INSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_Multi<Mode::PARTITION_OUTSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_P<Mode::BEST>(const int j);
+template unsigned long LinearPartition::beamstep_P<Mode::PARTITION_INSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_P<Mode::PARTITION_OUTSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_M2<Mode::BEST>(const int j);
+template unsigned long LinearPartition::beamstep_M2<Mode::PARTITION_INSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_M2<Mode::PARTITION_OUTSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_M<Mode::BEST>(const int j);
+template unsigned long LinearPartition::beamstep_M<Mode::PARTITION_INSIDE>(const int j);
+template unsigned long LinearPartition::beamstep_M<Mode::PARTITION_OUTSIDE>(const int j);
+template void LinearPartition::beamstep_C<Mode::BEST>(const int j);
+template void LinearPartition::beamstep_C<Mode::PARTITION_INSIDE>(const int j);
+template void LinearPartition::beamstep_C<Mode::PARTITION_OUTSIDE>(const int j);

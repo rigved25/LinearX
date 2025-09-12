@@ -5,8 +5,7 @@
 using namespace std;
 using namespace linearx::utils;
 
-inline __attribute__((always_inline)) void LinearAlignment::update_best_trace(const AlnEdge &new_edge,
-                                                                              const HStateType &new_trace) {
+FORCE_INLINE void LinearAlignment::update_best_trace(const AlnEdge &new_edge, const HStateType &new_trace) {
     const value_type new_score = new_edge.weight + (new_edge.prev ? new_edge.prev->alpha : 0);
     const value_type best_score = best_edge.weight + (best_edge.prev ? best_edge.prev->alpha : 0);
     if (new_score >= best_score) {
@@ -18,16 +17,15 @@ inline __attribute__((always_inline)) void LinearAlignment::update_best_trace(co
 MultiSeq LinearAlignment::get_alignment() {
     int i = seq1.length();
     int j = seq2.length();
-    const bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
 
-    get_incoming_edges<Mode::BEST>(i + 1, j + 1, HStateType::ALN, use_match_score);
+    get_incoming_edges<Mode::BEST>(i + 1, j + 1, HStateType::ALN);
     HStateType h = best_trace;
 
     string aln1 = "";
     string aln2 = "";
 
     while (i > 0 || j > 0) {
-        get_incoming_edges<Mode::BEST>(i, j, h, use_match_score);
+        get_incoming_edges<Mode::BEST>(i, j, h);
         HStateType h_prev = best_trace;
         switch (h) {
             case HStateType::ALN:
@@ -61,13 +59,8 @@ MultiSeq LinearAlignment::get_alignment() {
     return alignment;
 }
 
-inline __attribute__((always_inline)) void LinearAlignment::update_state_beta(HState &state,
-                                                                              const value_type new_score) {
-    state.beta = LOG_SUM(state.beta, new_score);
-}
-
-AlignmentOutsideLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold,
-                                                     bool verbose_output) {
+AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold,
+                                              bool verbose_output) {
     if (!use_lazy_outside) {
         return run_normal_outside(verbose_output);
     }
@@ -121,9 +114,17 @@ AlignmentOutsideLog LinearAlignment::compute_outside(bool use_lazy_outside, valu
         fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
                 bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
     }
-    return AlignmentOutsideLog{
-        bestALN[0][{0, 0}].beta,      execution_time, deviation_threshold, effective_beam_size, nodes_visited,
-        total_states - nodes_visited, edges_saved,    edges_pruned};
+    return AlignmentLog{-1,
+                        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha,
+                        bestALN[0][{0, 0}].beta,
+                        _last_inside_exec_time,
+                        execution_time,
+                        effective_beam_size,
+                        "Lazy Outside",
+                        nodes_visited,
+                        total_states - nodes_visited,
+                        edges_saved,
+                        edges_pruned};
 }
 
 pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i, const int j, const HState &state,
@@ -133,7 +134,7 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
         return make_pair(0, 0);
     }
 
-    get_incoming_edges<Mode::PARTITION>(i, j, type, false);
+    get_incoming_edges<Mode::PARTITION_OUTSIDE>(i, j, type);
     if (incoming_edges.empty()) {
         return make_pair(0, 0);
     }
@@ -180,9 +181,7 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
 }
 
 template <Mode mode>
-inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(const int i, const int j,
-                                                                               const HStateType type,
-                                                                               bool use_match_score) {
+FORCE_INLINE void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateType type) {
     if constexpr (mode == Mode::BEST) {
         best_edge.reset();
     } else {
@@ -204,19 +203,15 @@ inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(c
     }
 
     for (const HStateType h_prev : hstate_types) {
-        vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beam(h_prev);
+        vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beams(h_prev);
         auto &mp = beam[p + q];
         auto it = mp.find({p, q});
         if (it != mp.end()) {
             value_type edge_weight = get_trans_emit_prob(i, j, type, h_prev);
-            if (use_match_score && type == HStateType::ALN) {
-                value_type match_score = get_match_score(i - 1, j - 1);
-                edge_weight = LOG_MUL(edge_weight, match_score);
-            }
-            // new_edge.set(&(it->second), edge_weight);
-            // new_trace = h_prev;
-            // edges_trace_update_helper(incoming_edges, new_edge, best_edge, new_trace, best_trace);
             if constexpr (mode == Mode::BEST) {
+                if (type == HStateType::ALN) {
+                    edge_weight = LOG_MUL(edge_weight, get_match_score(i - 1, j - 1));
+                }
                 AlnEdge new_edge(&(it->second), edge_weight);
                 HStateType new_trace = h_prev;
                 update_best_trace(new_edge, new_trace);
@@ -227,15 +222,14 @@ inline __attribute__((always_inline)) void LinearAlignment::get_incoming_edges(c
     }
 }
 
-template void LinearAlignment::get_incoming_edges<Mode::BEST>(int, int, HStateType, bool);
-template void LinearAlignment::get_incoming_edges<Mode::PARTITION>(int, int, HStateType, bool);
+template void LinearAlignment::get_incoming_edges<Mode::BEST>(int, int, HStateType);
+template void LinearAlignment::get_incoming_edges<Mode::PARTITION_OUTSIDE>(int, int, HStateType);
 
-AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
+AlignmentLog LinearAlignment::run_normal_outside(bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
     }
-    bool use_match_score = (pm1 != nullptr && pm2 != nullptr);
     unsigned long nodes_visited = 0;
     unsigned long edges_visited = 0;
     for (int s = seq_len_sum; s >= 0; --s) {
@@ -243,10 +237,10 @@ AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
             linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum);
         }
         for (const HStateType h : hstate_types) {
-            vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beam(h);
+            vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beams(h);
             for (const auto &item : beam[s]) {
-                int i = item.first.first;
-                int j = item.first.second;
+                const int i = item.first.first;
+                const int j = item.first.second;
                 HState &state = beam[s][{i, j}];
                 nodes_visited += 1;
                 // INS1
@@ -254,9 +248,8 @@ AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
                     auto it = bestINS1[s + 1].find({i + 1, j});
                     if ((it != bestINS1[s + 1].end())) {
                         edges_visited += 1;
-                        value_type prob = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                        value_type score = LOG_MUL(prob, it->second.beta);
-                        update_state_beta(state, score);
+                        const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                        AlnEdge(&state, new_score).update_state_beta(it->second);
                     }
                 }
                 // INS2
@@ -264,9 +257,8 @@ AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
                     auto it = bestINS2[s + 1].find({i, j + 1});
                     if ((it != bestINS2[s + 1].end())) {
                         edges_visited += 1;
-                        value_type prob = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                        value_type score = LOG_MUL(prob, it->second.beta);
-                        update_state_beta(state, score);
+                        const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                        AlnEdge(&state, new_score).update_state_beta(it->second);
                     }
                 }
                 // ALN
@@ -275,13 +267,9 @@ AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
                     auto it = bestALN[s + 2].find({i + 1, j + 1});
                     if (it != bestALN[s + 2].end()) {
                         edges_visited += 1;
-                        value_type prob = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                        value_type score = LOG_MUL(prob, it->second.beta);
-                        if (use_match_score) {
-                            value_type match_score = get_match_score(i, j);
-                            score = LOG_MUL(score, match_score);
-                        }
-                        update_state_beta(state, score);
+                        value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                        new_score = LOG_MUL(new_score, get_match_score(i, j));
+                        AlnEdge(&state, new_score).update_state_beta(it->second);
                     }
                 }
             }
@@ -301,6 +289,15 @@ AlignmentOutsideLog LinearAlignment::run_normal_outside(bool verbose_output) {
         fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
                 bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
     }
-    return AlignmentOutsideLog{
-        bestALN[0][{0, 0}].beta, execution_time, linearx::math::LOG_ZERO, effective_beam_size, nodes_visited, 0, edges_visited, 0};
+    return AlignmentLog{-1,
+                        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha,
+                        bestALN[0][{0, 0}].beta,
+                        _last_inside_exec_time,
+                        execution_time,
+                        0,
+                        "Regular Outside",
+                        nodes_visited,
+                        0,
+                        edges_visited,
+                        0};
 }

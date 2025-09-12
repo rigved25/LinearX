@@ -9,7 +9,7 @@ TEST_CASE("LinearAlignment basic functionality", "[align][1]") {
 
     LinearAlignment la(msa[0], msa[1]);
     la.use_prob_set1();
-    la.compute_inside(Mode::BEST);
+    la.compute_inside<BEST>();
     la.print_alpha_beta();
 
     auto aln = la.get_alignment();
@@ -17,9 +17,9 @@ TEST_CASE("LinearAlignment basic functionality", "[align][1]") {
     const float similarity = aln.average_seq_identity();
     std::cout << "\nAverage sequence identity: " << similarity << std::endl << std::endl;
 
-    la.reset_beams();
+    la.reset_beams(100);
     la.use_prob_set2(similarity);
-    la.compute_inside(Mode::PARTITION);
+    la.compute_inside<PARTITION_INSIDE>();
     la.compute_outside(true);
     // la.compute_outside(true, std::numeric_limits<value_type>::max());
     // la.compute_outside(false);
