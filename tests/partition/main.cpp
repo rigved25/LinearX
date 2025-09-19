@@ -27,7 +27,24 @@ TEST_CASE("[LinearPartition] Partition Basic Seq", "[part][1]") {
     partition.reset_beams(100);
     partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
     partition.compute_outside(false);
+    partition.compute_bpp_matrix(100);
+    std::cout << "\nThreshknot Structure: \n" << partition.get_threshknot_structure(0.3, 3) << std::endl;
 }
+
+TEST_CASE("[LinearPartition] Partition Basic Seq", "[part][16S]") {
+    Sequence seq;
+    seq.read_fasta("tests/data/16S_s1_01.fasta");
+    seq.set_encoding(linearx::utils::VIENNA_NUC_ENCODING_SCHEME);
+    EnergyModel energy_model(EnergyParamsType::VIENNA);
+    LinearPartition partition(seq, energy_model);
+    partition.reset_beams(100);
+    partition.compute_inside(Mode::PARTITION_INSIDE, 100, true);
+    partition.compute_outside(false);
+    // partition.compute_outside(true, linearx::constants::math::VALUE_MAX, true);
+    // partition.compute_bpp_matrix(100);
+    // std::cout << "\nThreshknot Structure: \n" << partition.get_threshknot_structure(0.3, 3) << std::endl;
+}
+
 
 TEST_CASE("[LinearPartition] Big Seq", "[mfe][2]") {
     Sequence seq;
@@ -54,6 +71,8 @@ TEST_CASE("[LinearPartition] Big Seq", "[part][2]") {
     // partition.compute_outside(true, linearx::constants::limits::DEVIATION_THRESHOLD, true);
     partition.compute_outside(false);
     // partition.compute_outside(linearx::constants::math::VALUE_MAX * 100, true);
+    partition.compute_bpp_matrix(100);
+    std::cout << "\nThreshknot Structure: \n" << partition.get_threshknot_structure(0.3, 3) << std::endl;
 }
 
 TEST_CASE("[LinearPartition] Covid Seq", "[mfe][3]") {

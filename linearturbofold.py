@@ -20,6 +20,7 @@ def main():
     )
     parser.add_argument(
         "--num_iterations",
+        "-it",
         type=int,
         default=3,
         help="Number of TurboFold iterations (default: 3)",

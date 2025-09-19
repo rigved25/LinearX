@@ -1,0 +1,37 @@
+=== Partition Logs: Iteration 3 ===
+
+-- Sequence Index: 0 --
+  free_energy_of_ensemble: -26.9758
+  total_inside_energy: 43.7692
+  total_outside_energy: 43.7692
+  inside_exec_time: 0 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 1 --
+  free_energy_of_ensemble: -26.7102
+  total_inside_energy: 43.3381
+  total_outside_energy: 43.3381
+  inside_exec_time: 0 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 2 --
+  free_energy_of_ensemble: -29.7183
+  total_inside_energy: 48.2189
+  total_outside_energy: 48.2189
+  inside_exec_time: 0 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 3 --
+  free_energy_of_ensemble: -27.9283
+  total_inside_energy: 45.3145
+  total_outside_energy: 45.3145
+  inside_exec_time: 0 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 4 --
+  free_energy_of_ensemble: -20.5647
+  total_inside_energy: 33.3668
+  total_outside_energy: 33.3668
+  inside_exec_time: 0 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100

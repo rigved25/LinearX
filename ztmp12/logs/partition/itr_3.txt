@@ -1,0 +1,212 @@
+=== Partition Logs: Iteration 3 ===
+
+-- Sequence Index: 0 --
+  free_energy_of_ensemble: -697.354
+  total_inside_energy: 1131.48
+  total_outside_energy: 1131.48
+  inside_exec_time: 395 ms
+  outside_exec_time: 13 ms (3.29114% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 1 --
+  free_energy_of_ensemble: -690.225
+  total_inside_energy: 1119.91
+  total_outside_energy: 1119.91
+  inside_exec_time: 404 ms
+  outside_exec_time: 10 ms (2.47525% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 2 --
+  free_energy_of_ensemble: -677.271
+  total_inside_energy: 1098.89
+  total_outside_energy: 1098.89
+  inside_exec_time: 344 ms
+  outside_exec_time: 6 ms (1.74419% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 3 --
+  free_energy_of_ensemble: -654.365
+  total_inside_energy: 1061.73
+  total_outside_energy: 1061.73
+  inside_exec_time: 342 ms
+  outside_exec_time: 6 ms (1.75439% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 4 --
+  free_energy_of_ensemble: -647.093
+  total_inside_energy: 1049.93
+  total_outside_energy: 1049.93
+  inside_exec_time: 370 ms
+  outside_exec_time: 5 ms (1.35135% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 5 --
+  free_energy_of_ensemble: -626.74
+  total_inside_energy: 1016.91
+  total_outside_energy: 1016.91
+  inside_exec_time: 378 ms
+  outside_exec_time: 4 ms (1.0582% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 6 --
+  free_energy_of_ensemble: -660.05
+  total_inside_energy: 1070.95
+  total_outside_energy: 1070.95
+  inside_exec_time: 332 ms
+  outside_exec_time: 5 ms (1.50602% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 7 --
+  free_energy_of_ensemble: -673.276
+  total_inside_energy: 1092.41
+  total_outside_energy: 1092.41
+  inside_exec_time: 379 ms
+  outside_exec_time: 5 ms (1.31926% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 8 --
+  free_energy_of_ensemble: -687.499
+  total_inside_energy: 1115.49
+  total_outside_energy: 1115.49
+  inside_exec_time: 412 ms
+  outside_exec_time: 5 ms (1.21359% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 9 --
+  free_energy_of_ensemble: -663.895
+  total_inside_energy: 1077.19
+  total_outside_energy: 1077.19
+  inside_exec_time: 387 ms
+  outside_exec_time: 6 ms (1.55039% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 10 --
+  free_energy_of_ensemble: -656.332
+  total_inside_energy: 1064.92
+  total_outside_energy: 1064.92
+  inside_exec_time: 359 ms
+  outside_exec_time: 5 ms (1.39276% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 11 --
+  free_energy_of_ensemble: -661.216
+  total_inside_energy: 1072.84
+  total_outside_energy: 1072.84
+  inside_exec_time: 391 ms
+  outside_exec_time: 4 ms (1.02302% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 12 --
+  free_energy_of_ensemble: -691.714
+  total_inside_energy: 1122.33
+  total_outside_energy: 1122.33
+  inside_exec_time: 381 ms
+  outside_exec_time: 4 ms (1.04987% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 13 --
+  free_energy_of_ensemble: -692.925
+  total_inside_energy: 1124.29
+  total_outside_energy: 1124.29
+  inside_exec_time: 484 ms
+  outside_exec_time: 5 ms (1.03306% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 14 --
+  free_energy_of_ensemble: -666.663
+  total_inside_energy: 1081.68
+  total_outside_energy: 1081.68
+  inside_exec_time: 405 ms
+  outside_exec_time: 5 ms (1.23457% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 15 --
+  free_energy_of_ensemble: -664.541
+  total_inside_energy: 1078.24
+  total_outside_energy: 1078.24
+  inside_exec_time: 387 ms
+  outside_exec_time: 5 ms (1.29199% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 16 --
+  free_energy_of_ensemble: -652.876
+  total_inside_energy: 1059.31
+  total_outside_energy: 1059.31
+  inside_exec_time: 387 ms
+  outside_exec_time: 4 ms (1.03359% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 17 --
+  free_energy_of_ensemble: -647.449
+  total_inside_energy: 1050.51
+  total_outside_energy: 1050.51
+  inside_exec_time: 420 ms
+  outside_exec_time: 5 ms (1.19048% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 18 --
+  free_energy_of_ensemble: -664.293
+  total_inside_energy: 1077.84
+  total_outside_energy: 1077.84
+  inside_exec_time: 490 ms
+  outside_exec_time: 4 ms (0.816327% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 19 --
+  free_energy_of_ensemble: -670.648
+  total_inside_energy: 1088.15
+  total_outside_energy: 1088.15
+  inside_exec_time: 469 ms
+  outside_exec_time: 4 ms (0.852878% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 20 --
+  free_energy_of_ensemble: -655.18
+  total_inside_energy: 1063.05
+  total_outside_energy: 1063.05
+  inside_exec_time: 507 ms
+  outside_exec_time: 5 ms (0.986193% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 21 --
+  free_energy_of_ensemble: -665.42
+  total_inside_energy: 1079.66
+  total_outside_energy: 1079.66
+  inside_exec_time: 509 ms
+  outside_exec_time: 4 ms (0.785855% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 22 --
+  free_energy_of_ensemble: -688.333
+  total_inside_energy: 1116.84
+  total_outside_energy: 1116.84
+  inside_exec_time: 442 ms
+  outside_exec_time: 4 ms (0.904977% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 23 --
+  free_energy_of_ensemble: -658.014
+  total_inside_energy: 1067.65
+  total_outside_energy: 1067.65
+  inside_exec_time: 629 ms
+  outside_exec_time: 5 ms (0.794913% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 24 --
+  free_energy_of_ensemble: -644.669
+  total_inside_energy: 1046
+  total_outside_energy: 1046
+  inside_exec_time: 471 ms
+  outside_exec_time: 5 ms (1.06157% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 25 --
+  free_energy_of_ensemble: -648.374
+  total_inside_energy: 1052.01
+  total_outside_energy: 1052.01
+  inside_exec_time: 429 ms
+  outside_exec_time: 4 ms (0.932401% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 26 --
+  free_energy_of_ensemble: -651.866
+  total_inside_energy: 1057.67
+  total_outside_energy: 1057.67
+  inside_exec_time: 435 ms
+  outside_exec_time: 4 ms (0.91954% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 27 --
+  free_energy_of_ensemble: -652.858
+  total_inside_energy: 1059.28
+  total_outside_energy: 1059.28
+  inside_exec_time: 649 ms
+  outside_exec_time: 4 ms (0.616333% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 28 --
+  free_energy_of_ensemble: -656.269
+  total_inside_energy: 1064.82
+  total_outside_energy: 1064.82
+  inside_exec_time: 503 ms
+  outside_exec_time: 5 ms (0.994036% of inside)
+  effective_beam_size: 100
+-- Sequence Index: 29 --
+  free_energy_of_ensemble: -719.584
+  total_inside_energy: 1167.55
+  total_outside_energy: 1167.55
+  inside_exec_time: 947 ms
+  outside_exec_time: 6 ms (0.63358% of inside)
+  effective_beam_size: 100

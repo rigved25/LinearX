@@ -11,17 +11,19 @@ class TurboAlignment;
 
 class LinearTurbofold {
    private:
-    MultiSeq &msa;
-    EnergyModel &energy_model;
+    MultiSeq& msa;
+    EnergyModel& energy_model;
 
     std::vector<float> seq_identities;  // sequence identities for all k*(k-1)/2 pairs
     std::vector<TurboPartition> pfs;    // contains partition function objects for k sequences
     std::vector<TurboAlignment> alns;   // contains alignment objects for all k*(k-1)/2 sequence pairs
 
    public:
-    const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
+    const unsigned alignment_beam_size;
+    const unsigned folding_beam_size;
     const float alignment_pruning_threshold;
     const float folding_pruning_threshold;
+    const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
     const float threshknot_threshold;
     const float min_helix_size;
     int curr_itr = 0;
@@ -31,22 +33,24 @@ class LinearTurbofold {
     bool use_lazy_outside_ = false;
     bool use_prev_itr_beta_ = false;
 
-    LinearTurbofold(MultiSeq &msa, EnergyModel &energy_model, float lambda = 0.3,
-                    float alignment_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-                    float folding_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-                    float threshknot_threshold = 0.3, float min_helix_size = 3, bool allow_sharp_turn = false,
-                    float alpha1 = 1.0, float alpha2 = 0.8, float alpha3 = 0.5);
+    LinearTurbofold(MultiSeq& msa, EnergyModel& energy_model, const unsigned alignment_beam_size = 100,
+                    const unsigned folding_beam_size = 100,
+                    const float alignment_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                    const float folding_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                    const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
+                    const bool allow_sharp_turn = false, const float alpha1 = 1.0, const float alpha2 = 0.8,
+                    const float alpha3 = 0.5);
 
-    int get_seq_pair_index(const int k1, const int k2) const;
-    value_type get_extrinsic_info(const Sequence &x, const int i, const int j) const;
+    int get_seq_pair_index(int k1, int k2) const;
+    value_type get_extrinsic_info(const Sequence& x, const int i, const int j) const;
     void run(const int num_itr = 3, const bool use_lazy_outside = true, const bool use_prev_itr_beta = false,
              const bool restrict_search = false, const bool verbose_output = false, const bool save_logs = false,
              const bool save_probs = false, const std::string out_dir = "./ltf_output/");
 };
 
-class TurboPartition final : public LinearPartition {
+class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
    private:
-    LinearTurbofold &turbofold;
+    LinearTurbofold& turbofold;
     std::vector<std::unordered_map<int, value_type>> extinfo_cache;
     std::vector<std::unordered_map<int, State>> saved_bestH;
     std::vector<std::unordered_map<int, State>> saved_bestP;
@@ -59,11 +63,11 @@ class TurboPartition final : public LinearPartition {
     friend class LinearTurbofold;
     linearx::utils::ProbAccm prob_accm;
 
-    TurboPartition(LinearTurbofold &turbofold, const Sequence &seq, const EnergyModel &energy_model,
+    TurboPartition(LinearTurbofold& turbofold, const Sequence& seq, const EnergyModel& energy_model,
                    const bool allow_sharp_turn = false);
 
-    inline State *get_saved_state(const StateType type, const int i, const int j, const bool create = false) noexcept {
-        std::unordered_map<int, State> *beam = nullptr;
+    inline State* get_saved_state(const StateType type, const int i, const int j, const bool create = false) noexcept {
+        std::unordered_map<int, State>* beam = nullptr;
         switch (type) {
             case H:
                 beam = &saved_bestH[j];
@@ -92,14 +96,14 @@ class TurboPartition final : public LinearPartition {
         return it == beam->end() ? nullptr : &it->second;
     }
 
-    inline unsigned long beam_prune(std::unordered_map<int, State> &beamstep, const unsigned beam_size,
+    inline unsigned long beam_prune(std::unordered_map<int, State>& beamstep, const unsigned beam_size,
                                     const StateType type, const int j) override final {
         if (turbofold.curr_itr > 0 && type == StateType::P) {
             // Add extrinsic information to State P
             auto it = bestP[j].begin();
             while (it != bestP[j].end()) {
                 const int i = it->first;
-                State &state = it->second;
+                State& state = it->second;
                 double ext_info = turbofold.get_extrinsic_info(seq, i, j);
                 if (ext_info <= linearx::math::LOG_ZERO) {
                     it = bestP[j].erase(it);  // erase the element and update the iterator
@@ -111,28 +115,27 @@ class TurboPartition final : public LinearPartition {
                 }
             }
         }
-        return LinearPartition::beam_prune(beamstep, beam_size, type, j);
+        return LinearPartitionInterface<TurboPartition>::beam_prune(beamstep, beam_size, type, j);
     }
 
-    inline State *check_state(const StateType type, const int i, const int j) override final {
-        if (!turbofold.restrict_search_ || turbofold.curr_itr == 0) {
-            return LinearPartition::get_state(type, i, j, true);
+    inline State* check_state(const StateType type, const int i, const int j) {
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 0) {
+            State* state = TurboPartition::get_saved_state(type, i, j);
+            if (!state) {
+                return nullptr;
+            }
+            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
+                return nullptr;
+            }
+            if (!turbofold.use_lazy_outside_ &&
+                LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) <= turbofold.folding_pruning_threshold) {
+                return nullptr;
+            }
         }
-        State *state = TurboPartition::get_saved_state(type, i, j);
-        if (!state || (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) ||
-            (!turbofold.use_lazy_outside_ &&
-             LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) < -turbofold.folding_pruning_threshold)) {
-            // if (state) {
-            //     std::cout << state->alpha << " " << state->beta << " "
-            //               << LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) << std::endl;
-            // }
-            return nullptr;
-        }
-        return LinearPartition::get_state(type, i, j, true);
+        return LinearPartitionInterface<TurboPartition>::get_state(type, i, j, true);
     }
 
-    inline void update_state_beta(HEdge hedge, State *state, const StateType type, const int i,
-                                  const int j) override final {
+    inline void update_state_beta(HEdge hedge, State* state, const StateType type, const int i, const int j) {
         hedge.weight *= linearx::constants::energy::INV_KT;
         if (turbofold.curr_itr > 0 && type == StateType::P) {
             hedge.weight = LOG_MUL(hedge.weight, extinfo_cache[j][i]);  // adjust weight with extrinsic info
@@ -145,10 +148,9 @@ class TurboPartition final : public LinearPartition {
     void save_partition_function(const bool move, const unsigned beam_size);
 };
 
-class TurboAlignment final : public LinearAlignment {
+class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
    private:
-    linearx::utils::ProbAccm *pm1 = nullptr, *pm2 = nullptr;
-    const LinearTurbofold &turbofold;
+    const LinearTurbofold& turbofold;
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestALN;
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestINS1;
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestINS2;
@@ -156,15 +158,13 @@ class TurboAlignment final : public LinearAlignment {
    public:
     friend class LinearTurbofold;
 
-    TurboAlignment(const LinearTurbofold &turbofold, Sequence &seq1, Sequence &seq2, const float alpha1 = 1.0,
+    TurboAlignment(const LinearTurbofold& turbofold, Sequence& seq1, Sequence& seq2, const float alpha1 = 1.0,
                    const float alpha2 = 0.8, const float alpha3 = 0.5);
 
     void reset_saved_beams(const unsigned beam_size);
-    void set_prob_accm(linearx::utils::ProbAccm &prob_accm1, linearx::utils::ProbAccm &prob_accm2);
     void save_partition_function(const bool move);
-    value_type get_match_score(const int i, const int j);
 
-    inline std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> &get_saved_beams(
+    inline std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>& get_saved_beams(
         HStateType type) {
         switch (type) {
             case ALN:
@@ -173,13 +173,14 @@ class TurboAlignment final : public LinearAlignment {
                 return saved_bestINS1;
             case INS2:
                 return saved_bestINS2;
+            default:
+                return saved_bestALN;  // unreachable
         }
-        throw std::invalid_argument("Invalid HStateType");
     }
 
-    inline HState *get_saved_state(const HStateType type, const int i, const int j,
+    inline HState* get_saved_state(const HStateType type, const int i, const int j,
                                    const bool create = false) noexcept {
-        auto &beam = get_saved_beams(type)[i + j];
+        auto& beam = get_saved_beams(type)[i + j];
         const std::pair<int, int> key = {i, j};
         const auto it = beam.find(key);
         if (it != beam.end()) {
@@ -191,18 +192,22 @@ class TurboAlignment final : public LinearAlignment {
         }
     }
 
-    inline HState *check_state(const HStateType type, const int i, const int j) override final {
-        if (!turbofold.restrict_search_ || turbofold.curr_itr == 1) {
-            return LinearAlignment::get_state(type, i, j, true);
+    inline HState* check_state(const HStateType type, const int i, const int j) {
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 1) {
+            HState* state = TurboAlignment::get_saved_state(type, i, j);
+            if (!state) {
+                return nullptr;
+            }
+            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
+                return nullptr;
+            }
+            if (!turbofold.use_lazy_outside_ &&
+                LOG_DIV(LOG_MUL(state->alpha, state->beta),
+                        saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
+                    turbofold.alignment_pruning_threshold) {
+                return nullptr;
+            }
         }
-        HState *state = TurboAlignment::get_saved_state(type, i, j);
-        if (!state || (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) ||
-            (!turbofold.use_lazy_outside_ &&
-             LOG_DIV(LOG_MUL(state->alpha, state->beta),
-                     saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <
-                 -turbofold.alignment_pruning_threshold)) {
-            return nullptr;
-        }
-        return LinearAlignment::get_state(type, i, j, true);
+        return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
     }
 };

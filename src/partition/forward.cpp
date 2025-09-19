@@ -1,4 +1,5 @@
 // src/partition/forward.cpp
+#include <linearx/partition/config.hpp>
 #include <linearx/partition/linear_partition.hpp>
 
 using namespace linearx::utils;
@@ -8,7 +9,9 @@ using namespace linearx::constants::energy;
 using namespace linearx::constants::math;
 using namespace std;
 
-PartitionLog LinearPartition::compute_inside(const Mode mode, const unsigned beam_size, const bool verbose_output) {
+template <typename T>
+PartitionLog LinearPartitionInterface<T>::compute_inside(const Mode mode, const unsigned beam_size,
+                                                         const bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         fprintf(stderr, "[LinearPartition] Running Inside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
@@ -54,6 +57,7 @@ PartitionLog LinearPartition::compute_inside(const Mode mode, const unsigned bea
             fprintf(stderr, "  - Free Energy of the Ensemble: %.5f kcal/mol\n", score);
         }
     }
+    beam_scores.clear();
     return PartitionLog{get_ensemble_energy(),
                         bestC[seq_length - 1].alpha,
                         LOG_ZERO,
@@ -67,8 +71,9 @@ PartitionLog LinearPartition::compute_inside(const Mode mode, const unsigned bea
                         0};
 }
 
+template <typename T>
 template <Mode mode>
-unsigned long LinearPartition::beamstep_H(const int j) {
+unsigned long LinearPartitionInterface<T>::beamstep_H(const int j) {
     int jnext = next_pair[seq.enc[j]][j];
     while (!allow_sharp_turn && jnext < seq_length && (jnext - j) < 4) {
         jnext = next_pair[seq.enc[j]][jnext];
@@ -88,7 +93,7 @@ unsigned long LinearPartition::beamstep_H(const int j) {
             if constexpr (mode == Mode::BEST) {
                 bestH[jnext][j].alpha = std::max(bestH[jnext][j].alpha, static_cast<value_type>(new_score));
             } else {
-                State *next_state = check_state(StateType::H, j, jnext);
+                State* next_state = check_state(StateType::H, j, jnext);
                 if (next_state) {
                     HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
                 }
@@ -98,9 +103,9 @@ unsigned long LinearPartition::beamstep_H(const int j) {
     // for every state h in H[j]
     //   1. extend H(i, j) to H(i, jnext)
     //   2. generate P(i, j)
-    for (auto &item : bestH[j]) {
+    for (auto& item : bestH[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         // 1. extend H(i, j) to H(i, jnext)
         jnext = next_pair[seq.enc[i]][j];
         if (jnext < seq_length) {
@@ -121,7 +126,7 @@ unsigned long LinearPartition::beamstep_H(const int j) {
                 if constexpr (mode == Mode::BEST) {
                     bestH[jnext][i].alpha = std::max(bestH[jnext][i].alpha, static_cast<value_type>(new_score));
                 } else {
-                    State *next_state = check_state(StateType::H, i, jnext);
+                    State* next_state = check_state(StateType::H, i, jnext);
                     if (next_state) {
                         HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
                     }
@@ -136,7 +141,7 @@ unsigned long LinearPartition::beamstep_H(const int j) {
             if constexpr (mode == Mode::BEST) {
                 bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
             } else {
-                State *next_state = check_state(StateType::P, i, j);
+                State* next_state = check_state(StateType::P, i, j);
                 if (next_state) {
                     HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                 }
@@ -146,11 +151,12 @@ unsigned long LinearPartition::beamstep_H(const int j) {
     return 0;
 }
 
+template <typename T>
 template <Mode mode>
-unsigned long LinearPartition::beamstep_Multi(const int j) {
-    for (auto &item : bestMulti[j]) {
+unsigned long LinearPartitionInterface<T>::beamstep_Multi(const int j) {
+    for (auto& item : bestMulti[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         // 1. Multi(i, j) -> Multi(i, jnext)
         const int jnext = next_pair[seq.enc[i]][j];
         if (jnext < seq_length) {
@@ -165,7 +171,7 @@ unsigned long LinearPartition::beamstep_Multi(const int j) {
                 if constexpr (mode == Mode::BEST) {
                     bestMulti[jnext][i].alpha = std::max(bestMulti[jnext][i].alpha, state.alpha + new_score);
                 } else {
-                    State *next_state = check_state(StateType::Multi, i, jnext);
+                    State* next_state = check_state(StateType::Multi, i, jnext);
                     if (next_state) {
                         HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                     }
@@ -187,7 +193,7 @@ unsigned long LinearPartition::beamstep_Multi(const int j) {
             if constexpr (mode == Mode::BEST) {
                 bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
             } else {
-                State *next_state = check_state(StateType::P, i, j);
+                State* next_state = check_state(StateType::P, i, j);
                 if (next_state) {
                     HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                 }
@@ -197,12 +203,13 @@ unsigned long LinearPartition::beamstep_Multi(const int j) {
     return 0;
 }
 
+template <typename T>
 template <Mode mode>
-unsigned long LinearPartition::beamstep_P(const int j) {
+unsigned long LinearPartitionInterface<T>::beamstep_P(const int j) {
     const int nucj1 = (j + 1 < seq_length ? seq.enc[j + 1] : -1);
-    for (auto &item : bestP[j]) {
+    for (auto& item : bestP[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         // 1. P(i, j) -> P(p, q) [scan left & jump right, generate new P (helix/bulge)]
         int q = seq_length;
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
@@ -224,7 +231,7 @@ unsigned long LinearPartition::beamstep_P(const int j) {
                     if constexpr (mode == Mode::BEST) {
                         bestP[q][p].alpha = std::max(bestP[q][p].alpha, state.alpha + new_score);
                     } else {
-                        State *next_state = check_state(StateType::P, p, q);
+                        State* next_state = check_state(StateType::P, p, q);
                         if (next_state) {
                             HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                         }
@@ -248,7 +255,7 @@ unsigned long LinearPartition::beamstep_P(const int j) {
                 if constexpr (mode == Mode::BEST) {
                     bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
                 } else {
-                    State *next_state = check_state(StateType::M, i, j);
+                    State* next_state = check_state(StateType::M, i, j);
                     if (next_state) {
                         HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                     }
@@ -260,9 +267,9 @@ unsigned long LinearPartition::beamstep_P(const int j) {
         if (h > 0 && !bestM[h].empty()) {
             const int new_score =
                 -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
-            for (auto &m_item : bestM[h]) {
+            for (auto& m_item : bestM[h]) {
                 const int g = m_item.first;
-                State &m_state = m_item.second;
+                State& m_state = m_item.second;
                 if constexpr (mode == Mode::PARTITION_OUTSIDE) {
                     auto it = bestM2[j].find(g);
                     if (it != bestM2[j].end()) {
@@ -272,7 +279,7 @@ unsigned long LinearPartition::beamstep_P(const int j) {
                     if constexpr (mode == Mode::BEST) {
                         bestM2[j][g].alpha = std::max(bestM2[j][g].alpha, m_state.alpha + state.alpha + new_score);
                     } else {
-                        State *next_state = check_state(StateType::M2, g, j);
+                        State* next_state = check_state(StateType::M2, g, j);
                         if (next_state) {
                             HEdge(new_score, &m_state, &state).update_state_alpha(*next_state);
                         }
@@ -299,11 +306,12 @@ unsigned long LinearPartition::beamstep_P(const int j) {
     return 0;
 }
 
+template <typename T>
 template <Mode mode>
-unsigned long LinearPartition::beamstep_M2(const int j) {
-    for (auto &item : bestM2[j]) {
+unsigned long LinearPartitionInterface<T>::beamstep_M2(const int j) {
+    for (auto& item : bestM2[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         // 1. M2 -> Multi
         int q = seq_length;
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
@@ -322,7 +330,7 @@ unsigned long LinearPartition::beamstep_M2(const int j) {
                     if constexpr (mode == Mode::BEST) {
                         bestMulti[q][p].alpha = std::max(bestMulti[q][p].alpha, state.alpha + new_score);
                     } else {
-                        State *next_state = check_state(StateType::Multi, p, q);
+                        State* next_state = check_state(StateType::Multi, p, q);
                         if (next_state) {
                             HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                         }
@@ -342,7 +350,7 @@ unsigned long LinearPartition::beamstep_M2(const int j) {
             if constexpr (mode == Mode::BEST) {
                 bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
             } else {
-                State *next_state = check_state(StateType::M, i, j);
+                State* next_state = check_state(StateType::M, i, j);
                 if (next_state) {
                     HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                 }
@@ -352,12 +360,13 @@ unsigned long LinearPartition::beamstep_M2(const int j) {
     return 0;
 }
 
+template <typename T>
 template <Mode mode>
-unsigned long LinearPartition::beamstep_M(const int j) {
+unsigned long LinearPartitionInterface<T>::beamstep_M(const int j) {
     // M -> M + U
-    for (auto &item : bestM[j]) {
+    for (auto& item : bestM[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         if (j < seq_length - 1) {
             if constexpr (mode == Mode::PARTITION_OUTSIDE) {
                 auto it = bestM[j + 1].find(i);
@@ -370,7 +379,7 @@ unsigned long LinearPartition::beamstep_M(const int j) {
                 if constexpr (mode == Mode::BEST) {
                     bestM[j + 1][i].alpha = std::max(bestM[j + 1][i].alpha, state.alpha + new_score);
                 } else {
-                    State *next_state = check_state(StateType::M, i, j + 1);
+                    State* next_state = check_state(StateType::M, i, j + 1);
                     if (next_state) {
                         HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
                     }
@@ -381,8 +390,9 @@ unsigned long LinearPartition::beamstep_M(const int j) {
     return 0;
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::beamstep_C(const int j) {
+void LinearPartitionInterface<T>::beamstep_C(const int j) {
     // C -> C + U
     if (j < seq_length - 1) {
         const int new_score = -energy_model.score_external_unpaired(j + 1, j + 1);
@@ -398,22 +408,25 @@ void LinearPartition::beamstep_C(const int j) {
     }
 }
 
-// explicit template instantiation
-template unsigned long LinearPartition::beamstep_H<Mode::BEST>(const int j);
-template unsigned long LinearPartition::beamstep_H<Mode::PARTITION_INSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_H<Mode::PARTITION_OUTSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_Multi<Mode::BEST>(const int j);
-template unsigned long LinearPartition::beamstep_Multi<Mode::PARTITION_INSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_Multi<Mode::PARTITION_OUTSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_P<Mode::BEST>(const int j);
-template unsigned long LinearPartition::beamstep_P<Mode::PARTITION_INSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_P<Mode::PARTITION_OUTSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_M2<Mode::BEST>(const int j);
-template unsigned long LinearPartition::beamstep_M2<Mode::PARTITION_INSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_M2<Mode::PARTITION_OUTSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_M<Mode::BEST>(const int j);
-template unsigned long LinearPartition::beamstep_M<Mode::PARTITION_INSIDE>(const int j);
-template unsigned long LinearPartition::beamstep_M<Mode::PARTITION_OUTSIDE>(const int j);
-template void LinearPartition::beamstep_C<Mode::BEST>(const int j);
-template void LinearPartition::beamstep_C<Mode::PARTITION_INSIDE>(const int j);
-template void LinearPartition::beamstep_C<Mode::PARTITION_OUTSIDE>(const int j);
+// Instantiate templates for LinearPartitionInterface with desired types
+#define INSTANTIATE_FUNCS_WITH_MODE(FUNC, TYPE)                                               \
+    template unsigned long LinearPartitionInterface<TYPE>::FUNC<Mode::BEST>(int);             \
+    template unsigned long LinearPartitionInterface<TYPE>::FUNC<Mode::PARTITION_INSIDE>(int); \
+    template unsigned long LinearPartitionInterface<TYPE>::FUNC<Mode::PARTITION_OUTSIDE>(int);
+
+#define DECLARE_FUNCS(TYPE)                                                                 \
+    template class LinearPartitionInterface<TYPE>;                                          \
+    template void LinearPartitionInterface<TYPE>::beamstep_C<Mode::BEST>(int);              \
+    template void LinearPartitionInterface<TYPE>::beamstep_C<Mode::PARTITION_INSIDE>(int);  \
+    template void LinearPartitionInterface<TYPE>::beamstep_C<Mode::PARTITION_OUTSIDE>(int); \
+    INSTANTIATE_FUNCS_WITH_MODE(beamstep_H, TYPE)                                           \
+    INSTANTIATE_FUNCS_WITH_MODE(beamstep_Multi, TYPE)                                       \
+    INSTANTIATE_FUNCS_WITH_MODE(beamstep_P, TYPE)                                           \
+    INSTANTIATE_FUNCS_WITH_MODE(beamstep_M2, TYPE)                                          \
+    INSTANTIATE_FUNCS_WITH_MODE(beamstep_M, TYPE)
+
+#define X(TYPE) DECLARE_FUNCS(TYPE)
+LP_TEMPLATE_TYPES
+#undef X
+#undef DECLARE_FUNCS
+#undef INSTANTIATE_FUNCS_WITH_MODE

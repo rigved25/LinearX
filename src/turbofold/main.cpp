@@ -47,6 +47,5 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: " << e.what() << "\n";
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }

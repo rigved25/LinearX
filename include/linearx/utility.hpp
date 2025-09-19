@@ -8,11 +8,7 @@
 #include <sstream>
 #include <vector>
 
-enum Mode {
-    BEST,
-    PARTITION_INSIDE,
-    PARTITION_OUTSIDE
-};
+enum Mode { BEST, PARTITION_INSIDE, PARTITION_OUTSIDE };
 
 namespace linearx::utils {
 
@@ -27,37 +23,33 @@ inline std::unordered_map<char, int> VIENNA_NUC_ENCODING_SCHEME = {{'N', 0}, {'A
 
 // used for hashing a pair of integers
 struct PairHash {
-    std::size_t operator()(const std::pair<int, int> &p) const {
-        std::size_t i = static_cast<std::size_t>(p.first);
-        std::size_t j = static_cast<std::size_t>(p.second);
-
-        // combine i and j using bit manipulation
-        std::size_t hash = i ^ ((j << 16) | (j >> 16));
-
-        // apply an additional mix to further reduce collisions
-        hash ^= (hash >> 13);
-        hash *= linearx::constants::math::GOLDEN_RATIO;
-        hash ^= (hash >> 15);
-
-        return hash;
+    std::size_t operator()(const std::pair<int, int>& p) const noexcept {
+        return (static_cast<std::size_t>(p.first) << 32) | static_cast<std::size_t>(p.second);
     }
 };
 
 template <typename T>
-inline void reset_beam_vector(std::vector<T> &vec, const int outer_size, const int inner_size) {
-    if (vec.size() != outer_size) {
-        vec.resize(outer_size);  // adjust size only if needed
+inline void reset_beam_vector(std::vector<T>& vec, const int outer_size, const int inner_size = 0) {
+    vec.resize(outer_size);
+    if (inner_size > 0) {
+        for (auto& map : vec) {
+            map.clear();              // reuses internal memory
+            map.reserve(inner_size);  // reserve space for efficiency (if needed)
+        }
+    } else {
+        std::fill(vec.begin(), vec.end(), T());
     }
-    for (auto &map : vec) {
-        map.clear();              // reuses internal memory
-        map.reserve(inner_size);  // reserve space for efficiency (if needed)
-    }
+    // vec.resize(outer_size);
+    // for (auto& map : vec) {
+    //     map.clear();              // reuses internal memory
+    //     map.reserve(inner_size);  // reserve space for efficiency (if needed)
+    // }
 }
 
 inline bool check_valid_pair(const int nuc1, const int nuc2) { return (nuc1 + nuc2) > 3 && (nuc1 + nuc2) % 2 != 0; }
 
 template <typename T>
-inline int quickselect_partition(std::vector<std::pair<value_type, T>> &scores, int lower, int upper) {
+inline int quickselect_partition(std::vector<std::pair<value_type, T>>& scores, int lower, int upper) {
     value_type pivot = scores[upper].first;
     while (lower < upper) {
         while (scores[lower].first < pivot) ++lower;
@@ -71,7 +63,7 @@ inline int quickselect_partition(std::vector<std::pair<value_type, T>> &scores, 
 }
 
 template <typename T>
-inline value_type quickselect(std::vector<std::pair<value_type, T>> &scores, int lower, int upper, int k) {
+inline value_type quickselect(std::vector<std::pair<value_type, T>>& scores, int lower, int upper, int k) {
     if (lower == upper) return scores[lower].first;
     int split = quickselect_partition(scores, lower, upper);
     int length = split - lower + 1;
@@ -92,10 +84,10 @@ namespace linearx::utils::io {
 /// @throws std::invalid_argument if fp or mode is nullptr
 /// @throws std::runtime_error if the file cannot be opened
 /// @return FILE pointer to the opened file
-inline FILE *open_f(const char *fp, const char *mode) {
+inline FILE* open_f(const char* fp, const char* mode) {
     if (!fp || !mode) throw std::invalid_argument("open_f received nullptr");
 
-    FILE *f = fopen(fp, mode);
+    FILE* f = fopen(fp, mode);
     if (!f) {
         std::string action = (mode[0] == 'r') ? "reading" : "writing";
         throw std::runtime_error("Could not open " + std::string(fp) + " for " + action);

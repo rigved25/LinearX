@@ -1,6 +1,7 @@
 // src/partition/linear_partition.cpp
 #include <fstream>
 #include <iomanip>
+#include <linearx/partition/config.hpp>
 #include <linearx/partition/linear_partition.hpp>
 #include <set>
 
@@ -8,7 +9,9 @@ using namespace linearx::math;
 using namespace std;
 using namespace linearx::utils;
 
-LinearPartition::LinearPartition(const Sequence &seq, const EnergyModel &energy_model, bool allow_sharp_turn)
+template <typename T>
+LinearPartitionInterface<T>::LinearPartitionInterface(const Sequence& seq, const EnergyModel& energy_model,
+                                                      bool allow_sharp_turn)
     : seq(seq),
       seq_length(seq.length()),
       energy_model(energy_model),
@@ -17,11 +20,9 @@ LinearPartition::LinearPartition(const Sequence &seq, const EnergyModel &energy_
     for (int nuc = 0; nuc < 5; ++nuc) {
         prev_pair[nuc].resize(seq_length, -1);
         next_pair[nuc].resize(seq_length, seq_length);
-
         if (nuc == 0) {
             continue;  // skip N
         }
-
         int prev = -1;
         int next = seq_length;
         for (int j = 0; j < seq_length; ++j) {
@@ -40,9 +41,13 @@ LinearPartition::LinearPartition(const Sequence &seq, const EnergyModel &energy_
     energy_model.init_tetra_hex_tri(seq.seq, seq_length, if_tetraloops, if_hexaloops, if_triloops);
 }
 
-State &LinearPartition::get_viterbi() { return bestC[seq_length - 1]; }
+template <typename T>
+State& LinearPartitionInterface<T>::get_viterbi() {
+    return bestC[seq_length - 1];
+}
 
-void LinearPartition::reset_beams(const unsigned beam_size) {
+template <typename T>
+void LinearPartitionInterface<T>::reset_beams(const unsigned beam_size) {
     reset_beam_vector(bestH, seq_length, beam_size);
     reset_beam_vector(bestP, seq_length, beam_size);
     reset_beam_vector(bestM, seq_length, beam_size);
@@ -60,15 +65,16 @@ void LinearPartition::reset_beams(const unsigned beam_size) {
     }
 }
 
-void LinearPartition::compute_bpp_matrix(const unsigned beam_size) {
+template <typename T>
+void LinearPartitionInterface<T>::compute_bpp_matrix(const unsigned beam_size) {
     // clear the existing bpp matrix
     reset_beam_vector(bpp, seq_length, beam_size);
 
-    State &viterbi = get_viterbi();
+    State& viterbi = get_viterbi();
     for (int j = 0; j < seq_length; ++j) {
-        for (const auto &item : bestP[j]) {
+        for (const auto& item : bestP[j]) {
             const int i = item.first;
-            const State &state = item.second;
+            const State& state = item.second;
 
             value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), viterbi.alpha);
             if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD) {
@@ -84,28 +90,32 @@ void LinearPartition::compute_bpp_matrix(const unsigned beam_size) {
     }
 }
 
-value_type LinearPartition::get_ensemble_energy() const {
+template <typename T>
+value_type LinearPartitionInterface<T>::get_ensemble_energy() const {
     return -linearx::constants::energy::kT * (bestC[seq_length - 1].alpha) / 100.0;
 }  // -kT log(Q(x))
 
-void LinearPartition::print_alpha_beta() const {
+template <typename T>
+void LinearPartitionInterface<T>::print_alpha_beta() const {
     const int j = seq.length() - 1;
     printf("C[%d]: %.5f\t%.5f\n", j, bestC[j].alpha, bestC[j].beta);
 }
 
-Structure LinearPartition::get_mfe_structure() {
+template <typename T>
+Structure LinearPartitionInterface<T>::get_mfe_structure() {
     Structure structure(seq_length);
     mfe_backtrack(0, seq_length - 1, C, structure);
     return structure;
 }
 
-string LinearPartition::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
+template <typename T>
+string LinearPartitionInterface<T>::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
     vector<value_type> best_prob(seq_length, 0.0);
     Structure structure(seq_length);
     set<int> visited;
 
     for (int j = 0; j < seq_length; j++) {
-        for (const auto &item : bpp[j]) {
+        for (const auto& item : bpp[j]) {
             const int i = item.first;
             if (j - i < min_helix_size + 1) {
                 continue;
@@ -117,7 +127,7 @@ string LinearPartition::get_threshknot_structure(float threshknot_threshold, int
     }
 
     for (int j = 0; j < seq_length; j++) {
-        for (const auto &item : bpp[j]) {
+        for (const auto& item : bpp[j]) {
             const int i = item.first;
             if (j - i < min_helix_size + 1) {
                 continue;
@@ -141,7 +151,8 @@ string LinearPartition::get_threshknot_structure(float threshknot_threshold, int
     return dotBracket;
 }
 
-void LinearPartition::dump_bpp(const std::string &out_dir) const {
+template <typename T>
+void LinearPartitionInterface<T>::dump_bpp(const std::string& out_dir) const {
     if (bpp.empty()) {
         throw std::runtime_error(
             "[LinearPartition: Error] BPP matrix is empty! You must run compute_bpp_matrix() first.");
@@ -162,10 +173,15 @@ void LinearPartition::dump_bpp(const std::string &out_dir) const {
 
     // write bpp matrix
     for (int j = 0; j < seq_length; ++j) {
-        for (const auto &item : bpp[j]) {
+        for (const auto& item : bpp[j]) {
             const int i = item.first;
             const value_type prob = item.second;
             file << i + 1 << " " << j + 1 << " " << std::fixed << std::setprecision(4) << prob << "\n";
         }
     }
 }
+
+// Instantiate templates for LinearPartitionInterface with desired types
+#define X(TYPE) template class LinearPartitionInterface<TYPE>;
+LP_TEMPLATE_TYPES
+#undef X

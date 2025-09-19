@@ -1,11 +1,14 @@
 // src/alignment/backward.cpp
 #include <iomanip>
+#include <linearx/alignment/config.hpp>
 #include <linearx/alignment/linear_align.hpp>
 
 using namespace std;
 using namespace linearx::utils;
+using namespace linearx::math;
 
-FORCE_INLINE void LinearAlignment::update_best_trace(const AlnEdge &new_edge, const HStateType &new_trace) {
+template <typename T>
+void LinearAlignmentInterface<T>::update_best_trace(const AlnEdge& new_edge, const HStateType& new_trace) {
     const value_type new_score = new_edge.weight + (new_edge.prev ? new_edge.prev->alpha : 0);
     const value_type best_score = best_edge.weight + (best_edge.prev ? best_edge.prev->alpha : 0);
     if (new_score >= best_score) {
@@ -14,16 +17,15 @@ FORCE_INLINE void LinearAlignment::update_best_trace(const AlnEdge &new_edge, co
     }
 }
 
-MultiSeq LinearAlignment::get_alignment() {
+template <typename T>
+MultiSeq LinearAlignmentInterface<T>::get_alignment() {
     int i = seq1.length();
     int j = seq2.length();
-
     get_incoming_edges<Mode::BEST>(i + 1, j + 1, HStateType::ALN);
     HStateType h = best_trace;
 
-    string aln1 = "";
-    string aln2 = "";
-
+    Sequence s1("", seq1.name, seq1.id);
+    Sequence s2("", seq2.name, seq2.id);
     while (i > 0 || j > 0) {
         get_incoming_edges<Mode::BEST>(i, j, h);
         HStateType h_prev = best_trace;
@@ -31,36 +33,37 @@ MultiSeq LinearAlignment::get_alignment() {
             case HStateType::ALN:
                 i -= 1;
                 j -= 1;
-                aln1 += seq1[i];
-                aln2 += seq2[j];
+                s1.add_nuc(seq1[i]);
+                s2.add_nuc(seq2[j]);
                 break;
 
             case HStateType::INS1:
                 i -= 1;
-                aln1 += seq1[i];
-                aln2 += "-";
+                s1.add_nuc(seq1[i]);
+                s2.add_nuc('-');
                 break;
 
             case HStateType::INS2:
                 j -= 1;
-                aln1 += "-";
-                aln2 += seq2[j];
+                s1.add_nuc('-');
+                s2.add_nuc(seq2[j]);
                 break;
         }
         h = h_prev;
     }
 
-    reverse(aln1.begin(), aln1.end());
-    reverse(aln2.begin(), aln2.end());
+    s1.reverse();
+    s2.reverse();
 
     MultiSeq alignment;
-    alignment.add_sequence(Sequence(aln1, seq1.name, seq1.id));
-    alignment.add_sequence(Sequence(aln2, seq2.name, seq2.id));
+    alignment.add_sequence(s1);
+    alignment.add_sequence(s2);
     return alignment;
 }
 
-AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type deviation_threshold,
-                                              bool verbose_output) {
+template <typename T>
+AlignmentLog LinearAlignmentInterface<T>::compute_outside(bool use_lazy_outside, value_type deviation_threshold,
+                                                          bool verbose_output) {
     if (!use_lazy_outside) {
         return run_normal_outside(verbose_output);
     }
@@ -69,12 +72,11 @@ AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type 
         bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha - deviation_threshold;
     unsigned long total_states = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
-    incoming_edges.reserve(3 * bestALN[seq_len_sum].size());
-    auto process_beam = [&](unordered_map<pair<int, int>, HState, PairHash> &beam, const HStateType type) {
-        for (auto &item : beam) {
+    auto process_beam = [&](unordered_map<pair<int, int>, HState, PairHash>& beam, const HStateType type) {
+        for (auto& item : beam) {
             const int i = item.first.first;
             const int j = item.first.second;
-            HState &state = item.second;
+            HState& state = item.second;
             if (state.alpha + state.beta > global_threshold) {
                 value_type edge_threshold = global_threshold - state.beta;
                 pair<int, int> local_edges_info = backward_update(i, j, state, type, edge_threshold);
@@ -95,7 +97,6 @@ AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type 
         if (verbose_output) {
             linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum - 1);
         }
-
         // reverse topological order: ALN->INS2->INS1
         process_beam(bestALN[s], HStateType::ALN);
         process_beam(bestINS2[s], HStateType::INS2);
@@ -114,6 +115,11 @@ AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type 
         fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
                 bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
     }
+    // clean up
+    incoming_edges.clear();
+    incoming_edges.shrink_to_fit();
+    saved_edges.clear();
+    saved_edges.shrink_to_fit();
     return AlignmentLog{-1,
                         bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha,
                         bestALN[0][{0, 0}].beta,
@@ -127,9 +133,11 @@ AlignmentLog LinearAlignment::compute_outside(bool use_lazy_outside, value_type 
                         edges_pruned};
 }
 
-pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i, const int j, const HState &state,
-                                                                    const HStateType type,
-                                                                    const value_type edge_threshold) {
+template <typename T>
+pair<unsigned long, unsigned long> LinearAlignmentInterface<T>::backward_update(const int i, const int j,
+                                                                                const HState& state,
+                                                                                const HStateType type,
+                                                                                const value_type edge_threshold) {
     if ((i == 0 || j == 0) && type == HStateType::ALN) {
         return make_pair(0, 0);
     }
@@ -141,15 +149,15 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
 
     saved_edges.clear();
     saved_edges.reserve(incoming_edges.size());
-    AlnEdge *best_edge = nullptr;
+    AlnEdge* best_edge = nullptr;
 
-    value_type best_inside = LOG(0.0);
-    value_type saved_inside = LOG(0.0);
+    value_type best_inside = LOG_ZERO;
+    value_type saved_inside = LOG_ZERO;
 
     unsigned long edges_pruned = 0;
     unsigned long edges_saved = 0;
 
-    for (auto &edge : incoming_edges) {
+    for (auto& edge : incoming_edges) {
         value_type edge_inside = LOG_MUL(edge.prev->alpha, edge.weight);  // LOG_MUL(a, b) -> a + b
         if (edge_inside > edge_threshold) {                               // keep the edge
             saved_inside = LOG_SUM(saved_inside, edge_inside);
@@ -172,7 +180,7 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
         edges_pruned -= 1;  // one more edge recovered
     }
 
-    for (auto &edge : saved_edges) {
+    for (auto& edge : saved_edges) {
         edge->prev->beta = LOG_SUM(edge->prev->beta, state.beta + edge->weight + delta);
     }
 
@@ -180,8 +188,9 @@ pair<unsigned long, unsigned long> LinearAlignment::backward_update(const int i,
     return make_pair(edges_saved, edges_pruned);
 }
 
+template <typename T>
 template <Mode mode>
-FORCE_INLINE void LinearAlignment::get_incoming_edges(const int i, const int j, const HStateType type) {
+void LinearAlignmentInterface<T>::get_incoming_edges(const int i, const int j, const HStateType type) {
     if constexpr (mode == Mode::BEST) {
         best_edge.reset();
     } else {
@@ -203,8 +212,8 @@ FORCE_INLINE void LinearAlignment::get_incoming_edges(const int i, const int j, 
     }
 
     for (const HStateType h_prev : hstate_types) {
-        vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beams(h_prev);
-        auto &mp = beam[p + q];
+        vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(h_prev);
+        auto& mp = beam[p + q];
         auto it = mp.find({p, q});
         if (it != mp.end()) {
             value_type edge_weight = get_trans_emit_prob(i, j, type, h_prev);
@@ -213,8 +222,7 @@ FORCE_INLINE void LinearAlignment::get_incoming_edges(const int i, const int j, 
                     edge_weight = LOG_MUL(edge_weight, get_match_score(i - 1, j - 1));
                 }
                 AlnEdge new_edge(&(it->second), edge_weight);
-                HStateType new_trace = h_prev;
-                update_best_trace(new_edge, new_trace);
+                update_best_trace(new_edge, h_prev);
             } else {
                 incoming_edges.emplace_back(&(it->second), edge_weight);
             }
@@ -222,10 +230,8 @@ FORCE_INLINE void LinearAlignment::get_incoming_edges(const int i, const int j, 
     }
 }
 
-template void LinearAlignment::get_incoming_edges<Mode::BEST>(int, int, HStateType);
-template void LinearAlignment::get_incoming_edges<Mode::PARTITION_OUTSIDE>(int, int, HStateType);
-
-AlignmentLog LinearAlignment::run_normal_outside(bool verbose_output) {
+template <typename T>
+AlignmentLog LinearAlignmentInterface<T>::run_normal_outside(bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
@@ -237,11 +243,11 @@ AlignmentLog LinearAlignment::run_normal_outside(bool verbose_output) {
             linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum);
         }
         for (const HStateType h : hstate_types) {
-            vector<unordered_map<pair<int, int>, HState, PairHash>> &beam = get_beams(h);
-            for (const auto &item : beam[s]) {
+            vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(h);
+            for (const auto& item : beam[s]) {
                 const int i = item.first.first;
                 const int j = item.first.second;
-                HState &state = beam[s][{i, j}];
+                HState& state = beam[s][{i, j}];
                 nodes_visited += 1;
                 // INS1
                 if (i < seq1.length() && j <= seq2.length()) {
@@ -301,3 +307,14 @@ AlignmentLog LinearAlignment::run_normal_outside(bool verbose_output) {
                         edges_visited,
                         0};
 }
+
+// instantiate templates for LinearAlignmentInterface with desired types
+#define DECLARE_FUNCS(TYPE)                                                                             \
+    template class LinearAlignmentInterface<TYPE>;                                                      \
+    template void LinearAlignmentInterface<TYPE>::get_incoming_edges<Mode::BEST>(int, int, HStateType); \
+    template void LinearAlignmentInterface<TYPE>::get_incoming_edges<Mode::PARTITION_OUTSIDE>(int, int, HStateType);
+
+#define X(TYPE) DECLARE_FUNCS(TYPE)
+LA_TEMPLATE_TYPES
+#undef X
+#undef DECLARE_FUNCS

@@ -1,0 +1,4 @@
+Running LinearTurboFold with 30 sequences
+
+Saving output to ./ztmp12rs
+[Executing] ./build/linearturbofold tests/data/16S_k30_s1.fasta 0 3 1 0 1 0 1 0 ./ztmp12rs

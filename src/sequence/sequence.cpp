@@ -114,6 +114,8 @@ void Sequence::replace_nuc(size_t index, char nucleotide) {
     seq[index] = nucleotide;
 }
 
+void Sequence::reverse() { std::reverse(seq.begin(), seq.end()); }
+
 bool Sequence::read_fasta(const std::string& filepath) {
     std::ifstream infile(filepath);
     if (!infile.is_open()) {

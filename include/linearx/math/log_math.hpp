@@ -78,7 +78,7 @@ inline value_type xlog_mul(value_type log1, value_type log2) {
 // Returns 0 if log1 is 0 no matter what log2 is.
 inline value_type xlog_div(value_type log1, value_type log2) {
     if (IS_LOG_ZERO(log1)) return LOG_ZERO;
-    if (IS_LOG_ZERO(log2)) throw std::runtime_error("Division by xlog zero-value (in " __FILE__ ")");
+    if (IS_LOG_ZERO(log2)) return -100 * LOG_ZERO;
     return log1 - log2;
 }
 
@@ -154,23 +154,20 @@ inline value_type Fast_Exp(const value_type x) {
 }  // namespace linearx::math
 
 // Wrapper functions for easier use in the rest of the codebase
-inline __attribute__((always_inline)) value_type LOG(value_type x) { return linearx::math::xlog(x); }
-
-inline __attribute__((always_inline)) value_type EXP(value_type x) { return linearx::math::xexp(x); }
-
-inline __attribute__((always_inline)) value_type LOG_SUM(value_type a, value_type b) {
+FORCE_INLINE value_type LOG(value_type x) { return linearx::math::xlog(x); }
+FORCE_INLINE value_type EXP(value_type x) {
 #ifdef FAST_LOG
-    // return linearx::math::xlog_sum3(a, b);
+    return linearx::math::Fast_Exp(x);
+#else
+    return linearx::math::xexp(x);
+#endif
+}
+FORCE_INLINE value_type LOG_SUM(value_type a, value_type b) {
+#ifdef FAST_LOG
     return linearx::math::Fast_LogPlusEquals(a, b);
 #else
     return linearx::math::xlog_sum(a, b);
 #endif
 }
-
-inline __attribute__((always_inline)) value_type LOG_MUL(value_type a, value_type b) {
-    return linearx::math::xlog_mul(a, b);
-}
-
-inline __attribute__((always_inline)) value_type LOG_DIV(value_type a, value_type b) {
-    return linearx::math::xlog_div(a, b);
-}
+FORCE_INLINE value_type LOG_MUL(value_type a, value_type b) { return linearx::math::xlog_mul(a, b); }
+FORCE_INLINE value_type LOG_DIV(value_type a, value_type b) { return linearx::math::xlog_div(a, b); }

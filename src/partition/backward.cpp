@@ -1,4 +1,5 @@
 // src/partition/backward.cpp
+#include <linearx/partition/config.hpp>
 #include <linearx/partition/linear_partition.hpp>
 
 using namespace linearx::math;
@@ -7,8 +8,8 @@ using namespace linearx::constants::energy;
 
 using namespace std;
 
-inline __attribute__((always_inline)) void LinearPartition::update_best_trace(const HEdge &new_hedge,
-                                                                              const TraceInfo &new_trace) {
+template <typename T>
+void LinearPartitionInterface<T>::update_best_trace(const HEdge& new_hedge, const TraceInfo& new_trace) {
     const value_type best_value = best_hedge.weight + (best_hedge.left ? best_hedge.left->alpha : 0) +
                                   (best_hedge.right ? best_hedge.right->alpha : 0);
     const value_type new_value = new_hedge.weight + (new_hedge.left ? new_hedge.left->alpha : 0) +
@@ -19,7 +20,8 @@ inline __attribute__((always_inline)) void LinearPartition::update_best_trace(co
     }
 }
 
-void LinearPartition::mfe_backtrack(const int i, const int j, const StateType type, Structure &structure) {
+template <typename T>
+void LinearPartitionInterface<T>::mfe_backtrack(const int i, const int j, const StateType type, Structure& structure) {
     if (i >= j) return;
 
     switch (type) {
@@ -47,19 +49,20 @@ void LinearPartition::mfe_backtrack(const int i, const int j, const StateType ty
     mfe_backtrack(best_trace.t + 1, best_trace.j, best_trace.type_right, structure);
 }
 
-PartitionLog LinearPartition::compute_outside(const bool use_lazy_outside, const value_type deviation_threshold,
-                                              const bool verbose_output) {
+template <typename T>
+PartitionLog LinearPartitionInterface<T>::compute_outside(const bool use_lazy_outside,
+                                                          const value_type deviation_threshold,
+                                                          const bool verbose_output) {
     if (!use_lazy_outside) {
         return run_regular_outside(verbose_output);
     }
     const value_type global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
     unsigned long total_nodes = 0, nodes_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
-    incoming_hedges.reserve(4 * bestP[seq_length - 1].size());
-    auto process_beam = [&](const int j, unordered_map<int, State> &beam, const StateType type) {
-        for (auto &item : beam) {
+    auto process_beam = [&](const int j, unordered_map<int, State>& beam, const StateType type) {
+        for (auto& item : beam) {
             const int i = item.first;
-            State &state = item.second;
+            State& state = item.second;
             // if (state.beta > -deviation_threshold) {    // Major Bug Here (fixed!)
             if (state.beta > LOG_ZERO && state.alpha + state.beta > global_threshold) {
                 const value_type edge_threshold = global_threshold - state.beta;
@@ -103,6 +106,9 @@ PartitionLog LinearPartition::compute_outside(const bool use_lazy_outside, const
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
     }
+    // clean up
+    incoming_hedges.clear();
+    saved_hedges.clear();
     return PartitionLog{get_ensemble_energy(),
                         bestC[seq_length - 1].alpha,
                         bestC[-1].beta,
@@ -116,8 +122,8 @@ PartitionLog LinearPartition::compute_outside(const bool use_lazy_outside, const
                         edges_pruned};
 }
 
-inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_state(const int i, const int j,
-                                                                                     const StateType type) {
+template <typename T>
+void LinearPartitionInterface<T>::get_incoming_edges_state(const int i, const int j, const StateType type) {
     switch (type) {
         case H:
             break;
@@ -137,14 +143,15 @@ inline __attribute__((always_inline)) void LinearPartition::get_incoming_edges_s
             get_incoming_hedges_C<Mode::PARTITION_OUTSIDE>(j);
             break;
     }
-    for (auto &hedge : incoming_hedges) {
+    for (auto& hedge : incoming_hedges) {
         hedge.weight *= INV_KT;
     }
 }
 
-pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i, const int j, State &state,
-                                                                    const StateType type,
-                                                                    const value_type edge_threshold) {
+template <typename T>
+pair<unsigned long, unsigned long> LinearPartitionInterface<T>::backward_update(const int i, const int j, State& state,
+                                                                                const StateType type,
+                                                                                const value_type edge_threshold) {
     get_incoming_edges_state(i, j, type);
     if (incoming_hedges.empty()) {
         return make_pair(0, 0);
@@ -152,7 +159,7 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
 
     saved_hedges.clear();
     saved_hedges.reserve(incoming_hedges.size());
-    HEdge *best_hedge = nullptr;
+    HEdge* best_hedge = nullptr;
 
     value_type best_inside = LOG_ZERO;
     value_type saved_inside = LOG_ZERO;
@@ -160,7 +167,7 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
     unsigned long num_local_edges_pruned = 0;
     unsigned long num_local_edges_saved = 0;
 
-    for (auto &hedge : incoming_hedges) {
+    for (auto& hedge : incoming_hedges) {
         value_type edge_inside = hedge.weight + hedge.left->alpha + (hedge.right ? hedge.right->alpha : 0);
         if (edge_inside > edge_threshold) {  // keep the edge
             saved_inside = LOG_SUM(saved_inside, edge_inside);
@@ -183,7 +190,7 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
         num_local_edges_pruned -= 1;  // one more edge recovered
     }
 
-    for (auto &hedge : saved_hedges) {
+    for (auto& hedge : saved_hedges) {
         State *left = hedge->left, *right = hedge->right;
         if (!right) {
             left->beta = LOG_SUM(left->beta, state.beta + hedge->weight + delta);
@@ -197,8 +204,9 @@ pair<unsigned long, unsigned long> LinearPartition::backward_update(const int i,
     return make_pair(num_local_edges_saved, num_local_edges_pruned);
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::get_incoming_hedges_C(const int j) {
+void LinearPartitionInterface<T>::get_incoming_hedges_C(const int j) {
     if constexpr (mode == Mode::BEST) {
         best_hedge.reset();
         best_trace.reset();
@@ -217,9 +225,9 @@ void LinearPartition::get_incoming_hedges_C(const int j) {
     }
 
     // C = C + P
-    for (auto &item : bestP[j]) {
+    for (auto& item : bestP[j]) {
         const int i = item.first;
-        State &state = item.second;
+        State& state = item.second;
         new_score = -energy_model.score_external_paired(i, j, (i > 0 ? seq.enc[i - 1] : -1), seq.enc[i], seq.enc[j],
                                                         (j + 1 < seq_length ? seq.enc[j + 1] : -1), seq_length);
         if constexpr (mode == Mode::BEST) {
@@ -232,8 +240,9 @@ void LinearPartition::get_incoming_hedges_C(const int j) {
     }
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::get_incoming_hedges_P(const int i, const int j) {
+void LinearPartitionInterface<T>::get_incoming_hedges_P(const int i, const int j) {
     if constexpr (mode == Mode::BEST) {
         best_hedge.reset();
         best_trace.reset();
@@ -243,7 +252,7 @@ void LinearPartition::get_incoming_hedges_P(const int i, const int j) {
 
     // P = H
     int new_score = 0;
-    auto &mp1 = bestH[j];
+    auto& mp1 = bestH[j];
     auto itr = mp1.find(i);
     if (itr != mp1.end()) {
         if constexpr (mode == Mode::BEST) {
@@ -259,7 +268,7 @@ void LinearPartition::get_incoming_hedges_P(const int i, const int j) {
     for (int p = i + 1; (p < j - 1) && (p - i <= MAXLOOPSIZE); ++p) {
         int q = prev_pair[seq.enc[p]][j];
         while ((q != -1) && (p < q) && ((p - i) + (j - q) - 2 <= MAXLOOPSIZE)) {
-            auto &mp2 = bestP[q];
+            auto& mp2 = bestP[q];
             itr = mp2.find(p);
             if (itr != mp2.end()) {
                 // current shape is: i...p (pair) q...j
@@ -279,7 +288,7 @@ void LinearPartition::get_incoming_hedges_P(const int i, const int j) {
     }
 
     // P = Multi
-    auto &mp3 = bestMulti[j];
+    auto& mp3 = bestMulti[j];
     itr = mp3.find(i);
     if (itr != mp3.end()) {
         new_score = -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
@@ -293,8 +302,9 @@ void LinearPartition::get_incoming_hedges_P(const int i, const int j) {
     }
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::get_incoming_hedges_M(const int i, const int j) {
+void LinearPartitionInterface<T>::get_incoming_hedges_M(const int i, const int j) {
     if constexpr (mode == Mode::BEST) {
         best_hedge.reset();
         best_trace.reset();
@@ -304,7 +314,7 @@ void LinearPartition::get_incoming_hedges_M(const int i, const int j) {
 
     // M = M + U
     if (j > 0) {
-        auto &mp1 = bestM[j - 1];
+        auto& mp1 = bestM[j - 1];
         auto itr = mp1.find(i);
         if (itr != mp1.end()) {
             int new_score = -energy_model.score_multi_unpaired(j - 1, j);
@@ -319,7 +329,7 @@ void LinearPartition::get_incoming_hedges_M(const int i, const int j) {
     }
 
     // M = P
-    auto &mp2 = bestP[j];
+    auto& mp2 = bestP[j];
     auto itr = mp2.find(i);
     if (itr != mp2.end()) {
         int new_score = -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j],
@@ -334,7 +344,7 @@ void LinearPartition::get_incoming_hedges_M(const int i, const int j) {
     }
 
     // M = M2
-    auto &mp3 = bestM2[j];
+    auto& mp3 = bestM2[j];
     itr = mp3.find(i);
     if (itr != mp3.end()) {
         int new_score = 0;
@@ -348,8 +358,9 @@ void LinearPartition::get_incoming_hedges_M(const int i, const int j) {
     }
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::get_incoming_hedges_M2(const int i, const int j) {
+void LinearPartitionInterface<T>::get_incoming_hedges_M2(const int i, const int j) {
     if constexpr (mode == Mode::BEST) {
         best_hedge.reset();
         best_trace.reset();
@@ -360,11 +371,11 @@ void LinearPartition::get_incoming_hedges_M2(const int i, const int j) {
     // [TODO] sort P?
 
     // M2 = M + P
-    for (auto &item : bestP[j]) {
+    for (auto& item : bestP[j]) {
         const int t = item.first;
-        State &state = item.second;
+        State& state = item.second;
         if (t > i) {
-            auto &mp = bestM[t - 1];
+            auto& mp = bestM[t - 1];
             auto itr = mp.find(i);
             if (itr != mp.end()) {
                 int new_score = -energy_model.score_M1(t, j, j, seq.enc[t - 1], seq.enc[t], seq.enc[j],
@@ -381,8 +392,9 @@ void LinearPartition::get_incoming_hedges_M2(const int i, const int j) {
     }
 }
 
+template <typename T>
 template <Mode mode>
-void LinearPartition::get_incoming_hedges_Multi(const int i, const int j) {
+void LinearPartitionInterface<T>::get_incoming_hedges_Multi(const int i, const int j) {
     if constexpr (mode == Mode::BEST) {
         best_hedge.reset();
         best_trace.reset();
@@ -396,7 +408,7 @@ void LinearPartition::get_incoming_hedges_Multi(const int i, const int j) {
     }
 
     // Multi = Multi (jump right)
-    auto &mp1 = bestMulti[jprev];
+    auto& mp1 = bestMulti[jprev];
     auto itr = mp1.find(i);
     if (itr != mp1.end()) {
         int new_score = -energy_model.score_multi_unpaired(jprev, j);
@@ -411,7 +423,7 @@ void LinearPartition::get_incoming_hedges_Multi(const int i, const int j) {
 
     // Multi = M2 (scan left & jump right)
     for (int q = j - 1; q >= jprev; --q) {
-        auto &mp2 = bestM2[q];
+        auto& mp2 = bestM2[q];
         for (int p = i + 1; (p < q) && (p - i <= MAXLOOPSIZE); ++p) {
             auto itr = mp2.find(p);
             if (itr != mp2.end()) {
@@ -430,22 +442,8 @@ void LinearPartition::get_incoming_hedges_Multi(const int i, const int j) {
     }
 }
 
-template void LinearPartition::get_incoming_hedges_C<Mode::BEST>(int);
-template void LinearPartition::get_incoming_hedges_C<Mode::PARTITION_OUTSIDE>(int);
-
-template void LinearPartition::get_incoming_hedges_M<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_M<Mode::PARTITION_OUTSIDE>(int, int);
-
-template void LinearPartition::get_incoming_hedges_M2<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_M2<Mode::PARTITION_OUTSIDE>(int, int);
-
-template void LinearPartition::get_incoming_hedges_P<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_P<Mode::PARTITION_OUTSIDE>(int, int);
-
-template void LinearPartition::get_incoming_hedges_Multi<Mode::BEST>(int, int);
-template void LinearPartition::get_incoming_hedges_Multi<Mode::PARTITION_OUTSIDE>(int, int);
-
-PartitionLog LinearPartition::run_regular_outside(const bool verbose_output) {
+template <typename T>
+PartitionLog LinearPartitionInterface<T>::run_regular_outside(const bool verbose_output) {
     if (verbose_output) {
         fprintf(stderr, "[LinearPartition] Running Outside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
                 seq.length(), seq.name.c_str());
@@ -484,3 +482,23 @@ PartitionLog LinearPartition::run_regular_outside(const bool verbose_output) {
                         0,
                         0};
 }
+
+// Instantiate templates for LinearPartitionInterface with desired types
+#define INSTANTIATE_FUNCS_WITH_MODE(FUNC, TYPE)                               \
+    template void LinearPartitionInterface<TYPE>::FUNC<Mode::BEST>(int, int); \
+    template void LinearPartitionInterface<TYPE>::FUNC<Mode::PARTITION_OUTSIDE>(int, int);
+
+#define DECLARE_FUNCS(TYPE)                                                                            \
+    template class LinearPartitionInterface<TYPE>;                                                     \
+    template void LinearPartitionInterface<TYPE>::get_incoming_hedges_C<Mode::BEST>(int);              \
+    template void LinearPartitionInterface<TYPE>::get_incoming_hedges_C<Mode::PARTITION_OUTSIDE>(int); \
+    INSTANTIATE_FUNCS_WITH_MODE(get_incoming_hedges_M, TYPE)                                           \
+    INSTANTIATE_FUNCS_WITH_MODE(get_incoming_hedges_M2, TYPE)                                          \
+    INSTANTIATE_FUNCS_WITH_MODE(get_incoming_hedges_P, TYPE)                                           \
+    INSTANTIATE_FUNCS_WITH_MODE(get_incoming_hedges_Multi, TYPE)
+
+#define X(TYPE) DECLARE_FUNCS(TYPE)
+LP_TEMPLATE_TYPES
+#undef X
+#undef DECLARE_FUNCS
+#undef INSTANTIATE_FUNCS_WITH_MODE

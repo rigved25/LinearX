@@ -20,11 +20,11 @@ Phmm::Phmm(value_type new_emission_probs[N_OUTPUTS][N_STATES], value_type new_tr
     }  // cnt1 loop
 }
 
-Phmm::Phmm(const char *phmm_pars_file) {
+Phmm::Phmm(const char* phmm_pars_file) {
     this->alloc_init_params();
 
     // read the parameters file
-    FILE *fam_par_file = linearx::utils::io::open_f(phmm_pars_file, "r");
+    FILE* fam_par_file = linearx::utils::io::open_f(phmm_pars_file, "r");
 
     if (fam_par_file == NULL) {
         printf("Cannot find phmm parameters file, exiting @ %s(%d).\n", __FILE__, __LINE__);
@@ -45,25 +45,25 @@ Phmm::Phmm(const char *phmm_pars_file) {
 
 void Phmm::alloc_init_params() {
     // Copy transition matrix.
-    this->trans_probs = (value_type **)malloc(sizeof(value_type *) * (N_STATES + 2));
+    this->trans_probs = (value_type**)malloc(sizeof(value_type*) * (N_STATES + 2));
     for (int cnt1 = 0; cnt1 < N_STATES; cnt1++) {
-        this->trans_probs[cnt1] = (value_type *)malloc(sizeof(value_type) * (N_STATES + 2));
+        this->trans_probs[cnt1] = (value_type*)malloc(sizeof(value_type) * (N_STATES + 2));
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
             trans_probs[cnt1][cnt2] = LOG(0.0f);
         }  // cnt2 loop
     }  // cnt1 loop
 
     // Copy emission probabilities.
-    this->emission_probs = (value_type **)malloc(sizeof(value_type *) * (N_OUTPUTS + 2));
+    this->emission_probs = (value_type**)malloc(sizeof(value_type*) * (N_OUTPUTS + 2));
     for (int cnt1 = 0; cnt1 < N_OUTPUTS; cnt1++) {
-        this->emission_probs[cnt1] = (value_type *)malloc(sizeof(value_type) * (N_STATES + 2));
+        this->emission_probs[cnt1] = (value_type*)malloc(sizeof(value_type) * (N_STATES + 2));
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {
             emission_probs[cnt1][cnt2] = LOG(0.0f);
         }  // cnt2 loop
     }  // cnt1 loop
 
-    this->fam_hmm_pars = (value_type *)malloc(sizeof(value_type) * (N_BINZ * (N_STATES + N_OUTPUTS) * N_STATES + 2));
-    this->fam_thresholds = (value_type *)malloc(sizeof(value_type) * (N_BINZ + 2));
+    this->fam_hmm_pars = (value_type*)malloc(sizeof(value_type) * (N_BINZ * (N_STATES + N_OUTPUTS) * N_STATES + 2));
+    this->fam_thresholds = (value_type*)malloc(sizeof(value_type) * (N_BINZ + 2));
 }
 
 void Phmm::free_params() {
@@ -114,7 +114,7 @@ void Phmm::set_parameters_by_sim(float similarity) {
 
     // load emission probabilities
     int start_linear_index = (N_STATES + N_OUTPUTS) * N_STATES * get_bin_index(similarity, N_BINZ);
-    value_type *par_ptr = fam_hmm_pars + start_linear_index;
+    value_type* par_ptr = fam_hmm_pars + start_linear_index;
 
     for (int cnt1 = 0; cnt1 < N_OUTPUTS; cnt1++) {
         for (int cnt2 = 0; cnt2 < N_STATES; cnt2++) {

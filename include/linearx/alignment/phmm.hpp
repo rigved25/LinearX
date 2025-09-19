@@ -49,16 +49,16 @@ class Phmm {
     };
 
    private:
-    value_type **emission_probs;
-    value_type **trans_probs;
+    value_type** emission_probs;
+    value_type** trans_probs;
 
-    value_type *fam_hmm_pars;
-    value_type *fam_thresholds;
+    value_type* fam_hmm_pars;
+    value_type* fam_thresholds;
 
    public:
     // Replace the emission and transition probabilities.
     Phmm(value_type new_emit_probs[N_OUTPUTS][N_STATES], value_type new_trans_probs[N_STATES][N_STATES]);
-    Phmm(const char *phmm_pars_file);
+    Phmm(const char* phmm_pars_file);
     ~Phmm();
 
     float similarity = -1.0f;

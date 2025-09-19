@@ -1,0 +1,3047 @@
+=== Alignment Logs: Iteration 2 ===
+
+-- Pair Index: 0 --
+  seq_identity: 0.946528
+  total_inside_score: -1968.36
+  total_outside_score: -1968.36
+  inside_exec_time: 109 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 1 --
+  seq_identity: 0.833805
+  total_inside_score: -2517.28
+  total_outside_score: -2517.29
+  inside_exec_time: 95 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 2 --
+  seq_identity: 0.824983
+  total_inside_score: -2550.38
+  total_outside_score: -2550.38
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 3 --
+  seq_identity: 0.786572
+  total_inside_score: -2635.76
+  total_outside_score: -2635.76
+  inside_exec_time: 88 ms
+  outside_exec_time: 1 ms (1.13636% of inside)
+  effective_beam_size: 100
+-- Pair Index: 4 --
+  seq_identity: 0.775106
+  total_inside_score: -2578.41
+  total_outside_score: -2578.42
+  inside_exec_time: 60 ms
+  outside_exec_time: 1 ms (1.66667% of inside)
+  effective_beam_size: 100
+-- Pair Index: 5 --
+  seq_identity: 0.837553
+  total_inside_score: -2532.01
+  total_outside_score: -2532.02
+  inside_exec_time: 94 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 6 --
+  seq_identity: 0.826977
+  total_inside_score: -2583.91
+  total_outside_score: -2583.91
+  inside_exec_time: 73 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 7 --
+  seq_identity: 0.809717
+  total_inside_score: -2646.92
+  total_outside_score: -2646.93
+  inside_exec_time: 87 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 8 --
+  seq_identity: 0.831731
+  total_inside_score: -2548.01
+  total_outside_score: -2548.01
+  inside_exec_time: 111 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 9 --
+  seq_identity: 0.835327
+  total_inside_score: -2541.07
+  total_outside_score: -2541.07
+  inside_exec_time: 70 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 10 --
+  seq_identity: 0.818246
+  total_inside_score: -2546.51
+  total_outside_score: -2546.51
+  inside_exec_time: 53 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 11 --
+  seq_identity: 0.84072
+  total_inside_score: -2516.13
+  total_outside_score: -2516.13
+  inside_exec_time: 84 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 12 --
+  seq_identity: 0.812327
+  total_inside_score: -2552.95
+  total_outside_score: -2552.96
+  inside_exec_time: 50 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 13 --
+  seq_identity: 0.825789
+  total_inside_score: -2549.71
+  total_outside_score: -2549.71
+  inside_exec_time: 89 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 14 --
+  seq_identity: 0.831025
+  total_inside_score: -2515.54
+  total_outside_score: -2515.55
+  inside_exec_time: 81 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 15 --
+  seq_identity: 0.835779
+  total_inside_score: -2512.84
+  total_outside_score: -2512.84
+  inside_exec_time: 99 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 16 --
+  seq_identity: 0.827467
+  total_inside_score: -2596.41
+  total_outside_score: -2596.42
+  inside_exec_time: 58 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 17 --
+  seq_identity: 0.824859
+  total_inside_score: -2572.48
+  total_outside_score: -2572.48
+  inside_exec_time: 40 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 18 --
+  seq_identity: 0.837725
+  total_inside_score: -2604.27
+  total_outside_score: -2604.27
+  inside_exec_time: 68 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 19 --
+  seq_identity: 0.823446
+  total_inside_score: -2539.65
+  total_outside_score: -2539.65
+  inside_exec_time: 87 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 20 --
+  seq_identity: 0.8358
+  total_inside_score: -2547.24
+  total_outside_score: -2547.24
+  inside_exec_time: 63 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 21 --
+  seq_identity: 0.827964
+  total_inside_score: -2585.68
+  total_outside_score: -2585.68
+  inside_exec_time: 89 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 22 --
+  seq_identity: 0.80531
+  total_inside_score: -2703.97
+  total_outside_score: -2703.97
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 23 --
+  seq_identity: 0.823003
+  total_inside_score: -2644.63
+  total_outside_score: -2644.63
+  inside_exec_time: 60 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 24 --
+  seq_identity: 0.82153
+  total_inside_score: -2517.72
+  total_outside_score: -2517.72
+  inside_exec_time: 79 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 25 --
+  seq_identity: 0.828612
+  total_inside_score: -2481.06
+  total_outside_score: -2481.07
+  inside_exec_time: 66 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 26 --
+  seq_identity: 0.794201
+  total_inside_score: -2628.56
+  total_outside_score: -2628.57
+  inside_exec_time: 69 ms
+  outside_exec_time: 1 ms (1.44928% of inside)
+  effective_beam_size: 100
+-- Pair Index: 27 --
+  seq_identity: 0.825936
+  total_inside_score: -2553.52
+  total_outside_score: -2553.52
+  inside_exec_time: 91 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 28 --
+  seq_identity: 0.791035
+  total_inside_score: -2750.66
+  total_outside_score: -2750.67
+  inside_exec_time: 76 ms
+  outside_exec_time: 1 ms (1.31579% of inside)
+  effective_beam_size: 100
+-- Pair Index: 29 --
+  seq_identity: 0.81289
+  total_inside_score: -2631.5
+  total_outside_score: -2631.5
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 30 --
+  seq_identity: 0.839396
+  total_inside_score: -2555.61
+  total_outside_score: -2555.61
+  inside_exec_time: 72 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 31 --
+  seq_identity: 0.772161
+  total_inside_score: -2756.42
+  total_outside_score: -2756.42
+  inside_exec_time: 67 ms
+  outside_exec_time: 1 ms (1.49254% of inside)
+  effective_beam_size: 100
+-- Pair Index: 32 --
+  seq_identity: 0.755371
+  total_inside_score: -2688.86
+  total_outside_score: -2688.86
+  inside_exec_time: 77 ms
+  outside_exec_time: 1 ms (1.2987% of inside)
+  effective_beam_size: 100
+-- Pair Index: 33 --
+  seq_identity: 0.827203
+  total_inside_score: -2572.01
+  total_outside_score: -2572.01
+  inside_exec_time: 101 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 34 --
+  seq_identity: 0.811073
+  total_inside_score: -2680.31
+  total_outside_score: -2680.32
+  inside_exec_time: 75 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 35 --
+  seq_identity: 0.824005
+  total_inside_score: -2600.35
+  total_outside_score: -2600.36
+  inside_exec_time: 86 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 36 --
+  seq_identity: 0.842033
+  total_inside_score: -2524.48
+  total_outside_score: -2524.49
+  inside_exec_time: 73 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 37 --
+  seq_identity: 0.823162
+  total_inside_score: -2572.67
+  total_outside_score: -2572.68
+  inside_exec_time: 99 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 38 --
+  seq_identity: 0.794179
+  total_inside_score: -2591.68
+  total_outside_score: -2591.69
+  inside_exec_time: 80 ms
+  outside_exec_time: 1 ms (1.25% of inside)
+  effective_beam_size: 100
+-- Pair Index: 39 --
+  seq_identity: 0.837113
+  total_inside_score: -2573.52
+  total_outside_score: -2573.53
+  inside_exec_time: 87 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 40 --
+  seq_identity: 0.81044
+  total_inside_score: -2534.24
+  total_outside_score: -2534.24
+  inside_exec_time: 125 ms
+  outside_exec_time: 1 ms (0.8% of inside)
+  effective_beam_size: 100
+-- Pair Index: 41 --
+  seq_identity: 0.842936
+  total_inside_score: -2556.62
+  total_outside_score: -2556.62
+  inside_exec_time: 61 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 42 --
+  seq_identity: 0.84626
+  total_inside_score: -2544.93
+  total_outside_score: -2544.93
+  inside_exec_time: 75 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 43 --
+  seq_identity: 0.841083
+  total_inside_score: -2545.68
+  total_outside_score: -2545.68
+  inside_exec_time: 93 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 44 --
+  seq_identity: 0.84265
+  total_inside_score: -2520.66
+  total_outside_score: -2520.66
+  inside_exec_time: 47 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 45 --
+  seq_identity: 0.801384
+  total_inside_score: -2786.07
+  total_outside_score: -2786.07
+  inside_exec_time: 93 ms
+  outside_exec_time: 1 ms (1.07527% of inside)
+  effective_beam_size: 100
+-- Pair Index: 46 --
+  seq_identity: 0.848548
+  total_inside_score: -2606.4
+  total_outside_score: -2606.4
+  inside_exec_time: 109 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 47 --
+  seq_identity: 0.80346
+  total_inside_score: -2721.19
+  total_outside_score: -2721.19
+  inside_exec_time: 38 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 48 --
+  seq_identity: 0.819252
+  total_inside_score: -2643.92
+  total_outside_score: -2643.92
+  inside_exec_time: 75 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 49 --
+  seq_identity: 0.827891
+  total_inside_score: -2585.07
+  total_outside_score: -2585.07
+  inside_exec_time: 94 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 50 --
+  seq_identity: 0.816882
+  total_inside_score: -2714.37
+  total_outside_score: -2714.37
+  inside_exec_time: 100 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 51 --
+  seq_identity: 0.832875
+  total_inside_score: -2614.79
+  total_outside_score: -2614.79
+  inside_exec_time: 107 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 52 --
+  seq_identity: 0.800139
+  total_inside_score: -2661.58
+  total_outside_score: -2661.59
+  inside_exec_time: 60 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 53 --
+  seq_identity: 0.80569
+  total_inside_score: -2543.77
+  total_outside_score: -2543.77
+  inside_exec_time: 93 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 54 --
+  seq_identity: 0.774775
+  total_inside_score: -2714.06
+  total_outside_score: -2714.06
+  inside_exec_time: 76 ms
+  outside_exec_time: 1 ms (1.31579% of inside)
+  effective_beam_size: 100
+-- Pair Index: 55 --
+  seq_identity: 0.819863
+  total_inside_score: -2620.13
+  total_outside_score: -2620.13
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 56 --
+  seq_identity: 0.797775
+  total_inside_score: -2734.27
+  total_outside_score: -2734.28
+  inside_exec_time: 98 ms
+  outside_exec_time: 1 ms (1.02041% of inside)
+  effective_beam_size: 100
+-- Pair Index: 57 --
+  seq_identity: 0.851444
+  total_inside_score: -2429.42
+  total_outside_score: -2429.42
+  inside_exec_time: 86 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 58 --
+  seq_identity: 0.858564
+  total_inside_score: -2351
+  total_outside_score: -2351
+  inside_exec_time: 81 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 59 --
+  seq_identity: 0.905473
+  total_inside_score: -1868.94
+  total_outside_score: -1868.95
+  inside_exec_time: 129 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 60 --
+  seq_identity: 0.860777
+  total_inside_score: -2378.53
+  total_outside_score: -2378.53
+  inside_exec_time: 49 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 61 --
+  seq_identity: 0.898582
+  total_inside_score: -2256.58
+  total_outside_score: -2256.59
+  inside_exec_time: 102 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 62 --
+  seq_identity: 0.843813
+  total_inside_score: -2460.84
+  total_outside_score: -2460.84
+  inside_exec_time: 73 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 63 --
+  seq_identity: 0.850654
+  total_inside_score: -2438.39
+  total_outside_score: -2438.39
+  inside_exec_time: 66 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 64 --
+  seq_identity: 0.869165
+  total_inside_score: -2351.25
+  total_outside_score: -2351.25
+  inside_exec_time: 69 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 65 --
+  seq_identity: 0.841022
+  total_inside_score: -2410.11
+  total_outside_score: -2410.11
+  inside_exec_time: 35 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 66 --
+  seq_identity: 0.861207
+  total_inside_score: -2383.56
+  total_outside_score: -2383.56
+  inside_exec_time: 89 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 67 --
+  seq_identity: 0.833218
+  total_inside_score: -2424.6
+  total_outside_score: -2424.6
+  inside_exec_time: 67 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 68 --
+  seq_identity: 0.860289
+  total_inside_score: -2379.26
+  total_outside_score: -2379.26
+  inside_exec_time: 81 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 69 --
+  seq_identity: 0.862404
+  total_inside_score: -2349.15
+  total_outside_score: -2349.16
+  inside_exec_time: 78 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 70 --
+  seq_identity: 0.868255
+  total_inside_score: -2376.53
+  total_outside_score: -2376.53
+  inside_exec_time: 57 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 71 --
+  seq_identity: 0.850622
+  total_inside_score: -2453.89
+  total_outside_score: -2453.89
+  inside_exec_time: 80 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 72 --
+  seq_identity: 0.843484
+  total_inside_score: -2519.61
+  total_outside_score: -2519.61
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 73 --
+  seq_identity: 0.868567
+  total_inside_score: -2386.27
+  total_outside_score: -2386.28
+  inside_exec_time: 66 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 74 --
+  seq_identity: 0.847026
+  total_inside_score: -2456.51
+  total_outside_score: -2456.51
+  inside_exec_time: 72 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 75 --
+  seq_identity: 0.859353
+  total_inside_score: -2412.78
+  total_outside_score: -2412.79
+  inside_exec_time: 71 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 76 --
+  seq_identity: 0.852132
+  total_inside_score: -2453.13
+  total_outside_score: -2453.14
+  inside_exec_time: 73 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 77 --
+  seq_identity: 0.820652
+  total_inside_score: -2635.1
+  total_outside_score: -2635.1
+  inside_exec_time: 77 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 78 --
+  seq_identity: 0.846791
+  total_inside_score: -2496.28
+  total_outside_score: -2496.28
+  inside_exec_time: 44 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 79 --
+  seq_identity: 0.856939
+  total_inside_score: -2381.81
+  total_outside_score: -2381.82
+  inside_exec_time: 63 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 80 --
+  seq_identity: 0.856228
+  total_inside_score: -2335
+  total_outside_score: -2335
+  inside_exec_time: 93 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 81 --
+  seq_identity: 0.823989
+  total_inside_score: -2455.16
+  total_outside_score: -2455.17
+  inside_exec_time: 103 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 82 --
+  seq_identity: 0.867964
+  total_inside_score: -2360.81
+  total_outside_score: -2360.81
+  inside_exec_time: 119 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 83 --
+  seq_identity: 0.818122
+  total_inside_score: -2600.74
+  total_outside_score: -2600.75
+  inside_exec_time: 68 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 84 --
+  seq_identity: 0.814993
+  total_inside_score: -2491
+  total_outside_score: -2491.01
+  inside_exec_time: 100 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 85 --
+  seq_identity: 0.78542
+  total_inside_score: -2521.95
+  total_outside_score: -2521.96
+  inside_exec_time: 73 ms
+  outside_exec_time: 1 ms (1.36986% of inside)
+  effective_beam_size: 100
+-- Pair Index: 86 --
+  seq_identity: 0.917931
+  total_inside_score: -2066.72
+  total_outside_score: -2066.72
+  inside_exec_time: 38 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 87 --
+  seq_identity: 0.86795
+  total_inside_score: -2354.2
+  total_outside_score: -2354.2
+  inside_exec_time: 69 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 88 --
+  seq_identity: 0.943128
+  total_inside_score: -1938.79
+  total_outside_score: -1938.79
+  inside_exec_time: 83 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 89 --
+  seq_identity: 0.955862
+  total_inside_score: -1866.79
+  total_outside_score: -1866.79
+  inside_exec_time: 99 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 90 --
+  seq_identity: 0.921434
+  total_inside_score: -2022.85
+  total_outside_score: -2022.85
+  inside_exec_time: 55 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 91 --
+  seq_identity: 0.881379
+  total_inside_score: -2176.24
+  total_outside_score: -2176.24
+  inside_exec_time: 72 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 92 --
+  seq_identity: 0.933425
+  total_inside_score: -1961.96
+  total_outside_score: -1961.97
+  inside_exec_time: 102 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 93 --
+  seq_identity: 0.897049
+  total_inside_score: -2157.56
+  total_outside_score: -2157.56
+  inside_exec_time: 28 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 94 --
+  seq_identity: 0.946392
+  total_inside_score: -1888.71
+  total_outside_score: -1888.71
+  inside_exec_time: 76 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 95 --
+  seq_identity: 0.948965
+  total_inside_score: -1865.37
+  total_outside_score: -1865.38
+  inside_exec_time: 65 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 96 --
+  seq_identity: 0.935172
+  total_inside_score: -1924.86
+  total_outside_score: -1924.87
+  inside_exec_time: 79 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 97 --
+  seq_identity: 0.962759
+  total_inside_score: -1891.99
+  total_outside_score: -1891.99
+  inside_exec_time: 74 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 98 --
+  seq_identity: 0.844887
+  total_inside_score: -2536.78
+  total_outside_score: -2536.78
+  inside_exec_time: 69 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 99 --
+  seq_identity: 0.892022
+  total_inside_score: -2324.8
+  total_outside_score: -2324.8
+  inside_exec_time: 73 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 100 --
+  seq_identity: 0.8442
+  total_inside_score: -2475.71
+  total_outside_score: -2475.71
+  inside_exec_time: 79 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 101 --
+  seq_identity: 0.849794
+  total_inside_score: -2449.43
+  total_outside_score: -2449.44
+  inside_exec_time: 60 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 102 --
+  seq_identity: 0.924695
+  total_inside_score: -2014.56
+  total_outside_score: -2014.56
+  inside_exec_time: 80 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 103 --
+  seq_identity: 0.861224
+  total_inside_score: -2489.25
+  total_outside_score: -2489.25
+  inside_exec_time: 108 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 104 --
+  seq_identity: 0.955923
+  total_inside_score: -1940.73
+  total_outside_score: -1940.73
+  inside_exec_time: 39 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 105 --
+  seq_identity: 0.893103
+  total_inside_score: -2154.48
+  total_outside_score: -2154.48
+  inside_exec_time: 65 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 106 --
+  seq_identity: 0.895862
+  total_inside_score: -2131.08
+  total_outside_score: -2131.09
+  inside_exec_time: 72 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 107 --
+  seq_identity: 0.868276
+  total_inside_score: -2246.68
+  total_outside_score: -2246.68
+  inside_exec_time: 58 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 108 --
+  seq_identity: 0.939643
+  total_inside_score: -1899.62
+  total_outside_score: -1899.62
+  inside_exec_time: 78 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 109 --
+  seq_identity: 0.894256
+  total_inside_score: -2212.26
+  total_outside_score: -2212.26
+  inside_exec_time: 80 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 110 --
+  seq_identity: 0.875373
+  total_inside_score: -2203.43
+  total_outside_score: -2203.43
+  inside_exec_time: 80 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 111 --
+  seq_identity: 0.828147
+  total_inside_score: -2451.03
+  total_outside_score: -2451.03
+  inside_exec_time: 62 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 112 --
+  seq_identity: 0.920624
+  total_inside_score: -1897.34
+  total_outside_score: -1897.34
+  inside_exec_time: 63 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 113 --
+  seq_identity: 0.804598
+  total_inside_score: -2542.96
+  total_outside_score: -2542.96
+  inside_exec_time: 58 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 114 --
+  seq_identity: 0.815554
+  total_inside_score: -2504.68
+  total_outside_score: -2504.68
+  inside_exec_time: 71 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 115 --
+  seq_identity: 0.825195
+  total_inside_score: -2440.54
+  total_outside_score: -2440.54
+  inside_exec_time: 62 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 116 --
+  seq_identity: 0.849415
+  total_inside_score: -2322.68
+  total_outside_score: -2322.68
+  inside_exec_time: 85 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 117 --
+  seq_identity: 0.818876
+  total_inside_score: -2523.5
+  total_outside_score: -2523.5
+  inside_exec_time: 43 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 118 --
+  seq_identity: 0.788997
+  total_inside_score: -2521.12
+  total_outside_score: -2521.13
+  inside_exec_time: 68 ms
+  outside_exec_time: 1 ms (1.47059% of inside)
+  effective_beam_size: 100
+-- Pair Index: 119 --
+  seq_identity: 0.81512
+  total_inside_score: -2493.4
+  total_outside_score: -2493.4
+  inside_exec_time: 86 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 120 --
+  seq_identity: 0.825815
+  total_inside_score: -2460.81
+  total_outside_score: -2460.82
+  inside_exec_time: 105 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 121 --
+  seq_identity: 0.820728
+  total_inside_score: -2490.34
+  total_outside_score: -2490.34
+  inside_exec_time: 66 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 122 --
+  seq_identity: 0.812586
+  total_inside_score: -2551.81
+  total_outside_score: -2551.81
+  inside_exec_time: 57 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 123 --
+  seq_identity: 0.807528
+  total_inside_score: -2601.66
+  total_outside_score: -2601.66
+  inside_exec_time: 58 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 124 --
+  seq_identity: 0.826147
+  total_inside_score: -2527.92
+  total_outside_score: -2527.92
+  inside_exec_time: 78 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 125 --
+  seq_identity: 0.810369
+  total_inside_score: -2551.43
+  total_outside_score: -2551.43
+  inside_exec_time: 67 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 126 --
+  seq_identity: 0.820296
+  total_inside_score: -2507.01
+  total_outside_score: -2507.01
+  inside_exec_time: 70 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 127 --
+  seq_identity: 0.815247
+  total_inside_score: -2514.98
+  total_outside_score: -2514.98
+  inside_exec_time: 56 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 128 --
+  seq_identity: 0.7774
+  total_inside_score: -2714.33
+  total_outside_score: -2714.33
+  inside_exec_time: 86 ms
+  outside_exec_time: 1 ms (1.16279% of inside)
+  effective_beam_size: 100
+-- Pair Index: 129 --
+  seq_identity: 0.806073
+  total_inside_score: -2586.84
+  total_outside_score: -2586.84
+  inside_exec_time: 46 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 130 --
+  seq_identity: 0.852899
+  total_inside_score: -2304.19
+  total_outside_score: -2304.19
+  inside_exec_time: 74 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 131 --
+  seq_identity: 0.843434
+  total_inside_score: -2351.62
+  total_outside_score: -2351.62
+  inside_exec_time: 50 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 132 --
+  seq_identity: 0.832602
+  total_inside_score: -2393.73
+  total_outside_score: -2393.73
+  inside_exec_time: 94 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 133 --
+  seq_identity: 0.82881
+  total_inside_score: -2463.73
+  total_outside_score: -2463.73
+  inside_exec_time: 78 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 134 --
+  seq_identity: 0.773148
+  total_inside_score: -2714.02
+  total_outside_score: -2714.03
+  inside_exec_time: 91 ms
+  outside_exec_time: 1 ms (1.0989% of inside)
+  effective_beam_size: 100
+-- Pair Index: 135 --
+  seq_identity: 0.791814
+  total_inside_score: -2504.96
+  total_outside_score: -2504.97
+  inside_exec_time: 37 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 136 --
+  seq_identity: 0.829199
+  total_inside_score: -2361.62
+  total_outside_score: -2361.62
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 137 --
+  seq_identity: 0.7762
+  total_inside_score: -2566.2
+  total_outside_score: -2566.2
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 138 --
+  seq_identity: 0.780454
+  total_inside_score: -2554.21
+  total_outside_score: -2554.22
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 139 --
+  seq_identity: 0.800141
+  total_inside_score: -2451.99
+  total_outside_score: -2451.99
+  inside_exec_time: 22 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 140 --
+  seq_identity: 0.817917
+  total_inside_score: -2359.25
+  total_outside_score: -2359.25
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 141 --
+  seq_identity: 0.791811
+  total_inside_score: -2516.87
+  total_outside_score: -2516.87
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 142 --
+  seq_identity: 0.761277
+  total_inside_score: -2548.61
+  total_outside_score: -2548.62
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 143 --
+  seq_identity: 0.799725
+  total_inside_score: -2482.15
+  total_outside_score: -2482.15
+  inside_exec_time: 23 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 144 --
+  seq_identity: 0.799166
+  total_inside_score: -2463.67
+  total_outside_score: -2463.68
+  inside_exec_time: 23 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 145 --
+  seq_identity: 0.801682
+  total_inside_score: -2431.58
+  total_outside_score: -2431.59
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 146 --
+  seq_identity: 0.783541
+  total_inside_score: -2567.37
+  total_outside_score: -2567.38
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 147 --
+  seq_identity: 0.787535
+  total_inside_score: -2584.14
+  total_outside_score: -2584.14
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 148 --
+  seq_identity: 0.799026
+  total_inside_score: -2524.3
+  total_outside_score: -2524.3
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 149 --
+  seq_identity: 0.78966
+  total_inside_score: -2528.81
+  total_outside_score: -2528.81
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 150 --
+  seq_identity: 0.79704
+  total_inside_score: -2485.87
+  total_outside_score: -2485.87
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 151 --
+  seq_identity: 0.786795
+  total_inside_score: -2549.94
+  total_outside_score: -2549.95
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 152 --
+  seq_identity: 0.762262
+  total_inside_score: -2670.56
+  total_outside_score: -2670.56
+  inside_exec_time: 26 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 153 --
+  seq_identity: 0.781228
+  total_inside_score: -2579.86
+  total_outside_score: -2579.86
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 154 --
+  seq_identity: 0.81851
+  total_inside_score: -2361.52
+  total_outside_score: -2361.52
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 155 --
+  seq_identity: 0.810655
+  total_inside_score: -2356.58
+  total_outside_score: -2356.59
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 156 --
+  seq_identity: 0.801894
+  total_inside_score: -2427.62
+  total_outside_score: -2427.62
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 157 --
+  seq_identity: 0.798747
+  total_inside_score: -2491.89
+  total_outside_score: -2491.9
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 158 --
+  seq_identity: 0.755291
+  total_inside_score: -2675.75
+  total_outside_score: -2675.76
+  inside_exec_time: 25 ms
+  outside_exec_time: 1 ms (4% of inside)
+  effective_beam_size: 100
+-- Pair Index: 159 --
+  seq_identity: 0.859859
+  total_inside_score: -2382.45
+  total_outside_score: -2382.45
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 160 --
+  seq_identity: 0.892881
+  total_inside_score: -2247.27
+  total_outside_score: -2247.27
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 161 --
+  seq_identity: 0.905452
+  total_inside_score: -2150.48
+  total_outside_score: -2150.48
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 162 --
+  seq_identity: 0.97711
+  total_inside_score: -1762.19
+  total_outside_score: -1762.19
+  inside_exec_time: 22 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 163 --
+  seq_identity: 0.90616
+  total_inside_score: -2080.97
+  total_outside_score: -2080.98
+  inside_exec_time: 25 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 164 --
+  seq_identity: 0.908838
+  total_inside_score: -2132.6
+  total_outside_score: -2132.6
+  inside_exec_time: 22 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 165 --
+  seq_identity: 0.901836
+  total_inside_score: -2095.85
+  total_outside_score: -2095.85
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 166 --
+  seq_identity: 0.930297
+  total_inside_score: -2010.36
+  total_outside_score: -2010.37
+  inside_exec_time: 22 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 167 --
+  seq_identity: 0.948432
+  total_inside_score: -1905.39
+  total_outside_score: -1905.39
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 168 --
+  seq_identity: 0.954993
+  total_inside_score: -1930.2
+  total_outside_score: -1930.2
+  inside_exec_time: 22 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 169 --
+  seq_identity: 0.92025
+  total_inside_score: -2029.23
+  total_outside_score: -2029.23
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 170 --
+  seq_identity: 0.85583
+  total_inside_score: -2488.23
+  total_outside_score: -2488.23
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 171 --
+  seq_identity: 0.88695
+  total_inside_score: -2322.96
+  total_outside_score: -2322.97
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 172 --
+  seq_identity: 0.859065
+  total_inside_score: -2447.8
+  total_outside_score: -2447.8
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 173 --
+  seq_identity: 0.868495
+  total_inside_score: -2418.77
+  total_outside_score: -2418.77
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 174 --
+  seq_identity: 0.956552
+  total_inside_score: -1833.46
+  total_outside_score: -1833.46
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 175 --
+  seq_identity: 0.8397
+  total_inside_score: -2537.1
+  total_outside_score: -2537.1
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 176 --
+  seq_identity: 0.911419
+  total_inside_score: -2147.62
+  total_outside_score: -2147.62
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 177 --
+  seq_identity: 0.964106
+  total_inside_score: -1742.49
+  total_outside_score: -1742.49
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 178 --
+  seq_identity: 0.974874
+  total_inside_score: -1693.66
+  total_outside_score: -1693.66
+  inside_exec_time: 23 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 179 --
+  seq_identity: 0.888252
+  total_inside_score: -2123.71
+  total_outside_score: -2123.71
+  inside_exec_time: 24 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 180 --
+  seq_identity: 0.903806
+  total_inside_score: -2117.34
+  total_outside_score: -2117.34
+  inside_exec_time: 27 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 181 --
+  seq_identity: 0.864508
+  total_inside_score: -2401.95
+  total_outside_score: -2401.95
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 182 --
+  seq_identity: 0.85666
+  total_inside_score: -2391.67
+  total_outside_score: -2391.67
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 183 --
+  seq_identity: 0.873365
+  total_inside_score: -2352.16
+  total_outside_score: -2352.17
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 184 --
+  seq_identity: 0.866808
+  total_inside_score: -2336.32
+  total_outside_score: -2336.32
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 185 --
+  seq_identity: 0.859574
+  total_inside_score: -2343
+  total_outside_score: -2343.01
+  inside_exec_time: 19 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 186 --
+  seq_identity: 0.877169
+  total_inside_score: -2336.02
+  total_outside_score: -2336.03
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 187 --
+  seq_identity: 0.84375
+  total_inside_score: -2367.38
+  total_outside_score: -2367.38
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 188 --
+  seq_identity: 0.855182
+  total_inside_score: -2417.2
+  total_outside_score: -2417.2
+  inside_exec_time: 21 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 189 --
+  seq_identity: 0.86833
+  total_inside_score: -2356.9
+  total_outside_score: -2356.91
+  inside_exec_time: 26 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 190 --
+  seq_identity: 0.869322
+  total_inside_score: -2385.66
+  total_outside_score: -2385.66
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 191 --
+  seq_identity: 0.867911
+  total_inside_score: -2359.25
+  total_outside_score: -2359.26
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 192 --
+  seq_identity: 0.84735
+  total_inside_score: -2562.34
+  total_outside_score: -2562.34
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 193 --
+  seq_identity: 0.877778
+  total_inside_score: -2374.6
+  total_outside_score: -2374.6
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 194 --
+  seq_identity: 0.84947
+  total_inside_score: -2516.78
+  total_outside_score: -2516.79
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 195 --
+  seq_identity: 0.857847
+  total_inside_score: -2448.4
+  total_outside_score: -2448.4
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 196 --
+  seq_identity: 0.851852
+  total_inside_score: -2424.76
+  total_outside_score: -2424.77
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 197 --
+  seq_identity: 0.819171
+  total_inside_score: -2632.21
+  total_outside_score: -2632.21
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 198 --
+  seq_identity: 0.859213
+  total_inside_score: -2397.86
+  total_outside_score: -2397.87
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 199 --
+  seq_identity: 0.856738
+  total_inside_score: -2333.25
+  total_outside_score: -2333.25
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 200 --
+  seq_identity: 0.853901
+  total_inside_score: -2361.64
+  total_outside_score: -2361.64
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 201 --
+  seq_identity: 0.828369
+  total_inside_score: -2420.33
+  total_outside_score: -2420.33
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 202 --
+  seq_identity: 0.881167
+  total_inside_score: -2296.77
+  total_outside_score: -2296.77
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 203 --
+  seq_identity: 0.82209
+  total_inside_score: -2567.1
+  total_outside_score: -2567.11
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 204 --
+  seq_identity: 0.924171
+  total_inside_score: -2026.28
+  total_outside_score: -2026.28
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 205 --
+  seq_identity: 0.897019
+  total_inside_score: -2177.79
+  total_outside_score: -2177.79
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 206 --
+  seq_identity: 0.858983
+  total_inside_score: -2270.62
+  total_outside_score: -2270.63
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 207 --
+  seq_identity: 0.919322
+  total_inside_score: -2081.53
+  total_outside_score: -2081.53
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 208 --
+  seq_identity: 0.885424
+  total_inside_score: -2215.24
+  total_outside_score: -2215.24
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 209 --
+  seq_identity: 0.912955
+  total_inside_score: -2103.99
+  total_outside_score: -2103.99
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 210 --
+  seq_identity: 0.929492
+  total_inside_score: -2016.21
+  total_outside_score: -2016.21
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 211 --
+  seq_identity: 0.914576
+  total_inside_score: -2034.16
+  total_outside_score: -2034.16
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 212 --
+  seq_identity: 0.928814
+  total_inside_score: -2012.53
+  total_outside_score: -2012.53
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 213 --
+  seq_identity: 0.829285
+  total_inside_score: -2609.7
+  total_outside_score: -2609.7
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 214 --
+  seq_identity: 0.878972
+  total_inside_score: -2370.01
+  total_outside_score: -2370.01
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 215 --
+  seq_identity: 0.830634
+  total_inside_score: -2546.22
+  total_outside_score: -2546.22
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 216 --
+  seq_identity: 0.838166
+  total_inside_score: -2511.48
+  total_outside_score: -2511.48
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 217 --
+  seq_identity: 0.932203
+  total_inside_score: -1981.28
+  total_outside_score: -1981.28
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 218 --
+  seq_identity: 0.867657
+  total_inside_score: -2477.1
+  total_outside_score: -2477.1
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 219 --
+  seq_identity: 0.920216
+  total_inside_score: -2036.91
+  total_outside_score: -2036.91
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 220 --
+  seq_identity: 0.87661
+  total_inside_score: -2236.15
+  total_outside_score: -2236.15
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 221 --
+  seq_identity: 0.87322
+  total_inside_score: -2213.28
+  total_outside_score: -2213.28
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 222 --
+  seq_identity: 0.839322
+  total_inside_score: -2371.82
+  total_outside_score: -2371.83
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 223 --
+  seq_identity: 0.946128
+  total_inside_score: -1847.87
+  total_outside_score: -1847.87
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 224 --
+  seq_identity: 0.864603
+  total_inside_score: -2328.13
+  total_outside_score: -2328.13
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 225 --
+  seq_identity: 0.905517
+  total_inside_score: -2141.92
+  total_outside_score: -2141.92
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 226 --
+  seq_identity: 0.89372
+  total_inside_score: -2144.65
+  total_outside_score: -2144.65
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 227 --
+  seq_identity: 0.946465
+  total_inside_score: -1895.09
+  total_outside_score: -1895.09
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 228 --
+  seq_identity: 0.914894
+  total_inside_score: -2009.32
+  total_outside_score: -2009.33
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 229 --
+  seq_identity: 0.929849
+  total_inside_score: -2020.09
+  total_outside_score: -2020.09
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 230 --
+  seq_identity: 0.927536
+  total_inside_score: -2029.06
+  total_outside_score: -2029.07
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 231 --
+  seq_identity: 0.921325
+  total_inside_score: -2018.07
+  total_outside_score: -2018.07
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 232 --
+  seq_identity: 0.951001
+  total_inside_score: -1958.18
+  total_outside_score: -1958.18
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 233 --
+  seq_identity: 0.837912
+  total_inside_score: -2591.36
+  total_outside_score: -2591.37
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 234 --
+  seq_identity: 0.901583
+  total_inside_score: -2272.53
+  total_outside_score: -2272.53
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 235 --
+  seq_identity: 0.837225
+  total_inside_score: -2530.97
+  total_outside_score: -2530.97
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 236 --
+  seq_identity: 0.85048
+  total_inside_score: -2477.46
+  total_outside_score: -2477.46
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 237 --
+  seq_identity: 0.909091
+  total_inside_score: -2110.41
+  total_outside_score: -2110.42
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 238 --
+  seq_identity: 0.863358
+  total_inside_score: -2493.93
+  total_outside_score: -2493.94
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 239 --
+  seq_identity: 0.940731
+  total_inside_score: -2016.03
+  total_outside_score: -2016.03
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 240 --
+  seq_identity: 0.879917
+  total_inside_score: -2233.96
+  total_outside_score: -2233.96
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 241 --
+  seq_identity: 0.884748
+  total_inside_score: -2196.44
+  total_outside_score: -2196.44
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 242 --
+  seq_identity: 0.849551
+  total_inside_score: -2323.76
+  total_outside_score: -2323.77
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 243 --
+  seq_identity: 0.927248
+  total_inside_score: -1980.54
+  total_outside_score: -1980.54
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 244 --
+  seq_identity: 0.873368
+  total_inside_score: -2310.24
+  total_outside_score: -2310.24
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 245 --
+  seq_identity: 0.898571
+  total_inside_score: -2155.95
+  total_outside_score: -2155.95
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 246 --
+  seq_identity: 0.908206
+  total_inside_score: -2146.18
+  total_outside_score: -2146.18
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 247 --
+  seq_identity: 0.894515
+  total_inside_score: -2138.71
+  total_outside_score: -2138.71
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 248 --
+  seq_identity: 0.92069
+  total_inside_score: -2083.96
+  total_outside_score: -2083.96
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 249 --
+  seq_identity: 0.940111
+  total_inside_score: -1962.95
+  total_outside_score: -1962.95
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 250 --
+  seq_identity: 0.97189
+  total_inside_score: -1820.5
+  total_outside_score: -1820.5
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 251 --
+  seq_identity: 0.927235
+  total_inside_score: -1967.03
+  total_outside_score: -1967.03
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 252 --
+  seq_identity: 0.858557
+  total_inside_score: -2502.33
+  total_outside_score: -2502.34
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 253 --
+  seq_identity: 0.88145
+  total_inside_score: -2371.38
+  total_outside_score: -2371.38
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 254 --
+  seq_identity: 0.8618
+  total_inside_score: -2440.71
+  total_outside_score: -2440.71
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 255 --
+  seq_identity: 0.860662
+  total_inside_score: -2433.89
+  total_outside_score: -2433.89
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 256 --
+  seq_identity: 0.943487
+  total_inside_score: -1905.76
+  total_outside_score: -1905.76
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 257 --
+  seq_identity: 0.830948
+  total_inside_score: -2549.96
+  total_outside_score: -2549.96
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 258 --
+  seq_identity: 0.917704
+  total_inside_score: -2056.33
+  total_outside_score: -2056.33
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 259 --
+  seq_identity: 0.952722
+  total_inside_score: -1852.75
+  total_outside_score: -1852.75
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 260 --
+  seq_identity: 0.960602
+  total_inside_score: -1769.24
+  total_outside_score: -1769.24
+  inside_exec_time: 9 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 261 --
+  seq_identity: 0.892143
+  total_inside_score: -2198.11
+  total_outside_score: -2198.11
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 262 --
+  seq_identity: 0.90928
+  total_inside_score: -2094.89
+  total_outside_score: -2094.9
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 263 --
+  seq_identity: 0.867812
+  total_inside_score: -2319.47
+  total_outside_score: -2319.47
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 264 --
+  seq_identity: 0.922756
+  total_inside_score: -1920.19
+  total_outside_score: -1920.19
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 265 --
+  seq_identity: 0.917847
+  total_inside_score: -1886.29
+  total_outside_score: -1886.29
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 266 --
+  seq_identity: 0.871301
+  total_inside_score: -2219.35
+  total_outside_score: -2219.35
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 267 --
+  seq_identity: 0.877693
+  total_inside_score: -2232.61
+  total_outside_score: -2232.61
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 268 --
+  seq_identity: 0.879383
+  total_inside_score: -2245.99
+  total_outside_score: -2245.99
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 269 --
+  seq_identity: 0.884189
+  total_inside_score: -2185.8
+  total_outside_score: -2185.8
+  inside_exec_time: 11 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 270 --
+  seq_identity: 0.839146
+  total_inside_score: -2502.31
+  total_outside_score: -2502.32
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 271 --
+  seq_identity: 0.848781
+  total_inside_score: -2388.28
+  total_outside_score: -2388.28
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 272 --
+  seq_identity: 0.844508
+  total_inside_score: -2449.34
+  total_outside_score: -2449.35
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 273 --
+  seq_identity: 0.836505
+  total_inside_score: -2458.85
+  total_outside_score: -2458.85
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 274 --
+  seq_identity: 0.868638
+  total_inside_score: -2276.3
+  total_outside_score: -2276.3
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 275 --
+  seq_identity: 0.799183
+  total_inside_score: -2663.28
+  total_outside_score: -2663.28
+  inside_exec_time: 16 ms
+  outside_exec_time: 1 ms (6.25% of inside)
+  effective_beam_size: 100
+-- Pair Index: 276 --
+  seq_identity: 0.877509
+  total_inside_score: -2252.24
+  total_outside_score: -2252.25
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 277 --
+  seq_identity: 0.920029
+  total_inside_score: -2051.09
+  total_outside_score: -2051.09
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 278 --
+  seq_identity: 0.92038
+  total_inside_score: -1943.59
+  total_outside_score: -1943.59
+  inside_exec_time: 11 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 279 --
+  seq_identity: 0.920387
+  total_inside_score: -2036.11
+  total_outside_score: -2036.11
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 280 --
+  seq_identity: 0.88757
+  total_inside_score: -2171.83
+  total_outside_score: -2171.83
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 281 --
+  seq_identity: 0.835979
+  total_inside_score: -2389.19
+  total_outside_score: -2389.2
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 282 --
+  seq_identity: 0.958246
+  total_inside_score: -1806.95
+  total_outside_score: -1806.95
+  inside_exec_time: 10 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 283 --
+  seq_identity: 0.914501
+  total_inside_score: -2029.23
+  total_outside_score: -2029.23
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 284 --
+  seq_identity: 0.913103
+  total_inside_score: -2035.66
+  total_outside_score: -2035.66
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 285 --
+  seq_identity: 0.916667
+  total_inside_score: -2064.41
+  total_outside_score: -2064.41
+  inside_exec_time: 11 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 286 --
+  seq_identity: 0.927098
+  total_inside_score: -2069.57
+  total_outside_score: -2069.57
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 287 --
+  seq_identity: 0.849723
+  total_inside_score: -2541.36
+  total_outside_score: -2541.36
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 288 --
+  seq_identity: 0.888965
+  total_inside_score: -2311.03
+  total_outside_score: -2311.03
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 289 --
+  seq_identity: 0.84903
+  total_inside_score: -2483.86
+  total_outside_score: -2483.87
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 290 --
+  seq_identity: 0.86722
+  total_inside_score: -2433.74
+  total_outside_score: -2433.74
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 291 --
+  seq_identity: 0.925034
+  total_inside_score: -2102.37
+  total_outside_score: -2102.38
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 292 --
+  seq_identity: 0.863853
+  total_inside_score: -2482.88
+  total_outside_score: -2482.88
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 293 --
+  seq_identity: 0.919123
+  total_inside_score: -2111.61
+  total_outside_score: -2111.61
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 294 --
+  seq_identity: 0.880306
+  total_inside_score: -2244.5
+  total_outside_score: -2244.5
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 295 --
+  seq_identity: 0.887265
+  total_inside_score: -2179.87
+  total_outside_score: -2179.87
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 296 --
+  seq_identity: 0.853862
+  total_inside_score: -2304.75
+  total_outside_score: -2304.75
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 297 --
+  seq_identity: 0.906485
+  total_inside_score: -2011.51
+  total_outside_score: -2011.51
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 298 --
+  seq_identity: 0.88698
+  total_inside_score: -2306.63
+  total_outside_score: -2306.63
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 299 --
+  seq_identity: 0.876881
+  total_inside_score: -2245.14
+  total_outside_score: -2245.14
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 300 --
+  seq_identity: 0.877931
+  total_inside_score: -2249.38
+  total_outside_score: -2249.38
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 301 --
+  seq_identity: 0.885417
+  total_inside_score: -2235.71
+  total_outside_score: -2235.72
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 302 --
+  seq_identity: 0.893324
+  total_inside_score: -2172.74
+  total_outside_score: -2172.74
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 303 --
+  seq_identity: 0.827418
+  total_inside_score: -2567.32
+  total_outside_score: -2567.32
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 304 --
+  seq_identity: 0.857833
+  total_inside_score: -2388.47
+  total_outside_score: -2388.47
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 305 --
+  seq_identity: 0.834031
+  total_inside_score: -2486.65
+  total_outside_score: -2486.66
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 306 --
+  seq_identity: 0.840138
+  total_inside_score: -2460.01
+  total_outside_score: -2460.01
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 307 --
+  seq_identity: 0.889271
+  total_inside_score: -2229.6
+  total_outside_score: -2229.6
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 308 --
+  seq_identity: 0.840027
+  total_inside_score: -2505.39
+  total_outside_score: -2505.39
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 309 --
+  seq_identity: 0.885538
+  total_inside_score: -2246.74
+  total_outside_score: -2246.74
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 310 --
+  seq_identity: 0.870854
+  total_inside_score: -2220.03
+  total_outside_score: -2220.03
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 311 --
+  seq_identity: 0.877911
+  total_inside_score: -2150.27
+  total_outside_score: -2150.28
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 312 --
+  seq_identity: 0.875897
+  total_inside_score: -2214.63
+  total_outside_score: -2214.63
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 313 --
+  seq_identity: 0.872355
+  total_inside_score: -2252.29
+  total_outside_score: -2252.29
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 314 --
+  seq_identity: 0.786421
+  total_inside_score: -3530.9
+  total_outside_score: -3530.91
+  inside_exec_time: 21 ms
+  outside_exec_time: 3 ms (14.2857% of inside)
+  effective_beam_size: 100
+-- Pair Index: 315 --
+  seq_identity: 0.962043
+  total_inside_score: -1784.87
+  total_outside_score: -1784.87
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 316 --
+  seq_identity: 0.935128
+  total_inside_score: -1967.87
+  total_outside_score: -1967.88
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 317 --
+  seq_identity: 0.935306
+  total_inside_score: -2064.18
+  total_outside_score: -2064.18
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 318 --
+  seq_identity: 0.839286
+  total_inside_score: -2561.31
+  total_outside_score: -2561.31
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 319 --
+  seq_identity: 0.896077
+  total_inside_score: -2291.98
+  total_outside_score: -2291.98
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 320 --
+  seq_identity: 0.839286
+  total_inside_score: -2504.03
+  total_outside_score: -2504.04
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 321 --
+  seq_identity: 0.854496
+  total_inside_score: -2461.28
+  total_outside_score: -2461.28
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 322 --
+  seq_identity: 0.934237
+  total_inside_score: -1999.24
+  total_outside_score: -1999.24
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 323 --
+  seq_identity: 0.859959
+  total_inside_score: -2496.79
+  total_outside_score: -2496.79
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 324 --
+  seq_identity: 0.928522
+  total_inside_score: -2116.52
+  total_outside_score: -2116.52
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 325 --
+  seq_identity: 0.907522
+  total_inside_score: -2039.87
+  total_outside_score: -2039.87
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 326 --
+  seq_identity: 0.913043
+  total_inside_score: -1991.37
+  total_outside_score: -1991.38
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 327 --
+  seq_identity: 0.858913
+  total_inside_score: -2283.74
+  total_outside_score: -2283.74
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 328 --
+  seq_identity: 0.919067
+  total_inside_score: -2020.98
+  total_outside_score: -2020.98
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 329 --
+  seq_identity: 0.878985
+  total_inside_score: -2305.45
+  total_outside_score: -2305.45
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 330 --
+  seq_identity: 0.954007
+  total_inside_score: -1877.78
+  total_outside_score: -1877.78
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 331 --
+  seq_identity: 0.942481
+  total_inside_score: -1999.37
+  total_outside_score: -1999.37
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 332 --
+  seq_identity: 0.851801
+  total_inside_score: -2498.31
+  total_outside_score: -2498.31
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 333 --
+  seq_identity: 0.902151
+  total_inside_score: -2245.36
+  total_outside_score: -2245.36
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 334 --
+  seq_identity: 0.848338
+  total_inside_score: -2455.6
+  total_outside_score: -2455.6
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 335 --
+  seq_identity: 0.865744
+  total_inside_score: -2416.15
+  total_outside_score: -2416.16
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 336 --
+  seq_identity: 0.950103
+  total_inside_score: -1917.02
+  total_outside_score: -1917.02
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 337 --
+  seq_identity: 0.862892
+  total_inside_score: -2463.13
+  total_outside_score: -2463.13
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 338 --
+  seq_identity: 0.93163
+  total_inside_score: -2067.33
+  total_outside_score: -2067.33
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 339 --
+  seq_identity: 0.932404
+  total_inside_score: -1895.58
+  total_outside_score: -1895.58
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 340 --
+  seq_identity: 0.93101
+  total_inside_score: -1878.22
+  total_outside_score: -1878.22
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 341 --
+  seq_identity: 0.865879
+  total_inside_score: -2239.58
+  total_outside_score: -2239.59
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 342 --
+  seq_identity: 0.929161
+  total_inside_score: -1918.38
+  total_outside_score: -1918.38
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 343 --
+  seq_identity: 0.878113
+  total_inside_score: -2320.12
+  total_outside_score: -2320.13
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 344 --
+  seq_identity: 0.941054
+  total_inside_score: -2011.09
+  total_outside_score: -2011.09
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 345 --
+  seq_identity: 0.853249
+  total_inside_score: -2506.79
+  total_outside_score: -2506.79
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 346 --
+  seq_identity: 0.898814
+  total_inside_score: -2317.1
+  total_outside_score: -2317.11
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 347 --
+  seq_identity: 0.853948
+  total_inside_score: -2451.97
+  total_outside_score: -2451.97
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 348 --
+  seq_identity: 0.86113
+  total_inside_score: -2442.71
+  total_outside_score: -2442.72
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 349 --
+  seq_identity: 0.950481
+  total_inside_score: -1913.97
+  total_outside_score: -1913.97
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 350 --
+  seq_identity: 0.846521
+  total_inside_score: -2522.12
+  total_outside_score: -2522.12
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 351 --
+  seq_identity: 0.93218
+  total_inside_score: -2061.53
+  total_outside_score: -2061.53
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 352 --
+  seq_identity: 0.92827
+  total_inside_score: -1956.16
+  total_outside_score: -1956.16
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 353 --
+  seq_identity: 0.936006
+  total_inside_score: -1905.79
+  total_outside_score: -1905.79
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 354 --
+  seq_identity: 0.868864
+  total_inside_score: -2287.8
+  total_outside_score: -2287.81
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 355 --
+  seq_identity: 0.916609
+  total_inside_score: -2016.34
+  total_outside_score: -2016.34
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 356 --
+  seq_identity: 0.877309
+  total_inside_score: -2318.58
+  total_outside_score: -2318.58
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 357 --
+  seq_identity: 0.84058
+  total_inside_score: -2620.31
+  total_outside_score: -2620.31
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 358 --
+  seq_identity: 0.895574
+  total_inside_score: -2350.01
+  total_outside_score: -2350.01
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 359 --
+  seq_identity: 0.83989
+  total_inside_score: -2553.72
+  total_outside_score: -2553.73
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 360 --
+  seq_identity: 0.843448
+  total_inside_score: -2533.5
+  total_outside_score: -2533.51
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 361 --
+  seq_identity: 0.921142
+  total_inside_score: -2023.38
+  total_outside_score: -2023.38
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 362 --
+  seq_identity: 0.851499
+  total_inside_score: -2569.54
+  total_outside_score: -2569.54
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 363 --
+  seq_identity: 0.975812
+  total_inside_score: -1797.13
+  total_outside_score: -1797.13
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 364 --
+  seq_identity: 0.897365
+  total_inside_score: -2190.81
+  total_outside_score: -2190.81
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 365 --
+  seq_identity: 0.902219
+  total_inside_score: -2000.23
+  total_outside_score: -2000.23
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 366 --
+  seq_identity: 0.877863
+  total_inside_score: -2249.23
+  total_outside_score: -2249.24
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 367 --
+  seq_identity: 0.930489
+  total_inside_score: -2027.21
+  total_outside_score: -2027.21
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 368 --
+  seq_identity: 0.890778
+  total_inside_score: -2235.94
+  total_outside_score: -2235.95
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 369 --
+  seq_identity: 0.839136
+  total_inside_score: -2595.68
+  total_outside_score: -2595.68
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 370 --
+  seq_identity: 0.985735
+  total_inside_score: -1674.71
+  total_outside_score: -1674.71
+  inside_exec_time: 11 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 371 --
+  seq_identity: 0.909541
+  total_inside_score: -2208.6
+  total_outside_score: -2208.6
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 372 --
+  seq_identity: 0.838245
+  total_inside_score: -2613.65
+  total_outside_score: -2613.65
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 373 --
+  seq_identity: 0.882072
+  total_inside_score: -2383.86
+  total_outside_score: -2383.86
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 374 --
+  seq_identity: 0.836088
+  total_inside_score: -2636.83
+  total_outside_score: -2636.83
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 375 --
+  seq_identity: 0.849608
+  total_inside_score: -2479.44
+  total_outside_score: -2479.45
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 376 --
+  seq_identity: 0.851746
+  total_inside_score: -2456.02
+  total_outside_score: -2456.02
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 377 --
+  seq_identity: 0.817082
+  total_inside_score: -2598.67
+  total_outside_score: -2598.67
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 378 --
+  seq_identity: 0.858333
+  total_inside_score: -2499.98
+  total_outside_score: -2499.98
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 379 --
+  seq_identity: 0.802241
+  total_inside_score: -2764.54
+  total_outside_score: -2764.54
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 380 --
+  seq_identity: 0.840529
+  total_inside_score: -2533.91
+  total_outside_score: -2533.91
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 381 --
+  seq_identity: 0.869958
+  total_inside_score: -2462.38
+  total_outside_score: -2462.38
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 382 --
+  seq_identity: 0.884642
+  total_inside_score: -2358.68
+  total_outside_score: -2358.68
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 383 --
+  seq_identity: 0.854905
+  total_inside_score: -2569.16
+  total_outside_score: -2569.16
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 384 --
+  seq_identity: 0.886128
+  total_inside_score: -2376.84
+  total_outside_score: -2376.84
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 385 --
+  seq_identity: 0.862526
+  total_inside_score: -2402.94
+  total_outside_score: -2402.94
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 386 --
+  seq_identity: 0.866015
+  total_inside_score: -2321.22
+  total_outside_score: -2321.23
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 387 --
+  seq_identity: 0.821603
+  total_inside_score: -2483.05
+  total_outside_score: -2483.06
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 388 --
+  seq_identity: 0.882474
+  total_inside_score: -2330.71
+  total_outside_score: -2330.71
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 389 --
+  seq_identity: 0.84
+  total_inside_score: -2509.84
+  total_outside_score: -2509.84
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 390 --
+  seq_identity: 0.900353
+  total_inside_score: -2230.32
+  total_outside_score: -2230.33
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 391 --
+  seq_identity: 0.836875
+  total_inside_score: -2560.77
+  total_outside_score: -2560.78
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 392 --
+  seq_identity: 0.873892
+  total_inside_score: -2374.32
+  total_outside_score: -2374.32
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 393 --
+  seq_identity: 0.836088
+  total_inside_score: -2575.78
+  total_outside_score: -2575.79
+  inside_exec_time: 18 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 394 --
+  seq_identity: 0.852143
+  total_inside_score: -2439.53
+  total_outside_score: -2439.53
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 395 --
+  seq_identity: 0.854286
+  total_inside_score: -2383.72
+  total_outside_score: -2383.72
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 396 --
+  seq_identity: 0.821683
+  total_inside_score: -2549.8
+  total_outside_score: -2549.8
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 397 --
+  seq_identity: 0.858333
+  total_inside_score: -2437.1
+  total_outside_score: -2437.11
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 398 --
+  seq_identity: 0.801582
+  total_inside_score: -2704.45
+  total_outside_score: -2704.46
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 399 --
+  seq_identity: 0.856849
+  total_inside_score: -2479.32
+  total_outside_score: -2479.32
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 400 --
+  seq_identity: 0.929155
+  total_inside_score: -2043.37
+  total_outside_score: -2043.37
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 401 --
+  seq_identity: 0.839642
+  total_inside_score: -2561.11
+  total_outside_score: -2561.11
+  inside_exec_time: 20 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 402 --
+  seq_identity: 0.849576
+  total_inside_score: -2434.71
+  total_outside_score: -2434.71
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 403 --
+  seq_identity: 0.855932
+  total_inside_score: -2397.68
+  total_outside_score: -2397.68
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 404 --
+  seq_identity: 0.808886
+  total_inside_score: -2572.36
+  total_outside_score: -2572.36
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 405 --
+  seq_identity: 0.854282
+  total_inside_score: -2455.29
+  total_outside_score: -2455.29
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 406 --
+  seq_identity: 0.809618
+  total_inside_score: -2667.77
+  total_outside_score: -2667.77
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 407 --
+  seq_identity: 0.863821
+  total_inside_score: -2520.65
+  total_outside_score: -2520.65
+  inside_exec_time: 16 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 408 --
+  seq_identity: 0.910569
+  total_inside_score: -2077.89
+  total_outside_score: -2077.89
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 409 --
+  seq_identity: 0.926897
+  total_inside_score: -1935.28
+  total_outside_score: -1935.28
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 410 --
+  seq_identity: 0.937241
+  total_inside_score: -1858.58
+  total_outside_score: -1858.58
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 411 --
+  seq_identity: 0.851444
+  total_inside_score: -2333.34
+  total_outside_score: -2333.35
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 412 --
+  seq_identity: 0.895412
+  total_inside_score: -2210.64
+  total_outside_score: -2210.64
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 413 --
+  seq_identity: 0.879817
+  total_inside_score: -2290.29
+  total_outside_score: -2290.29
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 414 --
+  seq_identity: 0.843071
+  total_inside_score: -2610.76
+  total_outside_score: -2610.76
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 415 --
+  seq_identity: 0.815825
+  total_inside_score: -2557.75
+  total_outside_score: -2557.75
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 416 --
+  seq_identity: 0.821282
+  total_inside_score: -2530.26
+  total_outside_score: -2530.26
+  inside_exec_time: 14 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 417 --
+  seq_identity: 0.774523
+  total_inside_score: -2704.22
+  total_outside_score: -2704.23
+  inside_exec_time: 16 ms
+  outside_exec_time: 1 ms (6.25% of inside)
+  effective_beam_size: 100
+-- Pair Index: 418 --
+  seq_identity: 0.845842
+  total_inside_score: -2521.62
+  total_outside_score: -2521.63
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 419 --
+  seq_identity: 0.808042
+  total_inside_score: -2731.28
+  total_outside_score: -2731.29
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 420 --
+  seq_identity: 0.889273
+  total_inside_score: -2250.82
+  total_outside_score: -2250.82
+  inside_exec_time: 17 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 421 --
+  seq_identity: 0.894118
+  total_inside_score: -2186.37
+  total_outside_score: -2186.37
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 422 --
+  seq_identity: 0.869204
+  total_inside_score: -2297.96
+  total_outside_score: -2297.96
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 423 --
+  seq_identity: 0.924295
+  total_inside_score: -2071.47
+  total_outside_score: -2071.47
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 424 --
+  seq_identity: 0.883312
+  total_inside_score: -2278.63
+  total_outside_score: -2278.64
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 425 --
+  seq_identity: 0.988278
+  total_inside_score: -1671.94
+  total_outside_score: -1671.94
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 426 --
+  seq_identity: 0.912693
+  total_inside_score: -1963.25
+  total_outside_score: -1963.25
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 427 --
+  seq_identity: 0.902933
+  total_inside_score: -2057.89
+  total_outside_score: -2057.89
+  inside_exec_time: 13 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 428 --
+  seq_identity: 0.839947
+  total_inside_score: -2434.83
+  total_outside_score: -2434.84
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 429 --
+  seq_identity: 0.905771
+  total_inside_score: -2061
+  total_outside_score: -2061.01
+  inside_exec_time: 10 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 430 --
+  seq_identity: 0.900838
+  total_inside_score: -2047.88
+  total_outside_score: -2047.89
+  inside_exec_time: 7 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 431 --
+  seq_identity: 0.844577
+  total_inside_score: -2373.23
+  total_outside_score: -2373.24
+  inside_exec_time: 8 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 432 --
+  seq_identity: 0.870112
+  total_inside_score: -2237.64
+  total_outside_score: -2237.64
+  inside_exec_time: 12 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 433 --
+  seq_identity: 0.787879
+  total_inside_score: -4007.98
+  total_outside_score: -4008
+  inside_exec_time: 29 ms
+  outside_exec_time: 5 ms (17.2414% of inside)
+  effective_beam_size: 100
+-- Pair Index: 434 --
+  seq_identity: 0.853896
+  total_inside_score: -2386
+  total_outside_score: -2386
+  inside_exec_time: 15 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100

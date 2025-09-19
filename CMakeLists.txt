@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)  # Enables -flto globally
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result OUTPUT output)
+message(STATUS "IPO/LTO support: ${result} (${output})")
+
 # -------- OpenMP Setup for Apple Silicon --------
 # if(APPLE)
 #     # Use Homebrew LLVM

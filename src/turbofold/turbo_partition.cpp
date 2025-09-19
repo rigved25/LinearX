@@ -1,4 +1,5 @@
 // src/turbofold/turbo_partition.cpp
+#include <linearx/partition/linear_partition.hpp>
 #include <linearx/turbofold/linear_turbofold.hpp>
 
 using namespace linearx::math;
@@ -6,9 +7,10 @@ using namespace linearx::utils;
 
 TurboPartition::TurboPartition(LinearTurbofold &turbofold, const Sequence &seq, const EnergyModel &energy_model,
                                const bool allow_sharp_turn)
-    : LinearPartition(seq, energy_model, allow_sharp_turn), turbofold(turbofold) {
+    : LinearPartitionInterface<TurboPartition>(seq, energy_model, allow_sharp_turn), turbofold(turbofold) {
     prob_accm.upstrm.resize(seq.length());
     prob_accm.dwnstrm.resize(seq.length());
+    reset_beams(turbofold.folding_beam_size);
 }
 
 void TurboPartition::reset_saved_beams(const unsigned beam_size) {
@@ -21,7 +23,7 @@ void TurboPartition::reset_saved_beams(const unsigned beam_size) {
 
 void TurboPartition::save_partition_function(const bool move, const unsigned beam_size) {
     // if move is true, the original beam data will be cleared
-    reset_saved_beams(beam_size);
+    // reset_saved_beams(beam_size);
     auto save = [this, move](auto &src, auto &dest) {
         if (move) {
             dest = std::move(src);

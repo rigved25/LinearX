@@ -1,0 +1,9 @@
+num_iterations: 3
+use_lazy_outside: 1
+use_prev_itr_beta: 0
+restrict_search: 1
+alignment_pruning_threshold: 9.91152
+folding_pruning_threshold: 9.91152
+aln_itr_exec_times (ms): 0 41 33 25 
+pf_itr_exec_times (ms): 25 8 2 1 
+itrs_exec_time (ms): 135

@@ -43,6 +43,7 @@ class Sequence {
     void insert_nuc(size_t index, char nucleotide);
     void delete_nuc(size_t index);
     void replace_nuc(size_t index, char nucleotide);
+    void reverse();
 
     // file operations
     bool read_fasta(const std::string& filepath);

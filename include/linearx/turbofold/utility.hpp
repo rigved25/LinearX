@@ -35,12 +35,12 @@ struct TurboFoldLog {
         itrs_exec_time = 0.0;
     }
 
-    inline void save_logs(const std::string &out_dir) {
+    inline void save_logs(const std::string& out_dir) {
         std::filesystem::create_directories(out_dir);
 
         itrs_exec_time = 0.0;
-        for (const auto &t : aln_itr_exec_times) itrs_exec_time += t;
-        for (const auto &t : pf_itr_exec_times) itrs_exec_time += t;
+        for (const auto& t : aln_itr_exec_times) itrs_exec_time += t;
+        for (const auto& t : pf_itr_exec_times) itrs_exec_time += t;
 
         // --- write top-level summary file
         std::ofstream summary(out_dir + "/turbofold_log.txt");
@@ -56,11 +56,11 @@ struct TurboFoldLog {
         summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
 
         summary << "aln_itr_exec_times (ms): ";
-        for (const auto &t : aln_itr_exec_times) summary << t << " ";
+        for (const auto& t : aln_itr_exec_times) summary << t << " ";
         summary << "\n";
 
         summary << "pf_itr_exec_times (ms): ";
-        for (const auto &t : pf_itr_exec_times) summary << t << " ";
+        for (const auto& t : pf_itr_exec_times) summary << t << " ";
         summary << "\n";
 
         summary << "itrs_exec_time (ms): " << itrs_exec_time << "\n";
@@ -81,7 +81,7 @@ struct TurboFoldLog {
 
                 aln_log << "=== Alignment Logs: Iteration " << itr << " ===\n\n";
                 int pair_idx = 0;
-                for (const auto &log : aln_logs[itr]) {
+                for (const auto& log : aln_logs[itr]) {
                     aln_log << "-- Pair Index: " << pair_idx++ << " --\n";
                     aln_log << "  seq_identity: " << log.seq_identity << "\n";
                     aln_log << "  total_inside_score: " << log.total_inside_score << "\n";
@@ -103,7 +103,7 @@ struct TurboFoldLog {
 
             pf_log << "=== Partition Logs: Iteration " << itr << " ===\n\n";
             int seq_idx = 0;
-            for (const auto &log : pf_logs[itr]) {
+            for (const auto& log : pf_logs[itr]) {
                 pf_log << "-- Sequence Index: " << seq_idx++ << " --\n";
                 pf_log << "  free_energy_of_ensemble: " << log.free_energy_of_ensemble << "\n";
                 pf_log << "  total_inside_energy: " << log.total_inside_energy << "\n";

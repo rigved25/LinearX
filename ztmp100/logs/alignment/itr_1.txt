@@ -1,0 +1,72 @@
+=== Alignment Logs: Iteration 1 ===
+
+-- Pair Index: 0 --
+  seq_identity: 0.493506
+  total_inside_score: -180.565
+  total_outside_score: -180.565
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 1 --
+  seq_identity: 0.482353
+  total_inside_score: -202.224
+  total_outside_score: -202.224
+  inside_exec_time: 2 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 2 --
+  seq_identity: 0.5
+  total_inside_score: -179.308
+  total_outside_score: -179.308
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 3 --
+  seq_identity: 0.523256
+  total_inside_score: -194.104
+  total_outside_score: -194.104
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 4 --
+  seq_identity: 0.435294
+  total_inside_score: -205.504
+  total_outside_score: -205.504
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 5 --
+  seq_identity: 0.506494
+  total_inside_score: -182.25
+  total_outside_score: -182.25
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 6 --
+  seq_identity: 0.433333
+  total_inside_score: -206.362
+  total_outside_score: -206.362
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 7 --
+  seq_identity: 0.447059
+  total_inside_score: -206.4
+  total_outside_score: -206.4
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 8 --
+  seq_identity: 0.488889
+  total_inside_score: -208.688
+  total_outside_score: -208.689
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
+-- Pair Index: 9 --
+  seq_identity: 0.413793
+  total_inside_score: -204.395
+  total_outside_score: -204.396
+  inside_exec_time: 1 ms
+  outside_exec_time: 0 ms (0% of inside)
+  effective_beam_size: 100
