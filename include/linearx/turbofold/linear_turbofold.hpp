@@ -198,15 +198,15 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
             if (!state) {
                 return nullptr;
             }
-            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
-                return nullptr;
-            }
-            if (!turbofold.use_lazy_outside_ &&
-                LOG_DIV(LOG_MUL(state->alpha, state->beta),
-                        saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
-                    turbofold.alignment_pruning_threshold) {
-                return nullptr;
-            }
+            // if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
+            //     return nullptr;
+            // }
+            // if (!turbofold.use_lazy_outside_ &&
+            //     LOG_DIV(LOG_MUL(state->alpha, state->beta),
+            //             saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
+            //         turbofold.alignment_pruning_threshold) {
+            //     return nullptr;
+            // }
         }
         return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
     }

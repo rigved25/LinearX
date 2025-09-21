@@ -86,8 +86,9 @@ value_type LinearAlignmentInterface<T>::get_trans_emit_prob(const int i, const i
 
 template <typename T>
 void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose_output) {
+    auto start_time = chrono::high_resolution_clock::now();
     // clear the previous matrix
-    reset_beam_vector(coinc_prob, seq1.length());
+    reset_beam_vector(cp, seq1.length());
     reset_beam_vector(prob_rev_idx, seq2.length());
 
     const value_type p_xy = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
@@ -101,7 +102,7 @@ void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose
 
                 const value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
                 if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD && i > 0 && j > 0) {
-                    auto [ptr_cprob_ij, inserted] = coinc_prob[i - 1].try_emplace(j - 1, LOG_ZERO);
+                    auto [ptr_cprob_ij, inserted] = cp[i - 1].try_emplace(j - 1, LOG_ZERO);
                     ptr_cprob_ij->second = LOG_SUM(ptr_cprob_ij->second, prob);
                 }
             }
@@ -112,11 +113,11 @@ void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose
     unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
     const value_type fam_threshold = phmm->get_fam_threshold();
     for (int i = 0; i < seq1.length(); ++i) {
-        for (auto it = coinc_prob[i].begin(); it != coinc_prob[i].end();) {
+        for (auto it = cp[i].begin(); it != cp[i].end();) {
             const int j = it->first;
             value_type& prob = it->second;
             if (prob < fam_threshold) {
-                it = coinc_prob[i].erase(it);  // erase and get the next valid iterator
+                it = cp[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {
                 prob = EXP(prob);
@@ -132,16 +133,19 @@ void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose
             }
         }
     }
-
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time =
+        chrono::duration_cast<chrono::microseconds>(end_time - start_time).count() / 1000.0;  // in milliseconds
     if (verbose_output) {
-        fprintf(stderr, "[LinearAlignment] Coincidence Probabilities Computed: %lu (saved) + %lu (pruned)\n", num_saved,
-                num_pruned);
+        fprintf(stderr, "[LinearAlignment] Coincidence Probabilities in %f ms: %lu (saved) + %lu (pruned)\n",
+                execution_time, num_saved, num_pruned);
     }
+    log.cp_exec_time = execution_time;
 }
 
 template <typename T>
 void LinearAlignmentInterface<T>::dump_coinc_probs(const std::string& out_dir) const {
-    if (coinc_prob.empty()) {
+    if (cp.empty()) {
         throw std::runtime_error(
             "[LinearAlignment Error] Coincidence probabilities not computed yet! You must run "
             "compute_coincidence_probabilities() first.");
@@ -162,7 +166,7 @@ void LinearAlignmentInterface<T>::dump_coinc_probs(const std::string& out_dir) c
 
     // write all coincidence probabilities to the file
     for (int i = 0; i < seq1.length(); ++i) {
-        for (const auto& item : coinc_prob[i]) {
+        for (const auto& item : cp[i]) {
             const int j = item.first;
             const value_type prob = item.second;
             file << i + 1 << " " << j + 1 << " " << std::fixed << std::setprecision(4) << prob << "\n";

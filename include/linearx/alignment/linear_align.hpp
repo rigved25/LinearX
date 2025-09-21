@@ -17,7 +17,6 @@ class LinearAlignmentInterface {
     std::vector<AlnEdge*> saved_edges;
     AlnEdge best_edge;
     HStateType best_trace;
-    value_type _last_inside_exec_time = 1.0;
 
     void update_best_trace(const AlnEdge& new_edge, const HStateType& new_trace);
 
@@ -27,7 +26,7 @@ class LinearAlignmentInterface {
     template <Mode mode>
     void get_incoming_edges(const int i, const int j, const HStateType type);
 
-    AlignmentLog run_normal_outside(const bool verbose_output);
+    void run_normal_outside(const bool verbose_output);
 
    protected:
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> bestALN;
@@ -78,17 +77,14 @@ class LinearAlignmentInterface {
     }
 
    public:
-    // friend struct AlignBeam;
-
     Phmm* phmm = nullptr;
     Sequence& seq1;
     Sequence& seq2;
     int seq_len_sum;
-
-    std::vector<std::unordered_map<int, value_type>> coinc_prob;
+    std::vector<std::unordered_map<int, value_type>> cp;  // coincidence probabilities
     std::vector<std::vector<int>> prob_rev_idx;
-
     float alpha1, alpha2, alpha3;
+    AlignmentLog log;
 
     LinearAlignmentInterface(Sequence& seq1, Sequence& seq2, float alpha1 = 1.0, float alpha2 = 0.8,
                              float alpha3 = 0.5);
@@ -129,17 +125,17 @@ class LinearAlignmentInterface {
     MultiSeq get_alignment();  // [TODO] Can make it more efficient, by avoiding copy, or using move semantics
 
     template <Mode mode>
-    AlignmentLog compute_inside(const unsigned beam_size = 100, bool verbose_output = true);
-    AlignmentLog compute_outside(const bool use_lazy_outside,
-                                 const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-                                 const bool verbose_output = true);
+    void compute_inside(const unsigned beam_size = 100, bool verbose_output = true);
+    void compute_outside(const bool use_lazy_outside,
+                         const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                         const bool verbose_output = true);
 
     void compute_coincidence_probabilities(const bool verbose_output = true);
     void dump_coinc_probs(const std::string& out_dir) const;
-    inline value_type get_bpp(const int i, const int j) const {
-        const auto& coinc_prob_i = coinc_prob[i];
-        const auto it = coinc_prob_i.find(j);
-        return it == coinc_prob_i.end() ? 0.0 : it->second;
+    inline value_type get_cp(const int i, const int j) const {
+        const auto& cp_i = cp[i];
+        const auto it = cp_i.find(j);
+        return it == cp_i.end() ? 0.0 : it->second;
     }
 
     void print_alpha_beta() const;

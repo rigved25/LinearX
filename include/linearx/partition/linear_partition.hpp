@@ -20,12 +20,11 @@ class LinearPartitionInterface {
     std::vector<HEdge*> saved_hedges;
     TraceInfo best_trace;
     HEdge best_hedge;
-    value_type _last_inside_exec_time = 1.0;
 
     // methods declared in file backward.cpp
     void update_best_trace(const HEdge& new_hedge, const TraceInfo& new_trace);
     void mfe_backtrack(const int i, const int j, const StateType type, Structure& structure);
-    PartitionLog run_regular_outside(const bool verbose_output);
+    void run_regular_outside(const bool verbose_output);
 
    protected:
     std::vector<std::unordered_map<int, State>> bestH;
@@ -81,16 +80,18 @@ class LinearPartitionInterface {
     const EnergyModel& energy_model;
     const bool allow_sharp_turn;
 
+    PartitionLog log;
+
     LinearPartitionInterface(const Sequence& seq, const EnergyModel& energy_model, const bool allow_sharp_turn = false);
     State& get_viterbi();
 
     void reset_beams(const unsigned beam_size);
-    PartitionLog compute_inside(const Mode mode, const unsigned beam_size = 100, const bool verbose_output = true);
-    PartitionLog compute_outside(const bool use_lazy_outside = true,
-                                 const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-                                 const bool verbose_output = true);
+    void compute_inside(const Mode mode, const unsigned beam_size = 100, const bool verbose_output = true);
+    void compute_outside(const bool use_lazy_outside = true,
+                         const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                         const bool verbose_output = true);
 
-    void compute_bpp_matrix(const unsigned beam_size);
+    void compute_bpp_matrix(const unsigned beam_size, const bool verbose_output = false);
     value_type get_ensemble_energy() const;
     void print_alpha_beta() const;
     Structure get_mfe_structure();
@@ -165,7 +166,7 @@ class LinearPartitionInterface {
     template <Mode mode>
     void get_incoming_hedges_Multi(int i, int j);
 
-    std::string get_threshknot_structure(float threshknot_threshold = 0.3f,
+    Structure get_threshknot_structure(float threshknot_threshold = 0.3f,
                                          int min_helix_size = linearx::constants::energy::MIN_HELIX_SIZE) const;
 
     void dump_bpp(const std::string& out_dir) const;

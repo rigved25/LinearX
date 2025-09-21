@@ -66,7 +66,8 @@ void LinearPartitionInterface<T>::reset_beams(const unsigned beam_size) {
 }
 
 template <typename T>
-void LinearPartitionInterface<T>::compute_bpp_matrix(const unsigned beam_size) {
+void LinearPartitionInterface<T>::compute_bpp_matrix(const unsigned beam_size, const bool verbose_output) {
+    auto start_time = chrono::high_resolution_clock::now();
     // clear the existing bpp matrix
     reset_beam_vector(bpp, seq_length, beam_size);
 
@@ -88,6 +89,12 @@ void LinearPartitionInterface<T>::compute_bpp_matrix(const unsigned beam_size) {
             }
         }
     }
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    if (verbose_output) {
+        fprintf(stderr, "[LinearPartition] BPP Matrix Computation Time: %.2f ms\n", execution_time);
+    }
+    log.bpp_exec_time = execution_time;
 }
 
 template <typename T>
@@ -109,7 +116,7 @@ Structure LinearPartitionInterface<T>::get_mfe_structure() {
 }
 
 template <typename T>
-string LinearPartitionInterface<T>::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
+Structure LinearPartitionInterface<T>::get_threshknot_structure(float threshknot_threshold, int min_helix_size) const {
     vector<value_type> best_prob(seq_length, 0.0);
     Structure structure(seq_length);
     set<int> visited;
@@ -146,9 +153,7 @@ string LinearPartitionInterface<T>::get_threshknot_structure(float threshknot_th
     }
 
     structure.removeShortHelices(min_helix_size);
-    string dotBracket = structure.getDotBracket();
-
-    return dotBracket;
+    return structure;
 }
 
 template <typename T>

@@ -7,26 +7,26 @@
 int main(int argc, char* argv[]) {
     if (argc != 11) {
         std::cerr << "Usage: " << argv[0]
-                  << " <msa_file_path> <energy_model> <num_iterations> "
+                  << " <msa_file_path> <out_dir> <energy_model> <num_iterations> "
                      "<use_lazy_outside> <use_prev_itr_beta> <restrict_search> "
-                     "<verbose> <save_logs> <save_probs> <out_dir>\n";
+                     "<verbose> <save_logs> <save_probs>\n";
         return EXIT_FAILURE;
     }
 
     std::string msa_file_path = argv[1];
-    int energy_model_choice = std::stoi(argv[2]);
-    int num_itr = std::stoi(argv[3]);
-    bool use_lazy_outside = std::stoi(argv[4]) != 0;
-    bool use_prev_itr_beta = std::stoi(argv[5]) != 0;
-    bool restrict_search = std::stoi(argv[6]) != 0;
-    bool verbose = std::stoi(argv[7]) != 0;
-    bool save_logs = std::stoi(argv[8]) != 0;
-    bool save_probs = std::stoi(argv[9]) != 0;
-    std::string out_dir = argv[10];
-
+    std::string out_dir = argv[2];
+    int energy_model_choice = std::stoi(argv[3]);
+    int num_itr = std::stoi(argv[4]);
+    bool use_lazy_outside = std::stoi(argv[5]) != 0;
+    bool use_prev_itr_beta = std::stoi(argv[6]) != 0;
+    bool restrict_search = std::stoi(argv[7]) != 0;
+    bool verbose = std::stoi(argv[8]) != 0;
+    bool save_logs = std::stoi(argv[9]) != 0;
+    bool save_probs = std::stoi(argv[10]) != 0;
 
     std::cerr << "Arguments:\n";
     std::cerr << "  msa_file_path: " << msa_file_path << "\n";
+    std::cerr << "  out_dir: " << out_dir << "\n";
     std::cerr << "  energy_model: " << energy_model_choice << "\n";
     std::cerr << "  num_iterations: " << num_itr << "\n";
     std::cerr << "  use_lazy_outside: " << use_lazy_outside << "\n";
@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
     std::cerr << "  verbose: " << verbose << "\n";
     std::cerr << "  save_logs: " << save_logs << "\n";
     std::cerr << "  save_probs: " << save_probs << "\n";
-    std::cerr << "  out_dir: " << out_dir << "\n\n";
 
     try {
         MultiSeq ms;

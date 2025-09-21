@@ -10,14 +10,14 @@ enum HStateType {
 
 struct AlignmentLog {
     value_type seq_identity;
-    value_type total_inside_score;
-    value_type total_outside_score;
-    value_type inside_exec_time;
-    value_type outside_exec_time;
-    float effective_beam_size;
-    std::string run_mode;
-    unsigned long nodes_visited;
-    unsigned long nodes_pruned;
+    bool lazy_outside;
+    value_type best_exec_time;
+    value_type cp_exec_time;
+    std::pair<value_type, value_type> exec_time;             // (inside, outside)
+    std::pair<value_type, value_type> total_score;           // (inside, outside)
+    std::pair<float, float> effective_beam_size;             // (inside, outside)
+    std::pair<unsigned long, unsigned long> states_visited;  // (inside, outside)
+    std::pair<unsigned long, unsigned long> states_pruned;   // (inside, outside)
     unsigned long edges_saved;
     unsigned long edges_pruned;
 };

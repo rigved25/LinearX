@@ -10,6 +10,12 @@ def main():
     )
 
     parser.add_argument("msa_file", help="Path to input MSA FASTA file")
+    parser.add_argument(
+        "out_dir",
+        nargs="?",
+        default="",
+        help="Output directory",
+    )
 
     parser.add_argument(
         "--energy_model",
@@ -68,16 +74,12 @@ def main():
         default=False,
         help="Save BPP and coincidence probabilities (default: False)",
     )
-    parser.add_argument(
-        "--out_dir",
-        default="./ltf_output",
-        help="Output directory for logs and probability matrices (default: './ltf_output')",
-    )
     args = parser.parse_args()
 
     cmd = [
         "./build/linearturbofold",
         args.msa_file,
+        args.out_dir,
         str(args.energy_model),
         str(args.num_iterations),
         str(int(args.use_lazy_outside)),
@@ -86,7 +88,6 @@ def main():
         str(int(args.verbose)),
         str(int(args.save_logs)),
         str(int(args.save_probs)),
-        args.out_dir,
     ]
 
     print("[Executing] " + " ".join(cmd))

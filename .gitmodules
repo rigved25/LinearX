@@ -4,3 +4,6 @@
 [submodule "external/LinearTurboFold"]
 	path = external/LinearTurboFold
 	url = https://github.com/1998apoorvmalik/LinearTurboFold-old
+[submodule "external/rna-eval"]
+	path = external/rna-eval
+	url = https://github.com/1998apoorvmalik/rna-eval

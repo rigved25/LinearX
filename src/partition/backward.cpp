@@ -50,14 +50,13 @@ void LinearPartitionInterface<T>::mfe_backtrack(const int i, const int j, const 
 }
 
 template <typename T>
-PartitionLog LinearPartitionInterface<T>::compute_outside(const bool use_lazy_outside,
-                                                          const value_type deviation_threshold,
-                                                          const bool verbose_output) {
+void LinearPartitionInterface<T>::compute_outside(const bool use_lazy_outside, const value_type deviation_threshold,
+                                                  const bool verbose_output) {
     if (!use_lazy_outside) {
         return run_regular_outside(verbose_output);
     }
     const value_type global_threshold = bestC[seq_length - 1].alpha - deviation_threshold;
-    unsigned long total_nodes = 0, nodes_visited = 0;
+    unsigned long total_states = 0, states_visited = 0;
     unsigned long edges_saved = 0, edges_pruned = 0;
     auto process_beam = [&](const int j, unordered_map<int, State>& beam, const StateType type) {
         for (auto& item : beam) {
@@ -69,9 +68,9 @@ PartitionLog LinearPartitionInterface<T>::compute_outside(const bool use_lazy_ou
                 const auto local_edges_info = backward_update(i, j, state, type, edge_threshold);
                 edges_saved += local_edges_info.first;
                 edges_pruned += local_edges_info.second;
-                nodes_visited += 1;
+                states_visited += 1;
             }
-            total_nodes += 1;
+            total_states += 1;
         }
     };
     if (verbose_output) {
@@ -96,30 +95,29 @@ PartitionLog LinearPartitionInterface<T>::compute_outside(const bool use_lazy_ou
     }
     const auto end_time = chrono::high_resolution_clock::now();
     const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-    const float effective_beam_size = float(nodes_visited) / (4 * seq_length);  // 4 beams (M, M2, P, Multi) per j
+    const float effective_beam_size = float(states_visited) / (4 * seq_length);  // 4 beams (M, M2, P, Multi) per j
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(_last_inside_exec_time, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, 1.0));
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
-        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
-                100.0 * nodes_visited / total_nodes, nodes_visited, total_nodes);
+        fprintf(stderr, "  - Visited States (%.2f%%): %lu (visited) / %lu (total)\n",
+                100.0 * states_visited / total_states, states_visited, total_states);
         fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
     }
     // clean up
     incoming_hedges.clear();
     saved_hedges.clear();
-    return PartitionLog{get_ensemble_energy(),
-                        bestC[seq_length - 1].alpha,
-                        bestC[-1].beta,
-                        _last_inside_exec_time,
-                        execution_time,
-                        effective_beam_size,
-                        "Lazy Outside",
-                        nodes_visited,
-                        total_nodes - nodes_visited,
-                        edges_saved,
-                        edges_pruned};
+
+    // update logs
+    log.lazy_outside = true;
+    log.exec_time.second = execution_time;
+    log.total_energy.second = bestC[-1].beta;
+    log.effective_beam_size.second = effective_beam_size;
+    log.states_visited.second = states_visited;
+    log.states_pruned.second = total_states - states_visited;
+    log.edges_saved = edges_saved;
+    log.edges_pruned = edges_pruned;
 }
 
 template <typename T>
@@ -443,7 +441,7 @@ void LinearPartitionInterface<T>::get_incoming_hedges_Multi(const int i, const i
 }
 
 template <typename T>
-PartitionLog LinearPartitionInterface<T>::run_regular_outside(const bool verbose_output) {
+void LinearPartitionInterface<T>::run_regular_outside(const bool verbose_output) {
     if (verbose_output) {
         fprintf(stderr, "[LinearPartition] Running Outside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
                 seq.length(), seq.name.c_str());
@@ -467,20 +465,14 @@ PartitionLog LinearPartitionInterface<T>::run_regular_outside(const bool verbose
     const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(_last_inside_exec_time, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, 1.0));
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
     }
-    return PartitionLog{get_ensemble_energy(),
-                        bestC[seq_length - 1].alpha,
-                        bestC[-1].beta,
-                        _last_inside_exec_time,
-                        execution_time,
-                        0,
-                        "Regular Outside",
-                        0,
-                        0,
-                        0,
-                        0};
+
+    // update logs
+    log.lazy_outside = false;
+    log.exec_time.second = execution_time;
+    log.total_energy.second = bestC[-1].beta;
 }
 
 // Instantiate templates for LinearPartitionInterface with desired types

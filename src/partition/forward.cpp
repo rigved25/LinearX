@@ -10,35 +10,34 @@ using namespace linearx::constants::math;
 using namespace std;
 
 template <typename T>
-PartitionLog LinearPartitionInterface<T>::compute_inside(const Mode mode, const unsigned beam_size,
-                                                         const bool verbose_output) {
+void LinearPartitionInterface<T>::compute_inside(const Mode mode, const unsigned beam_size, const bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         fprintf(stderr, "[LinearPartition] Running Inside Algorithm (ID: %d | Length: %zu | Name: %s):\n", seq.id,
                 seq.length(), seq.name.c_str());
     }
-    unsigned long nodes_pruned = 0;
+    unsigned long states_pruned = 0;
     for (int j = 0; j < seq_length; j++) {
         if (verbose_output) {
             showProgressBar(j, seq_length - 1);
         }
         // beam of H
-        nodes_pruned += beam_prune(bestH[j], beam_size, StateType::H, j);
+        states_pruned += beam_prune(bestH[j], beam_size, StateType::H, j);
         beamstep_H<PARTITION_INSIDE>(j);
         if (j == 0) {
             continue;
         }
         // beam of Multi
-        nodes_pruned += beam_prune(bestMulti[j], beam_size, StateType::Multi, j);
+        states_pruned += beam_prune(bestMulti[j], beam_size, StateType::Multi, j);
         beamstep_Multi<PARTITION_INSIDE>(j);
         // beam of P
-        nodes_pruned += beam_prune(bestP[j], beam_size, StateType::P, j);
+        states_pruned += beam_prune(bestP[j], beam_size, StateType::P, j);
         beamstep_P<PARTITION_INSIDE>(j);
         // beam of M2
-        nodes_pruned += beam_prune(bestM2[j], beam_size, StateType::M2, j);
+        states_pruned += beam_prune(bestM2[j], beam_size, StateType::M2, j);
         beamstep_M2<PARTITION_INSIDE>(j);
         // beam of M
-        nodes_pruned += beam_prune(bestM[j], beam_size, StateType::M, j);
+        states_pruned += beam_prune(bestM[j], beam_size, StateType::M, j);
         beamstep_M<PARTITION_INSIDE>(j);
         // beam of C
         beamstep_C<PARTITION_INSIDE>(j);
@@ -46,11 +45,10 @@ PartitionLog LinearPartitionInterface<T>::compute_inside(const Mode mode, const 
     // update/print time stats
     const auto end_time = chrono::high_resolution_clock::now();
     const double execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-    _last_inside_exec_time = execution_time;  // store the last inside execution time
     const value_type score = mode == Mode::BEST ? bestC[seq_length - 1].alpha / -100 : get_ensemble_energy();
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.3f ms\n", execution_time);
-        fprintf(stderr, "  - Nodes Pruned: %lu\n", nodes_pruned);
+        fprintf(stderr, "  - Nodes Pruned: %lu\n", states_pruned);
         if (mode == Mode::BEST) {
             fprintf(stderr, "  - MFE (Minimum Free Energy): %.5f kcal/mol\n", score);
         } else {
@@ -58,17 +56,13 @@ PartitionLog LinearPartitionInterface<T>::compute_inside(const Mode mode, const 
         }
     }
     beam_scores.clear();
-    return PartitionLog{get_ensemble_energy(),
-                        bestC[seq_length - 1].alpha,
-                        LOG_ZERO,
-                        execution_time,
-                        -LOG_ZERO,
-                        float(beam_size),
-                        "Inside",
-                        0,
-                        nodes_pruned,
-                        0,
-                        0};
+
+    // update logs
+    log.free_energy_of_ensemble = get_ensemble_energy();
+    log.total_energy.first = bestC[seq_length - 1].alpha;
+    log.exec_time.first = execution_time;
+    log.states_pruned.first = states_pruned;
+    log.effective_beam_size.first = beam_size;
 }
 
 template <typename T>
@@ -170,7 +164,7 @@ unsigned long LinearPartitionInterface<T>::beamstep_Multi(const int j) {
                 const int new_score = -energy_model.score_multi_unpaired(j, jnext);
                 if constexpr (mode == Mode::BEST) {
                     bestMulti[jnext][i].alpha = std::max(bestMulti[jnext][i].alpha, state.alpha + new_score);
-                } else {
+                } else {  // PARTITION_INSIDE
                     State* next_state = check_state(StateType::Multi, i, jnext);
                     if (next_state) {
                         HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
@@ -215,19 +209,20 @@ unsigned long LinearPartitionInterface<T>::beamstep_P(const int j) {
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
             q = next_pair[seq.enc[p]][j];
             while (q < seq_length && ((i - p) + (q - j) - 2) <= MAXLOOPSIZE) {
+                // lambda function
+                auto tmp_func = [p, q, i, j, nucj1, this]() -> int {
+                    return -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
+                                                           seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
+                };
                 // current shape is: p...i (pair) j...q
                 if constexpr (mode == Mode::PARTITION_OUTSIDE) {
                     auto it = bestP[q].find(p);
                     if (it != bestP[q].end()) {
-                        const int new_score =
-                            -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
-                                                            seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
+                        int new_score = tmp_func();
                         update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::P, p, q);
                     }
                 } else {
-                    const int new_score =
-                        -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
-                                                        seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
+                    int new_score = tmp_func();
                     if constexpr (mode == Mode::BEST) {
                         bestP[q][p].alpha = std::max(bestP[q][p].alpha, state.alpha + new_score);
                     } else {
@@ -288,7 +283,7 @@ unsigned long LinearPartitionInterface<T>::beamstep_P(const int j) {
             }
         }
 
-        // // 4. C + P -> C
+        // 4. C + P -> C
         if constexpr (mode == Mode::PARTITION_OUTSIDE) {
             const int new_score = -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i],
                                                                       seq.enc[j], nucj1, seq_length);

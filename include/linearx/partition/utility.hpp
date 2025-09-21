@@ -12,15 +12,15 @@ enum StateType {
 };
 
 struct PartitionLog {
-    value_type free_energy_of_ensemble;  // should be equal to -energy
-    value_type total_inside_energy;      // corresponds to bestC[seq_length - 1].alpha
-    value_type total_outside_energy;     // corresponds to bestC[-1].beta
-    value_type inside_exec_time;
-    value_type outside_exec_time;
-    float effective_beam_size;
-    std::string run_mode;
-    unsigned long nodes_visited;
-    unsigned long nodes_pruned;
+    value_type free_energy_of_ensemble;
+    bool lazy_outside;
+    value_type best_exec_time;
+    value_type bpp_exec_time;
+    std::pair<value_type, value_type> exec_time;     // (inside, outside)
+    std::pair<value_type, value_type> total_energy;  // (inside, outside)
+    std::pair<float, float> effective_beam_size;     // (inside, outside)
+    std::pair<unsigned long, unsigned long> states_visited;  // (inside, outside)
+    std::pair<unsigned long, unsigned long> states_pruned;   // (inside, outside)
     unsigned long edges_saved;
     unsigned long edges_pruned;
 };

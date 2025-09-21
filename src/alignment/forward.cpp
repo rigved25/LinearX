@@ -7,20 +7,20 @@ using namespace linearx::utils;
 
 template <typename T>
 template <Mode mode>
-AlignmentLog LinearAlignmentInterface<T>::compute_inside(const unsigned beam_size, bool verbose_output) {
+void LinearAlignmentInterface<T>::compute_inside(const unsigned beam_size, bool verbose_output) {
     run_beam_size_ = beam_size;
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         cerr << "[LinearAlignment] Running Inside Algorithm:" << endl;
     }
-    unsigned long nodes_pruned = 0;
+    unsigned long state_pruned = 0;
     for (int s = 0; s <= seq_len_sum; ++s) {
         if (verbose_output) {
             linearx::utils::io::showProgressBar(s, seq_len_sum);
         }
         for (const HStateType h : hstate_types) {
             vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(h);
-            nodes_pruned += beam_prune(beam[s]);
+            state_pruned += beam_prune(beam[s]);
             for (auto& item : beam[s]) {
                 const int i = item.first.first;
                 const int j = item.first.second;
@@ -79,32 +79,26 @@ AlignmentLog LinearAlignmentInterface<T>::compute_inside(const unsigned beam_siz
     // update/print time stats
     const auto end_time = chrono::high_resolution_clock::now();
     const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-    _last_inside_exec_time = execution_time;
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.3f ms\n", execution_time);
-        fprintf(stderr, "  - Nodes Pruned: %lu\n", nodes_pruned);
+        fprintf(stderr, "  - States Pruned: %lu\n", state_pruned);
         fprintf(stderr, "  - Score: %.4f\n", bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha);
     }
     // clean up
     beam_scores.clear();
-    return AlignmentLog{-1.0,
-                        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha,
-                        linearx::math::LOG_ZERO,
-                        execution_time,
-                        -linearx::math::LOG_ZERO,
-                        float(beam_size),
-                        "Inside",
-                        0,
-                        nodes_pruned,
-                        0,
-                        0};
+
+    // update logs
+    log.total_score.first = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
+    log.exec_time.first = execution_time;
+    log.states_pruned.first = state_pruned;
+    log.effective_beam_size.first = beam_size;
 }
 
 // instantiate templates for LinearAlignmentInterface with desired types
 #define DECLARE_FUNCS(TYPE)                                                                           \
     template class LinearAlignmentInterface<TYPE>;                                                    \
-    template AlignmentLog LinearAlignmentInterface<TYPE>::compute_inside<Mode::BEST>(unsigned, bool); \
-    template AlignmentLog LinearAlignmentInterface<TYPE>::compute_inside<Mode::PARTITION_INSIDE>(unsigned, bool);
+    template void LinearAlignmentInterface<TYPE>::compute_inside<Mode::BEST>(unsigned, bool); \
+    template void LinearAlignmentInterface<TYPE>::compute_inside<Mode::PARTITION_INSIDE>(unsigned, bool);
 
 #define X(TYPE) DECLARE_FUNCS(TYPE)
 LA_TEMPLATE_TYPES
