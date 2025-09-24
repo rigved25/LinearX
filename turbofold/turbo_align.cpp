@@ -42,6 +42,8 @@ double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, Pa
         ++it;  // Move to the next item
     }
 
+    
+
     if (scores.size() <= beam_size) {
         return VALUE_MIN;
     }
@@ -55,7 +57,7 @@ double TurboAlign::beam_prune(std::unordered_map<std::pair<int, int>, HState, Pa
 }
 
 bool TurboAlign::check_state(const int i, const int j, const HStateType h) {
-    if (use_prev_outside_score && turbofold->itr > 1) {
+    if (restrict_search && turbofold->itr > 1) {
         int s = i + j;
         std::unordered_map<std::pair<int, int>, HState, PairHash> *prev_beamstep;
 
@@ -77,6 +79,11 @@ bool TurboAlign::check_state(const int i, const int j, const HStateType h) {
             double score = xlog_div(xlog_mul(prev_it->second.alpha, prev_it->second.beta), ab.total_alpha);
             keep_state = score > turbofold->alignment_pruning_threshold;
         }
+
+        // cerr << "check_state " << " i: " << i
+        //     << " j: " << j
+        //     << " keep_state: " << keep_state
+        //     << endl;
 
         return keep_state;
     }

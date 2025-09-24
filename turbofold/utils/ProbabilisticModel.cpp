@@ -1,4 +1,5 @@
 #include "ProbabilisticModel.h"
+#include <chrono>
 #include <list>
 #include <cmath>
 #include <cstdio>
@@ -379,7 +380,7 @@ unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSe
 
                         sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
                         // TOCHECK
-                        //if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
+                        // if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
                         // cerr << i <<  " "  << j <<  " "  << first << " "  << second  << " " << ibase  << " " << jbase  << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
@@ -394,7 +395,7 @@ unordered_map<int, AlnProbs> * ProbabilisticModel::LinearMultiAlnResults(MultiSe
                         if (item.second.aln_prob < 0.01) continue;
                         sum_aln_ret[ibase][jbase].aln_prob += item.second.aln_prob;
                         // TOCHECK
-                        //if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
+                        // if (sum_aln_ret[ibase][jbase].aln_prob > 1.0) sum_aln_ret[ibase][jbase].aln_prob = 1.0;
                         // cerr << i <<  " "  << j <<  " "  <<  first << " "  << second << " " << ibase  << " " << jbase << " " <<  item.second.aln_prob << " " << sum_aln_ret[ibase][jbase].aln_prob << endl;
                     }
                 }
@@ -415,20 +416,20 @@ void ProbabilisticModel::LinearConsistencyTransform(int lengthX, unordered_map<i
 
     for(int i = 0; i < lengthX; i++){
 
-        cerr << " i " << i << " xz_CT[i].size() " << xz_consistency_transform[i].size()  << endl;  
+        // cerr << " i " << i << " xz_CT[i].size() " << xz_consistency_transform[i].size()  << endl;  
         for(auto &xz_cand : xz_consistency_transform[i]){
             int k = xz_cand.first;
 
-            cerr << " k " << k << "zy_CT[k].size() " << zy_consistency_transform[k].size()  << endl;  
+            // cerr << " k " << k << "zy_CT[k].size() " << zy_consistency_transform[k].size()  << endl;  
             for(auto &zy_cand : zy_consistency_transform[k]){
                 int j = zy_cand.first;
                 
-                cerr << " j " << j << endl;
+                // cerr << " j " << j << endl;
                 new_xy_consistency_transform[i][j].aln_prob += xz_cand.second.aln_prob * zy_cand.second.aln_prob;
-                cerr << xz_cand.second.aln_prob * zy_cand.second.aln_prob << " " << endl;
+                // cerr << xz_cand.second.aln_prob * zy_cand.second.aln_prob << " " << endl;
             }
         }
-        cerr << endl;
+        // cerr << endl;
     }
 }
 
@@ -475,23 +476,6 @@ vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiCon
             // Contribution from all other sequences
             for (int k = 0; k < numSeqs; k++) {
                 if (k == i || k == j) continue;
-
-                // unordered_map<int, double> *xzCT, *zyCT;
-                // if (k < i) {
-                //     xzCT = consistency_transform[k][i];
-                //     zyCT = consistency_transform[k][j];
-                // }
-                // else if (k > j) {
-                //     xzCT = consistency_transform[i][k];
-                //     zyCT = consistency_transform[j][k];
-                // }
-                // else{
-                //     xzCT = consistency_transform[i][k];
-                //     zyCT = consistency_transform[k][j];
-                // }
-                // cerr << "seqs: " << i << " " << j << " " << k << endl;
-                // LinearConsistencyTransform(seq1Length, xzCT, zyCT, temp_pair_CT);
-
                 LinearConsistencyTransform(seq1Length, consistency_transform[i][k], consistency_transform[k][j], temp_pair_CT);
             }
 
@@ -502,30 +486,6 @@ vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiCon
                     temp_pair_CT[k][l].aln_prob /= numSeqs;
                 }
             }
-
-            // // Optional per-row normalization to enforce probability mass constraint (sum <= 1)
-            // if (std::getenv("LTF_PCT_ROW_NORM")) {
-            //     size_t rows_scaled = 0;
-            //     double max_row_sum_before = 0.0;
-            //     for (int k = 0; k < seq1Length; k++){
-            //         double row_sum = 0.0;
-            //         for (auto &item : temp_pair_CT[k]) {
-            //             row_sum += item.second.aln_prob;
-            //         }
-            //         if (row_sum > max_row_sum_before) max_row_sum_before = row_sum;
-            //         if (row_sum > 1.0 && row_sum > 0.0) {
-            //             const double scale = 1.0 / row_sum;
-            //             for (auto &item : temp_pair_CT[k]) {
-            //                 item.second.aln_prob *= scale;
-            //             }
-            //             rows_scaled++;
-            //         }
-            //     }
-            //     if (rows_scaled > 0) {
-            //         std::cerr << "[PCT-ROW-NORM] pair(" << i << "," << j << ") scaled_rows=" << rows_scaled
-            //                   << " max_row_sum_before=" << std::setprecision(6) << max_row_sum_before << std::endl;
-            //     }
-            // }
 
             size_t entries = 0;
             size_t count_gt1 = 0;
@@ -547,6 +507,7 @@ vector<vector<unordered_map<int, AlnProbs>*>> ProbabilisticModel::LinearMultiCon
                         << " max_row_sum=" << std::setprecision(6) << max_row_sum << std::endl;
             
 
+            // TOCHECK
             // // Clamp to [0, 1] to ensure valid probabilities and avoid MEA inflation
             // size_t pct_total_entries = 0;
             // size_t pct_clamped_entries = 0;
@@ -689,14 +650,24 @@ MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree,
 
     cerr << endl << "[Multi Seq Align] Processing the Guide Tree for initial alignment " << endl;
 
+    auto process_tree_start_time = std::chrono::high_resolution_clock::now();
     MultiSeq *alignment = LinearProcessTree (tree, sequences, consistency_transform, model, hmmBeam);
+    auto process_tree_end_time = std::chrono::high_resolution_clock::now();
+    long long process_tree_ms = std::chrono::duration_cast<std::chrono::milliseconds>(process_tree_end_time - process_tree_start_time).count();
+    std::cerr << "[Multi Sequence Alignment] Total Time taken for Process tree: " << process_tree_ms << "ms" << std::endl;
 
     cout << endl << "[Multi Seq Align] Alignment from the processing of Guide Tree " << endl;
     alignment->print_sequences();
 
+    cerr << endl << "[Multi Seq Align] Initialting Iterative Alignment " << endl;
+
+    auto iter_start_time = std::chrono::high_resolution_clock::now();
     // Iterative refinement
     for (int i = 0; i < num_iterative_refinement_reps; i++)
         LinearDoIterativeRefinement (consistency_transform, model, alignment, i, hmmBeam);
+    auto iter_end_time = std::chrono::high_resolution_clock::now();
+    long long iterative_refine_ms = std::chrono::duration_cast<std::chrono::milliseconds>(iter_end_time - iter_start_time).count();
+    std::cerr << "[Multi Sequence Alignment] Total Time taken for Iterative refinement: " << iterative_refine_ms << "ms" << std::endl;
 
     cerr << endl << "[Multi Seq Align] Completed Iterative Refinement " << endl;
 

@@ -1,7 +1,27 @@
-# Example run commands:
-# python3 eval_perf.py -d ./data/no_aln/ -p ./outputs/lp_v_mea --allow-slip
-# python3 eval_perf.py -d ./data/aln/ -p ./outputs/laf_part_vn_ma_1.2_0.1/threshknot --cnsns --allow-slip
-# python3 eval_perf.py -d ./data/aln/ -p ./outputs/raf_mfe_mea_rna/output --cnsns --allow-slip --backsearch
+'''
+    
+    Example run commands:
+    
+    python3 eval_perf.py -d ./data/no_aln/ -p ./outputs/lp_v_mea --allow-slip
+    
+    python3 eval_perf.py -d ./data/aln/ -p ./outputs/laf_part_vn_ma_1.2_0.1/threshknot --cnsns --allow-slip
+    
+    python3 eval_perf.py -d ./data/aln/ -p ./outputs/raf_mfe_mea_rna/output --cnsns --allow-slip --backsearch
+    
+    python3 eval_perf.py -d ./data/input/ -p ./data/ltf2_res/ --allow-slip
+    
+    
+    python3 ./../eval_perf.py -d ./v2/no_aln/ -p ./ltf2_noflags/
+    python3 ./../eval_perf.py -d ./v2/no_aln/ -p ./ltf2_res/
+    python3 ./../eval_perf.py -d ./v2/no_aln/ -p ./ltf2_lazy/
+    python3 ./../eval_perf.py -d ./v2/no_aln/ -p ./ltf2_lazy_res/
+
+    python3 ./../eval_perf.py -d ./input/ -p ./ltf2_noflags/
+    python3 ./../eval_perf.py -d ./input/ -p ./ltf2_res/
+    python3 ./../eval_perf.py -d ./input/ -p ./ltf2_lazy/
+    python3 ./../eval_perf.py -d ./input/ -p ./ltf2_lazy_res/
+
+'''
 
 import argparse
 import os
@@ -100,17 +120,35 @@ def evaluate_rnastralign_performance(
         ).readlines()
         if backsearch:
             struc_lines = struc_lines[::-1]
-        for line in struc_lines:
-            if line[0] in set(["(", ".", "<", "[", "{"]):
-                if cnsns:
-                    consns_struc = line.strip().split()[0]
+
+        # Helper to detect dot-bracket structure lines while ignoring alignment markers
+        def _is_structure_line(s):
+            s = s.strip()
+            if not s or s.startswith(">"):
+                return False
+            # Exclude any line containing alphanumeric characters (e.g., markers like [Multi ...])
+            if any(ch.isalnum() for ch in s):
+                return False
+            allowed = set(".()[]{}<>-")
+            return all(ch in allowed for ch in s)
+
+        if cnsns:
+            # Find the first valid structure line and map it to all sequences
+            for line in struc_lines:
+                if _is_structure_line(line):
+                    consns_struc = line.strip()
                     for seq in seqs:
                         pred_strucs.append(
                             utility.map_consns_struc_to_aln_seq(consns_struc, seq)[0]
                         )
                     break
-                else:
+        else:
+            # Collect exactly one structure per sequence from the dot-bracket section
+            for line in struc_lines:
+                if _is_structure_line(line):
                     pred_strucs.append(line.strip())
+                    if len(pred_strucs) == len(seqs):
+                        break
 
         assert len(seqs) == len(pred_strucs), (
             "Number of sequences and structures must be equal "
@@ -174,7 +212,7 @@ if __name__ == "__main__":
         "-ct",
         "--ct-path",
         type=str,
-        default="./data/gold-database/",
+        default="",
         help="path to database folder",
     )
     parser.add_argument(

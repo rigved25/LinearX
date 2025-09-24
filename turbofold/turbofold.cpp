@@ -160,7 +160,7 @@ void LinearTurboFold::run_phmm_alignment(){
         float seq_idnty = seq_identities[aln_pair_index];
 
         // get the alignments
-        aln.reset_beams(use_prev_outside_score ? false : true);
+        aln.reset_beams(use_prev_outside_score || restrict_search ? false : true);
         aln.prob_set1();
         // itr <= 1 ? aln.prob_set1() : aln.prob_set2(seq_idnty);
         if (itr > 0) aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
@@ -203,46 +203,45 @@ void LinearTurboFold::run_phmm_alignment(){
         aln.compute_coincidence_probabilities(verbose_state == VerboseState::DEBUG);
 
         if(itr == num_itr + 1) {
-            // TOCHECK Just initializing directly
-            // consistency_transform[k1][k2] = aln.coinc_prob1;
-            // consistency_transform[k2][k1] = aln.coinc_prob2;
+            consistency_transform[k1][k2] = aln.coinc_prob1;
+            consistency_transform[k2][k1] = aln.coinc_prob2;
             // initialize Probability Consistency Transform with the posterior matrix (also called coincidence prob matrix)
             // Deep copy so CT owns memory, avoiding aliasing/dangling pointers
-            const int len1 = aln.sequence1->length();
-            const int len2 = aln.sequence2->length();
+            // const int len1 = aln.sequence1->length();
+            // const int len2 = aln.sequence2->length();
 
-            if (consistency_transform[k1][k2]) { delete[] consistency_transform[k1][k2]; }
-            if (consistency_transform[k2][k1]) { delete[] consistency_transform[k2][k1]; }
+            // if (consistency_transform[k1][k2]) { delete[] consistency_transform[k1][k2]; }
+            // if (consistency_transform[k2][k1]) { delete[] consistency_transform[k2][k1]; }
 
-            std::unordered_map<int, AlnProbs>* copy12 = new std::unordered_map<int, AlnProbs>[len1];
-            for (int i = 0; i < len1; ++i) {
-                for (const auto &kv : aln.coinc_prob1[i]) {
-                    const int j = kv.first;
-                    if (j >= 0 && j < len2) {
-                        copy12[i][j] = kv.second;
-                    }
-                }
-            }
+            // std::unordered_map<int, AlnProbs>* copy12 = new std::unordered_map<int, AlnProbs>[len1];
+            // for (int i = 0; i < len1; ++i) {
+            //     for (const auto &kv : aln.coinc_prob1[i]) {
+            //         const int j = kv.first;
+            //         if (j >= 0 && j < len2) {
+            //             copy12[i][j] = kv.second;
+            //         }
+            //     }
+            // }
 
-            std::unordered_map<int, AlnProbs>* copy21 = new std::unordered_map<int, AlnProbs>[len2];
-            for (int j = 0; j < len2; ++j) {
-                for (const auto &kv : aln.coinc_prob2[j]) {
-                    const int i = kv.first;
-                    if (i >= 0 && i < len1) {
-                        copy21[j][i] = kv.second;
-                    }
-                }
-            }
+            // std::unordered_map<int, AlnProbs>* copy21 = new std::unordered_map<int, AlnProbs>[len2];
+            // for (int j = 0; j < len2; ++j) {
+            //     for (const auto &kv : aln.coinc_prob2[j]) {
+            //         const int i = kv.first;
+            //         if (i >= 0 && i < len1) {
+            //             copy21[j][i] = kv.second;
+            //         }
+            //     }
+            // }
 
-            consistency_transform[k1][k2] = copy12;
-            consistency_transform[k2][k1] = copy21;
+            // consistency_transform[k1][k2] = copy12;
+            // consistency_transform[k2][k1] = copy21;
         }
 
         // dump_coinc_probs(("./vb_info/" + std::to_string(itr) + "_aln_" + std::to_string(k1) + "_" +
         //                             std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
         
-        dump_coinc_aln_probs(("./vb_info/" + std::to_string(itr) + "_aln_prob_" + std::to_string(k1) + "_" +
-                                    std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
+        // dump_coinc_aln_probs(("./vb_info/" + std::to_string(itr) + "_aln_prob_" + std::to_string(k1) + "_" +
+        //                             std::to_string(k2) + ".bpp.txt"), 0.0, aln.coinc_prob1, aln.sequence1->length());
         
 
         if (verbose_state == VerboseState::DEBUG) {
@@ -254,7 +253,7 @@ void LinearTurboFold::run_phmm_alignment(){
         }
 
         // save alignment beams for the next iteration
-        if (use_prev_outside_score) {
+        if (use_prev_outside_score || restrict_search) {
             aln.ab.free();
             aln.ab.save(aln);
         }
@@ -296,7 +295,7 @@ void LinearTurboFold::run() {
         int fold_total_inside_time = 0;
         int fold_total_outside_time = 0;
         for (TurboPartition &pf : pfs) {
-            pf.reset_beams(use_prev_outside_score ? false : true);
+            pf.reset_beams(use_prev_outside_score || restrict_search ? false : true);
 
             auto fold_inside_start_time = std::chrono::high_resolution_clock::now();
             pf.compute_inside(beam_size);
@@ -314,7 +313,7 @@ void LinearTurboFold::run() {
                     .count();
 
             // // save partition function beams for the next iteration
-            if (use_prev_outside_score) {
+            if (use_prev_outside_score || restrict_search) {
                 pf.pfb.free();
                 pf.pfb.save(pf);
             }
@@ -391,17 +390,18 @@ int LinearTurboFold::multiple_sequence_alignment()
     ProbabilisticModel model;
 
     // TOCHECK if removing this mul_aln_results works in this func. Directly use cons_trans
-    vector<vector<unordered_map<int, AlnProbs>*>> mul_aln_results;
-    mul_aln_results.resize(seq_len);
-    for(unsigned int i_seq1 = 0; i_seq1 < seq_len; i_seq1++){
-        mul_aln_results[i_seq1].resize(seq_len);
-        for(unsigned int i_seq2 = 0; i_seq2 < seq_len; i_seq2++) {
-            if(i_seq1 == i_seq2) continue;
-            mul_aln_results[i_seq1][i_seq2] = new unordered_map<int, AlnProbs>[multi_seq->at(i_seq1).length()];
-        }
-    }
+    // vector<vector<unordered_map<int, AlnProbs>*>> mul_aln_results;
+    // mul_aln_results.resize(seq_len);
+    // for(unsigned int i_seq1 = 0; i_seq1 < seq_len; i_seq1++){
+    //     mul_aln_results[i_seq1].resize(seq_len);
+    //     for(unsigned int i_seq2 = 0; i_seq2 < seq_len; i_seq2++) {
+    //         if(i_seq1 == i_seq2) continue;
+    //         mul_aln_results[i_seq1][i_seq2] = new unordered_map<int, AlnProbs>[multi_seq->at(i_seq1).length()];
+    //     }
+    // }
 
     std::cerr << "[Multi Seq Align] Starting the Max Exp Accuracy calculation for all pairs" << std::endl;
+    auto mea_start_time = std::chrono::high_resolution_clock::now();
     for(unsigned int i_seq1 = 0; i_seq1 < seq_len; i_seq1++)
     {
         for(unsigned int i_seq2 = i_seq1+1; i_seq2 < seq_len; i_seq2++)
@@ -412,41 +412,39 @@ int LinearTurboFold::multiple_sequence_alignment()
                 size_t seq2length = multi_seq->at(i_seq2).length();
 
                 // Maximum Expected Accuracy calculation
-                // for (int i = 0; i < seq1length; ++i) {
-                //     auto& cons_trans_i = consistency_transform[i_seq1][i_seq2][i]; // unordered_map<int, Node>
+                for (int i = 0; i < seq1length; ++i) {
+                    auto& cons_trans_i = consistency_transform[i_seq1][i_seq2][i];
 
-                //     for (auto it = cons_trans_i.begin(); it != cons_trans_i.end(); ) {
-                //         int k = it->first;
-                //         double value = it->second.aln_prob;
-
-                //         if (value < 0.01) {
-                //             it = cons_trans_i.erase(it); // returns iterator to next
-                //             consistency_transform[i_seq2][i_seq1][k].erase(i);
-                //         } else {
-                //             ++it;
-                //         }
-                //     }
-                // }
-
-                for(int i = 0; i < seq1length; i++) {
-                    for(auto &item : consistency_transform[i_seq1][i_seq2][i]){
-                        int k = item.first;
-                        double value = item.second.aln_prob;
-                        if (value >= 0.01) {
-                            mul_aln_results[i_seq1][i_seq2][i][k].aln_prob = consistency_transform[i_seq1][i_seq2][i][k].aln_prob;
-                            mul_aln_results[i_seq2][i_seq1][k][i].aln_prob = consistency_transform[i_seq1][i_seq2][i][k].aln_prob;
+                    for (auto it = cons_trans_i.begin(); it != cons_trans_i.end(); ) {
+                        if (it->second.aln_prob < 0.01) {
+                            int k = it->first;
+                            consistency_transform[i_seq2][i_seq1][k].erase(i);
+                            it = cons_trans_i.erase(it); // returns iterator to next
+                        } else {
+                            ++it;
                         }
                     }
                 }
 
+                // for(int i = 0; i < seq1length; i++) {
+                //     for(auto &item : consistency_transform[i_seq1][i_seq2][i]){
+                //         int k = item.first;
+                //         double value = item.second.aln_prob;
+                //         if (value >= 0.01) {
+                //             mul_aln_results[i_seq1][i_seq2][i][k].aln_prob = consistency_transform[i_seq1][i_seq2][i][k].aln_prob;
+                //             mul_aln_results[i_seq2][i_seq1][k][i].aln_prob = consistency_transform[i_seq1][i_seq2][i][k].aln_prob;
+                //         }
+                //     }
+                // }
+
                 pair<string*, float> pair_alignment = model.LinearComputeAlignment(hmm_beam, seq1length, 
-                    seq2length, mul_aln_results[i_seq1][i_seq2]);
+                    seq2length, consistency_transform[i_seq1][i_seq2]);
 
                 std::cerr << "pair: ("<< i_seq1 <<","<< i_seq2 <<") "
                     << " lengths: "<< seq1length
                     << ","<< seq2length
-                    << "  transform-size: "<< mul_aln_results.size()
-                    << "x"<< mul_aln_results[i_seq1].size()
+                    << "  transform-size: "<< consistency_transform.size()
+                    << "x"<< consistency_transform[i_seq1].size()
                     //<< " posterior size: "<< consistency_transform[i_seq1][i_seq2]->size()
                     << " Alignment: " << (*pair_alignment.first)
                     << " MEA: " << pair_alignment.second
@@ -465,6 +463,12 @@ int LinearTurboFold::multiple_sequence_alignment()
             }
         } // i_seq2 loop.
     } // i_seq1 loop.
+    auto mea_end_time = std::chrono::high_resolution_clock::now();
+    if (verbose_state == VerboseState::DEBUG) {
+        std::cerr << "[Multi Sequence Alignment] Total Time taken for Max expected accuracy calculation: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(mea_end_time - mea_start_time).count()
+                  << "ms" << std::endl;
+    }
 
     std::cerr << "[Multi Seq Align] Probabilistic Consistency Transformation" << std::endl;
 
@@ -473,21 +477,28 @@ int LinearTurboFold::multiple_sequence_alignment()
     //     model.LinearMultiConsistencyTransform(multi_seq, consistency_transform);
     // }
 
+    auto pct_start_time = std::chrono::high_resolution_clock::now();
     for (int r = 0; r<num_consistency_reps; r++ ) {
-        vector<vector<unordered_map<int, AlnProbs>*>> new_aln_results = model.LinearMultiConsistencyTransform(multi_seq, mul_aln_results);
+        consistency_transform = model.LinearMultiConsistencyTransform(multi_seq, consistency_transform);
         // now replace the old posterior probs.
-        for (int i = 0; i < seq_len; i++){
-            for (int j = 0; j < seq_len; j++){
-                if (i == j) continue;
-                delete[] mul_aln_results[i][j];
-                mul_aln_results[i][j] = new_aln_results[i][j];
+        // for (int i = 0; i < seq_len; i++){
+        //     for (int j = 0; j < seq_len; j++){
+        //         if (i == j) continue;
+        //         delete[] mul_aln_results[i][j];
+        //         mul_aln_results[i][j] = new_aln_results[i][j];
                 
-                int seq1Length = multi_seq->at(i).length();
-                dump_coinc_aln_probs(("./vb_info/" + std::to_string(r) + "_msa_pct_alnprobs_" + std::to_string(i) + "_" +
-                std::to_string(j) + ".bpp.txt"), 0.0, mul_aln_results[i][j], seq1Length);
+        //         int seq1Length = multi_seq->at(i).length();
+        //         dump_coinc_aln_probs(("./vb_info/" + std::to_string(r) + "_msa_pct_alnprobs_" + std::to_string(i) + "_" +
+        //         std::to_string(j) + ".bpp.txt"), 0.0, mul_aln_results[i][j], seq1Length);
 
-            }
-        }
+        //     }
+        // }
+    }
+    auto pct_end_time = std::chrono::high_resolution_clock::now();
+    if (verbose_state == VerboseState::DEBUG) {
+        std::cerr << "[Multi Sequence Alignment] Total Time taken for Multi consistency transformation: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(pct_end_time - pct_start_time).count()
+                  << "ms" << std::endl;
     }
 
     std::cerr << "[Multi Seq Align] Computing the Guide Tree" << std::endl;
@@ -500,7 +511,16 @@ int LinearTurboFold::multiple_sequence_alignment()
         std::cerr << std::endl;
     }
     this->multi_alignment=NULL;
+    auto tree_start_time = std::chrono::high_resolution_clock::now();
     TreeNode *tree = TreeNode::ComputeTree(distances); // lisiz, guide tree 
+    auto tree_end_time = std::chrono::high_resolution_clock::now();
+
+    if (verbose_state == VerboseState::DEBUG) {
+        long long compute_tree_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tree_end_time - tree_start_time).count();
+        std::cerr << "[Multi Sequence Alignment] Total Time taken for Compute tree: " << compute_tree_ms << "ms" << std::endl;
+    }
+
+    std::cerr << "[Multi Seq Align] Computed the Guide Tree" << std::endl;
 
     // make the final alignment
     // 1. Guide tree computation
@@ -508,8 +528,10 @@ int LinearTurboFold::multiple_sequence_alignment()
     // 3. Iterative Refinement
     std::cerr << "[Multi Seq Align] Initiating Final Alignment" << std::endl;
 
-    this->multi_alignment = model.LinearComputeFinalAlignment(tree, this->multi_seq, mul_aln_results, model, hmm_beam);
+    this->multi_alignment = model.LinearComputeFinalAlignment(tree, this->multi_seq, consistency_transform, model, hmm_beam);
     
+    std::cerr << "[Multi Seq Align] Completed Final Alignment" << std::endl;
+
     // int numSeqs = this->multi_alignment->size();
     // for (int i = 0; i < numSeqs; i++){
     //     mul_aln_results[i].clear();

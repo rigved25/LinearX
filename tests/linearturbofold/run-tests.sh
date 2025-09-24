@@ -2,11 +2,40 @@
 
 # Execute the commands one by one
 
-# 0. LTF 2: basic test
-./run.sh ./input outputbasic/ 0 0 1 0
+# # 0. LTF 2: basic test
+# ./run.sh ./input outputbasic/ 0 0 0 1 0
 
-# 1. LTF 2: No flag
-# ./run.sh ./../../eval/rnastralign/data/v2/no_aln outputfinal_rnastraln/ 0 0 0 0
+# 0. LTF 2: basic test
+./run.sh ./input outputbasic_noflag/ 0 0 0 0 0
+
+# # # 0. LTF 2: basic test
+# # ./run.sh ./input outputbasic_pos/ 0 0 1 0 0
+
+# 0. LTF 2: basic test
+./run.sh ./input outputbasic_res/ 0 0 0 1 0
+
+# 0. LTF 2: basic test
+./run.sh ./input outputbasic_lazy/ 0 1 0 0 0
+
+# # 0. LTF 2: basic test
+# ./run.sh ./input outputbasic_lazy_pos/ 0 1 1 0 0
+
+# 0. LTF 2: basic test
+./run.sh ./input outputbasic_lazy_res/ 0 1 0 1 0
+
+# # 1. LTF 2: No flag
+# ./run.sh ./../../eval/rnastralign/data/v2/no_aln outputfinal_rnastraln_noflag/ 0 0 0 0 0
+
+# # 1. LTF 2: Lazy Outside
+# ./run.sh ./../../eval/rnastralign/data/v2/no_aln outputfinal_rnastraln_lazy/ 0 1 0 0 0
+
+# # 1. LTF 2: No flag
+# ./run.sh ./../../eval/rnastralign/data/v2/no_aln outputfinal_rnastraln_lazy_res/ 0 1 0 1 0
+
+# # 1. LTF 2: Lazy Outside
+# ./run.sh ./../../eval/rnastralign/data/v2/no_aln outputfinal_rnastraln_res/ 0 0 0 1 0
+
+
 
 # 1. LTF 2: Vienna + Lazy Outside
 # ./run.sh ./../../eval/rnastralign/data/v1/no_aln output-final/rnastraln_ltf2_ltf1conf_vn_lazyout 0 1 0 0

@@ -45,3 +45,6 @@ parity*/
 
 # ignore mac config files
 .DS_Store
+
+*.fasta
+*.png

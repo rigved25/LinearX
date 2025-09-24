@@ -30,6 +30,7 @@ class LinearTurboFold {
     const int num_itr;  // number of iterations
     const bool use_lazy_outside;
     const bool use_prev_outside_score;
+    const bool restrict_search;
     const bool shrink_beam;
     const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
 
@@ -46,7 +47,7 @@ class LinearTurboFold {
     vector<vector<unordered_map<int, AlnProbs>*>> consistency_transform;
 
     LinearTurboFold(MultiSeq *multi_seq, const EnergyParamsType energy_params, const int num_itr,
-                    const bool use_lazy_outside, const bool use_prev_outside_score, const bool shrink_beam,
+                    const bool use_lazy_outside, const bool use_prev_outside_score, const bool restrict_search, const bool shrink_beam,
                     const float lambda = 0.3, const float alignment_pruning_threshold = -DEVIATION_THRESHOLD,
                     const float folding_pruning_threshold = -DEVIATION_THRESHOLD, const float threshknot_threshold = 0.3,
                     const float min_helix_size = 3, VerboseState verbose_state = VerboseState::DEBUG)
@@ -55,6 +56,7 @@ class LinearTurboFold {
           num_itr(num_itr),
           use_lazy_outside(use_lazy_outside),
           use_prev_outside_score(use_prev_outside_score),
+          restrict_search(restrict_search),
           shrink_beam(shrink_beam),
           lambda(lambda),
           alignment_pruning_threshold(alignment_pruning_threshold),
@@ -76,7 +78,7 @@ class LinearTurboFold {
         for (int i = 0; i < multi_seq->size(); i++) {
             multi_seq->at(i).k_id = i;  // set k_id for each sequence
             pfs.emplace_back(this, &(multi_seq->at(i)), energy_model,
-                             use_prev_outside_score);  // better than pfs.push_back(),
+                             use_prev_outside_score, restrict_search);  // better than pfs.push_back(),
                                                        // creates Partition object directly
                                                        // inside the container
             
@@ -84,7 +86,7 @@ class LinearTurboFold {
 
             // enumerate all possible k^2 sequence pairs and create LinearAlign objects
             for (int j = i + 1; j < multi_seq->size(); j++) {
-                alns.emplace_back(this, &(multi_seq->at(i)), &(multi_seq->at(j)), use_prev_outside_score);
+                alns.emplace_back(this, &(multi_seq->at(i)), &(multi_seq->at(j)), use_prev_outside_score, restrict_search);
                 seq_identities.push_back(0.0f);
             }
 
@@ -153,6 +155,7 @@ class TurboPartition final : public Partition {
     LinearTurboFold *turbofold;
     PartitionFunctionBeam pfb;
     bool use_prev_outside_score;
+    bool restrict_search;
 
    public:
     friend class LinearTurboFold;
@@ -160,11 +163,12 @@ class TurboPartition final : public Partition {
     ProbAccm prob_accm;
 
     TurboPartition(LinearTurboFold *turbofold, const Seq *sequence, EnergyModel &energy_model,
-                   bool use_prev_outside_score, bool allow_sharp_turn = false, bool verbose_output = true)
+                   bool use_prev_outside_score, bool restrict_search, bool allow_sharp_turn = false, bool verbose_output = true)
         : Partition(sequence, energy_model, InsideMode::PARTITION, allow_sharp_turn, verbose_output),
           turbofold(turbofold),
-          pfb(use_prev_outside_score ? sequence->length() : 0),
-          use_prev_outside_score(use_prev_outside_score) {}
+          pfb((use_prev_outside_score || restrict_search) ? sequence->length() : 0),
+          use_prev_outside_score(use_prev_outside_score),
+          restrict_search(restrict_search) {}
 
     ~TurboPartition();
 
@@ -179,16 +183,19 @@ class TurboAlign final : public LinearAlign {
     LinearTurboFold *turbofold;
     AlignBeam ab;
     bool use_prev_outside_score;
+    bool restrict_search;
 
    public:
     friend class LinearTurboFold;
 
     TurboAlign(LinearTurboFold *turbofold, Seq *sequence1, Seq *sequence2, bool use_prev_outside_score,
-               bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8, double alpha3 = 0.5)
+               bool restrict_search, bool verbose = false, double alpha1 = 1.0, double alpha2 = 0.8, double alpha3 = 0.5)
         : LinearAlign(sequence1, sequence2, verbose, alpha1, alpha2, alpha3),
           turbofold(turbofold),
-          ab(use_prev_outside_score ? sequence1->length() : 0, use_prev_outside_score ? sequence2->length() : 0),
-          use_prev_outside_score(use_prev_outside_score) {}
+          ab((use_prev_outside_score || restrict_search) ? sequence1->length() : 0, 
+             (use_prev_outside_score || restrict_search) ? sequence2->length() : 0),
+          use_prev_outside_score(use_prev_outside_score),
+          restrict_search(restrict_search) {}
 
     ~TurboAlign();
 

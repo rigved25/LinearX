@@ -317,7 +317,6 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
                 it = coinc_prob1[i].erase(it);  // erase and get the next valid iterator
                 ++num_pruned;
             } else {
-                // TOCHECK EXP
                 prob = Fast_Exp(prob);
                 aln_prob = Fast_Exp(aln_prob);
 
@@ -345,7 +344,6 @@ void LinearAlign::compute_coincidence_probabilities(bool verbose_output) {
             if (prob < phmm->get_fam_threshold()) {
                 it = coinc_prob2[i].erase(it);  // erase and get the next valid iterator
             } else {
-                // TOCHECK EXP
                 prob = Fast_Exp(prob);
                 aln_prob = Fast_Exp(aln_prob);
 
