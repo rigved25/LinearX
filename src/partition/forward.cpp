@@ -81,18 +81,11 @@ unsigned long LinearPartitionInterface<T>::beamstep_H(const int j) {
         else if (jnext - j - 1 == 3)  // 5:tri
             tetra_hex_tri = if_triloops[j];
 
-        if constexpr (mode != Mode::PARTITION_OUTSIDE) {
-            const int new_score = -energy_model.score_hairpin(j, jnext, seq.enc[j], seq.enc[j + 1], seq.enc[jnext - 1],
-                                                              seq.enc[jnext], tetra_hex_tri);
-            if constexpr (mode == Mode::BEST) {
-                bestH[jnext][j].alpha = std::max(bestH[jnext][j].alpha, static_cast<value_type>(new_score));
-            } else {
-                State* next_state = check_state(StateType::H, j, jnext);
-                if (next_state) {
-                    HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
-                }
-            }
-        }
+        const auto get_score = [this, j, jnext, tetra_hex_tri]() constexpr -> int {
+            return -energy_model.score_hairpin(j, jnext, seq.enc[j], seq.enc[j + 1], seq.enc[jnext - 1], seq.enc[jnext],
+                                               tetra_hex_tri);
+        };
+        update_state<mode>(get_score, nullptr, nullptr, StateType::H, j, jnext);
     }
     // for every state h in H[j]
     //   1. extend H(i, j) to H(i, jnext)
@@ -111,36 +104,15 @@ unsigned long LinearPartitionInterface<T>::beamstep_H(const int j) {
             else if (jnext - i - 1 == 3)  // 5:tri
                 tetra_hex_tri = if_triloops[i];
 
-            // update_score(StateType::H, i, jnext, score);
-            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                continue;  // do nothing
-            } else {
-                const int new_score = -energy_model.score_hairpin(i, jnext, seq.enc[i], seq.enc[i + 1],
-                                                                  seq.enc[jnext - 1], seq.enc[jnext], tetra_hex_tri);
-                if constexpr (mode == Mode::BEST) {
-                    bestH[jnext][i].alpha = std::max(bestH[jnext][i].alpha, static_cast<value_type>(new_score));
-                } else {
-                    State* next_state = check_state(StateType::H, i, jnext);
-                    if (next_state) {
-                        HEdge(new_score, nullptr, nullptr).update_state_alpha(*next_state);
-                    }
-                }
-            }
+            const auto get_score = [this, i, jnext, tetra_hex_tri]() constexpr -> int {
+                return -energy_model.score_hairpin(i, jnext, seq.enc[i], seq.enc[i + 1], seq.enc[jnext - 1],
+                                                   seq.enc[jnext], tetra_hex_tri);
+            };
+            update_state<mode>(get_score, nullptr, nullptr, StateType::H, i, jnext);
         }
         // 2. H(i, j) -> P(i, j)
-        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-            continue;  // do nothing
-        } else {
-            const int new_score = 0;
-            if constexpr (mode == Mode::BEST) {
-                bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
-            } else {
-                State* next_state = check_state(StateType::P, i, j);
-                if (next_state) {
-                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                }
-            }
-        }
+        const auto get_score = []() constexpr -> int { return 0; };
+        update_state<mode>(get_score, &state, nullptr, StateType::P, i, j);
     }
     return 0;
 }
@@ -154,45 +126,17 @@ unsigned long LinearPartitionInterface<T>::beamstep_Multi(const int j) {
         // 1. Multi(i, j) -> Multi(i, jnext)
         const int jnext = next_pair[seq.enc[i]][j];
         if (jnext < seq_length) {
-            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                auto it = bestMulti[jnext].find(i);
-                if (it != bestMulti[jnext].end()) {
-                    const int new_score = -energy_model.score_multi_unpaired(j, jnext);
-                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::Multi, i, jnext);
-                }
-            } else {
-                const int new_score = -energy_model.score_multi_unpaired(j, jnext);
-                if constexpr (mode == Mode::BEST) {
-                    bestMulti[jnext][i].alpha = std::max(bestMulti[jnext][i].alpha, state.alpha + new_score);
-                } else {  // PARTITION_INSIDE
-                    State* next_state = check_state(StateType::Multi, i, jnext);
-                    if (next_state) {
-                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                    }
-                }
-            }
+            const auto get_score = [this, j, jnext]() constexpr -> int {
+                return -energy_model.score_multi_unpaired(j, jnext);
+            };
+            update_state<mode>(get_score, &state, nullptr, StateType::Multi, i, jnext);
         }
 
         // 2. generate P(i, j)
-        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-            auto it = bestP[j].find(i);
-            if (it != bestP[j].end()) {
-                const int new_score =
-                    -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
-                update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::P, i, j);
-            }
-        } else {
-            const int new_score =
-                -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
-            if constexpr (mode == Mode::BEST) {
-                bestP[j][i].alpha = std::max(bestP[j][i].alpha, state.alpha + new_score);
-            } else {
-                State* next_state = check_state(StateType::P, i, j);
-                if (next_state) {
-                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                }
-            }
-        }
+        const auto get_score = [this, i, j]() constexpr -> int {
+            return -energy_model.score_multi(i, j, seq.enc[i], seq.enc[i + 1], seq.enc[j - 1], seq.enc[j], seq_length);
+        };
+        update_state<mode>(get_score, &state, nullptr, StateType::P, i, j);
     }
     return 0;
 }
@@ -210,93 +154,41 @@ unsigned long LinearPartitionInterface<T>::beamstep_P(const int j) {
             q = next_pair[seq.enc[p]][j];
             while (q < seq_length && ((i - p) + (q - j) - 2) <= MAXLOOPSIZE) {
                 // lambda function
-                auto tmp_func = [p, q, i, j, nucj1, this]() -> int {
+                const auto get_score = [this, p, q, i, j, nucj1]() constexpr -> int {
                     return -energy_model.score_single_loop(p, q, i, j, seq.enc[p], seq.enc[p + 1], seq.enc[q - 1],
                                                            seq.enc[q], seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1);
                 };
                 // current shape is: p...i (pair) j...q
-                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                    auto it = bestP[q].find(p);
-                    if (it != bestP[q].end()) {
-                        int new_score = tmp_func();
-                        update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::P, p, q);
-                    }
-                } else {
-                    int new_score = tmp_func();
-                    if constexpr (mode == Mode::BEST) {
-                        bestP[q][p].alpha = std::max(bestP[q][p].alpha, state.alpha + new_score);
-                    } else {
-                        State* next_state = check_state(StateType::P, p, q);
-                        if (next_state) {
-                            HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                        }
-                    }
-                }
+                update_state<mode>(get_score, &state, nullptr, StateType::P, p, q);
                 q = next_pair[seq.enc[p]][q];
             }
         }
         // 2. P -> M
         if (i > 0 && j < seq_length - 1) {
-            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                auto it = bestM[j].find(i);
-                if (it != bestM[j].end()) {
-                    const int new_score =
-                        -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
-                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j);
-                }
-            } else {
-                const int new_score =
-                    -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
-                if constexpr (mode == Mode::BEST) {
-                    bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
-                } else {
-                    State* next_state = check_state(StateType::M, i, j);
-                    if (next_state) {
-                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                    }
-                }
-            }
+            const auto get_score = [this, i, j, nucj1]() constexpr -> int {
+                return -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
+            };
+            update_state<mode>(get_score, &state, nullptr, StateType::M, i, j);
         }
         // 3. M + P -> M2
         const int h = i - 1;
         if (h > 0 && !bestM[h].empty()) {
-            const int new_score =
-                -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
+            const auto get_score = [this, i, j, nucj1]() constexpr -> int {
+                return -energy_model.score_M1(i, j, j, seq.enc[i - 1], seq.enc[i], seq.enc[j], nucj1, seq_length);
+            };
             for (auto& m_item : bestM[h]) {
                 const int g = m_item.first;
                 State& m_state = m_item.second;
-                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                    auto it = bestM2[j].find(g);
-                    if (it != bestM2[j].end()) {
-                        update_state_beta(HEdge(new_score, &m_state, &state), &it->second, StateType::M2, g, j);
-                    }
-                } else {
-                    if constexpr (mode == Mode::BEST) {
-                        bestM2[j][g].alpha = std::max(bestM2[j][g].alpha, m_state.alpha + state.alpha + new_score);
-                    } else {
-                        State* next_state = check_state(StateType::M2, g, j);
-                        if (next_state) {
-                            HEdge(new_score, &m_state, &state).update_state_alpha(*next_state);
-                        }
-                    }
-                }
+                update_state<mode>(get_score, &m_state, &state, StateType::M2, g, j);
             }
         }
 
         // 4. C + P -> C
-        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-            const int new_score = -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i],
-                                                                      seq.enc[j], nucj1, seq_length);
-            update_state_beta(HEdge(new_score, &bestC[h], &state), &bestC[j], StateType::C, 0, j);
-        } else {
-            const int new_score = -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i],
-                                                                      seq.enc[j], nucj1, seq_length);
-            if constexpr (mode == Mode::BEST) {
-                bestC[j].alpha = std::max(bestC[j].alpha, bestC[h].alpha + state.alpha + new_score);
-            } else {
-                HEdge(new_score, &bestC[h], &state).update_state_alpha(bestC[j]);
-            }
-        }
+        const auto get_score = [this, h, i, j, nucj1]() constexpr -> int {
+            return -energy_model.score_external_paired(i, j, i > 0 ? seq.enc[h] : -1, seq.enc[i], seq.enc[j], nucj1,
+                                                       seq_length);
+        };
+        update_state<mode>(get_score, &bestC[h], &state, StateType::C, 0, j);
     }
     return 0;
 }
@@ -312,45 +204,15 @@ unsigned long LinearPartitionInterface<T>::beamstep_M2(const int j) {
         for (int p = i - 1; p >= max(0, i - MAXLOOPSIZE); --p) {
             q = next_pair[seq.enc[p]][j];
             if (q < seq_length) {
-                if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                    auto it = bestMulti[q].find(p);
-                    if (it != bestMulti[q].end()) {
-                        const int new_score = -(energy_model.score_multi_unpaired(p, i - 1) +
-                                                energy_model.score_multi_unpaired(j, q - 1));
-                        update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::Multi, p, q);
-                    }
-                } else {
-                    const int new_score =
-                        -(energy_model.score_multi_unpaired(p, i - 1) + energy_model.score_multi_unpaired(j, q - 1));
-                    if constexpr (mode == Mode::BEST) {
-                        bestMulti[q][p].alpha = std::max(bestMulti[q][p].alpha, state.alpha + new_score);
-                    } else {
-                        State* next_state = check_state(StateType::Multi, p, q);
-                        if (next_state) {
-                            HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                        }
-                    }
-                }
+                const auto get_score = [this, p, i, j, q]() constexpr -> int {
+                    return -(energy_model.score_multi_unpaired(p, i - 1) + energy_model.score_multi_unpaired(j, q - 1));
+                };
+                update_state<mode>(get_score, &state, nullptr, StateType::Multi, p, q);
             }
         }
         // 2. M2 -> M
-        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-            auto it = bestM[j].find(i);
-            if (it != bestM[j].end()) {
-                const int new_score = 0;
-                update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j);
-            }
-        } else {
-            const int new_score = 0;
-            if constexpr (mode == Mode::BEST) {
-                bestM[j][i].alpha = std::max(bestM[j][i].alpha, state.alpha + new_score);
-            } else {
-                State* next_state = check_state(StateType::M, i, j);
-                if (next_state) {
-                    HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                }
-            }
-        }
+        const auto get_score = []() constexpr -> int { return 0; };
+        update_state<mode>(get_score, &state, nullptr, StateType::M, i, j);
     }
     return 0;
 }
@@ -363,23 +225,10 @@ unsigned long LinearPartitionInterface<T>::beamstep_M(const int j) {
         const int i = item.first;
         State& state = item.second;
         if (j < seq_length - 1) {
-            if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-                auto it = bestM[j + 1].find(i);
-                if (it != bestM[j + 1].end()) {
-                    const int new_score = -energy_model.score_multi_unpaired(j, j + 1);
-                    update_state_beta(HEdge(new_score, &state, nullptr), &it->second, StateType::M, i, j + 1);
-                }
-            } else {
-                const int new_score = -energy_model.score_multi_unpaired(j, j + 1);
-                if constexpr (mode == Mode::BEST) {
-                    bestM[j + 1][i].alpha = std::max(bestM[j + 1][i].alpha, state.alpha + new_score);
-                } else {
-                    State* next_state = check_state(StateType::M, i, j + 1);
-                    if (next_state) {
-                        HEdge(new_score, &state, nullptr).update_state_alpha(*next_state);
-                    }
-                }
-            }
+            const auto get_score = [this, j]() constexpr -> int {
+                return -energy_model.score_multi_unpaired(j, j + 1);
+            };
+            update_state<mode>(get_score, &state, nullptr, StateType::M, i, j + 1);
         }
     }
     return 0;
@@ -390,16 +239,10 @@ template <Mode mode>
 void LinearPartitionInterface<T>::beamstep_C(const int j) {
     // C -> C + U
     if (j < seq_length - 1) {
-        const int new_score = -energy_model.score_external_unpaired(j + 1, j + 1);
-        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
-            update_state_beta(HEdge(new_score, &bestC[j], nullptr), &bestC[j + 1], StateType::C, 0, j + 1);
-        } else {
-            if constexpr (mode == Mode::BEST) {
-                bestC[j + 1].alpha = std::max(bestC[j + 1].alpha, bestC[j].alpha + new_score);
-            } else {
-                HEdge(new_score, &bestC[j], nullptr).update_state_alpha(bestC[j + 1]);
-            }
-        }
+        const auto get_score = [this, j]() constexpr -> int {
+            return -energy_model.score_external_unpaired(j + 1, j + 1);
+        };
+        update_state<mode>(get_score, &bestC[j], nullptr, StateType::C, 0, j + 1);
     }
 }
 

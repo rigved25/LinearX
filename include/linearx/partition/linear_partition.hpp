@@ -38,8 +38,15 @@ class LinearPartitionInterface {
         return static_cast<T*>(this)->check_state(type, i, j);
     }
 
-    inline void update_state_beta(HEdge hedge, State* state, const StateType type, const int i, const int j) {
-        return static_cast<T*>(this)->update_state_beta(hedge, state, type, i, j);
+    template <Mode mode, typename F>
+    inline void update_state(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+                             const unsigned j) {
+        if constexpr (mode == Mode::PARTITION_OUTSIDE) {
+            static_cast<T*>(this)->update_state_beta(std::forward<F>(get_score), left, right, type, i, j);
+        } else {
+            static_cast<T*>(this)->template update_state_alpha<mode>(std::forward<F>(get_score), left, right, type, i,
+                                                                     j);
+        }
     }
 
     inline virtual unsigned long beam_prune(std::unordered_map<int, State>& beamstep, const unsigned beam_size,
@@ -119,14 +126,14 @@ class LinearPartitionInterface {
             default:
                 return nullptr;
         }
+        if (create) {
+            return &(*beam)[i];
+        }
         const auto it = beam->find(i);
         if (it != beam->end()) {
             return &it->second;
-        } else if (create) {
-            return &(*beam)[i];
-        } else {
-            return nullptr;
         }
+        return nullptr;
     }
 
     inline value_type get_bpp(const int i, const int j) const {
@@ -167,7 +174,7 @@ class LinearPartitionInterface {
     void get_incoming_hedges_Multi(int i, int j);
 
     Structure get_threshknot_structure(float threshknot_threshold = 0.3f,
-                                         int min_helix_size = linearx::constants::energy::MIN_HELIX_SIZE) const;
+                                       int min_helix_size = linearx::constants::energy::MIN_HELIX_SIZE) const;
 
     void dump_bpp(const std::string& out_dir) const;
 };
@@ -181,8 +188,32 @@ class LinearPartition final : public LinearPartitionInterface<LinearPartition> {
         return LinearPartitionInterface<LinearPartition>::get_state(type, i, j, true);
     }
 
-    inline void update_state_beta(HEdge hedge, State* state, const StateType type, const int i, const int j) {
-        hedge.weight *= linearx::constants::energy::INV_KT;
-        hedge.update_state_beta(*state);
+    template <Mode mode, typename F>
+    inline void update_state_alpha(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+                                   const unsigned j) {
+        State* next_state = get_state(type, i, j, true);
+        if constexpr (mode == Mode::BEST) {
+            next_state->alpha =
+                std::max(next_state->alpha, (left ? left->alpha : 0) + (right ? right->alpha : 0) + get_score());
+        } else {  // PARTITION_INSIDE
+            const value_type weight = get_score() * linearx::constants::energy::INV_KT;
+            next_state->alpha =
+                LOG_SUM(next_state->alpha, (left ? left->alpha : 0) + (right ? right->alpha : 0) + weight);
+        }
+    }
+
+    template <typename F>
+    inline void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+                                  const unsigned j) {
+        const State* next_state = get_state(type, i, j, false);
+        if (next_state) {
+            const value_type weight = get_score() * linearx::constants::energy::INV_KT;
+            if (!right) {
+                left->beta = LOG_SUM(left->beta, weight + next_state->beta);
+            } else {
+                left->beta = LOG_SUM(left->beta, right->alpha + weight + next_state->beta);
+                right->beta = LOG_SUM(right->beta, left->alpha + weight + next_state->beta);
+            }
+        }
     }
 };

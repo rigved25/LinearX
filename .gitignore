@@ -1,4 +1,6 @@
 .vscode
 build
 x-runs-x
-eval
+# eval
+outputs
+.DS_Store

@@ -16,9 +16,9 @@ struct PartitionLog {
     bool lazy_outside;
     value_type best_exec_time;
     value_type bpp_exec_time;
-    std::pair<value_type, value_type> exec_time;     // (inside, outside)
-    std::pair<value_type, value_type> total_energy;  // (inside, outside)
-    std::pair<float, float> effective_beam_size;     // (inside, outside)
+    std::pair<value_type, value_type> exec_time;             // (inside, outside)
+    std::pair<value_type, value_type> total_energy;          // (inside, outside)
+    std::pair<float, float> effective_beam_size;             // (inside, outside)
     std::pair<unsigned long, unsigned long> states_visited;  // (inside, outside)
     std::pair<unsigned long, unsigned long> states_pruned;   // (inside, outside)
     unsigned long edges_saved;
@@ -83,12 +83,12 @@ struct HEdge {
 
     // set next_state alpha using current states and the edge
     inline void update_state_alpha(State& next_state) {
-        value_type prev_score = (left ? left->alpha : 0) + (right ? right->alpha : 0);
-        next_state.alpha = LOG_SUM(next_state.alpha, prev_score + (weight * linearx::constants::energy::INV_KT));
+        const value_type prev_score = (left ? left->alpha : 0) + (right ? right->alpha : 0);  // unary or binary edge
+        next_state.alpha = LOG_SUM(next_state.alpha, prev_score + weight);
     }
 
     // set current states beta using next_state and the edge
-    inline void update_state_beta(State& next_state) {
+    inline void update_state_beta(const State& next_state) {
         if (!right) {
             left->beta = LOG_SUM(left->beta, weight + next_state.beta);
         } else {

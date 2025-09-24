@@ -119,7 +119,7 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     }
 
     inline State* check_state(const StateType type, const int i, const int j) {
-        if (turbofold.restrict_search_ && turbofold.curr_itr > 0) {
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 0 && type != StateType::H) {
             State* state = TurboPartition::get_saved_state(type, i, j);
             if (!state) {
                 return nullptr;
@@ -128,19 +128,42 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
                 return nullptr;
             }
             if (!turbofold.use_lazy_outside_ &&
-                LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) <= turbofold.folding_pruning_threshold) {
+                LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) <= -turbofold.folding_pruning_threshold) {
                 return nullptr;
             }
         }
         return LinearPartitionInterface<TurboPartition>::get_state(type, i, j, true);
     }
 
-    inline void update_state_beta(HEdge hedge, State* state, const StateType type, const int i, const int j) {
-        hedge.weight *= linearx::constants::energy::INV_KT;
-        if (turbofold.curr_itr > 0 && type == StateType::P) {
-            hedge.weight = LOG_MUL(hedge.weight, extinfo_cache[j][i]);  // adjust weight with extrinsic info
+    template <Mode mode, typename F>
+    inline void update_state_alpha(F&& get_score, const State* left, const State* right, const StateType type,
+                                   const unsigned i, const unsigned j) {
+        if constexpr (mode == Mode::PARTITION_INSIDE) {
+            State* next_state = TurboPartition::check_state(type, i, j);
+            if (next_state) {
+                const value_type weight = get_score() * linearx::constants::energy::INV_KT;
+                next_state->alpha =
+                    LOG_SUM(next_state->alpha, (left ? left->alpha : 0) + (right ? right->alpha : 0) + weight);
+            }
         }
-        hedge.update_state_beta(*state);
+    }
+
+    template <typename F>
+    inline void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+                                  const unsigned j) {
+        const State* next_state = get_state(type, i, j, false);
+        if (next_state) {
+            value_type weight = get_score() * linearx::constants::energy::INV_KT;
+            if (turbofold.curr_itr > 0 && type == StateType::P) {
+                weight = LOG_MUL(weight, extinfo_cache[j][i]);  // adjust weight with extrinsic info
+            }
+            if (!right) {
+                left->beta = LOG_SUM(left->beta, weight + next_state->beta);
+            } else {
+                left->beta = LOG_SUM(left->beta, right->alpha + weight + next_state->beta);
+                right->beta = LOG_SUM(right->beta, left->alpha + weight + next_state->beta);
+            }
+        }
     }
 
     void calc_prob_accm();
@@ -198,15 +221,15 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
             if (!state) {
                 return nullptr;
             }
-            // if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
-            //     return nullptr;
-            // }
-            // if (!turbofold.use_lazy_outside_ &&
-            //     LOG_DIV(LOG_MUL(state->alpha, state->beta),
-            //             saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
-            //         turbofold.alignment_pruning_threshold) {
-            //     return nullptr;
-            // }
+            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
+                return nullptr;
+            }
+            if (!turbofold.use_lazy_outside_ &&
+                LOG_DIV(LOG_MUL(state->alpha, state->beta),
+                        saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
+                    -turbofold.alignment_pruning_threshold) {
+                return nullptr;
+            }
         }
         return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
     }

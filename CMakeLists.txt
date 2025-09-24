@@ -34,6 +34,8 @@ add_compile_options(
     -fno-math-errno
     -funroll-loops
     -fomit-frame-pointer
+    # -Rpass=inline
+    # -Rpass-missed=inline
 )
 
 # Optional: disable asserts
