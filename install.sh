@@ -5,8 +5,10 @@ set -e
 git submodule update --init --recursive
 
 # setup RNA Eval
-chmod +X ./external/rna-eval/setup_env.sh
-./external/rna-eval/setup_env.sh
+cd external/rna-eval
+chmod +X ./setup_env.sh
+./setup_env.sh
 
 # make build script executable
+cd ../../
 chmod +x ./build.sh
