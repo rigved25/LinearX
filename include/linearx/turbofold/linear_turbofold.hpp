@@ -66,7 +66,7 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     TurboPartition(LinearTurbofold& turbofold, const Sequence& seq, const EnergyModel& energy_model,
                    const bool allow_sharp_turn = false);
 
-    inline State* get_saved_state(const StateType type, const int i, const int j, const bool create = false) noexcept {
+    inline State* get_saved_state(const StateType type, const int i, const int j) noexcept {
         std::unordered_map<int, State>* beam = nullptr;
         switch (type) {
             case H:
@@ -88,9 +88,6 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
                 return nullptr;  // control will never reach here
             default:
                 return nullptr;
-        }
-        if (create) {
-            return &(*beam)[i];
         }
         const auto it = beam->find(i);
         return it == beam->end() ? nullptr : &it->second;
@@ -119,7 +116,7 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     }
 
     inline State* check_state(const StateType type, const int i, const int j) {
-        if (turbofold.restrict_search_ && turbofold.curr_itr > 0 && type != StateType::H) {
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 0 && type != StateType::H && type != StateType::C) {
             State* state = TurboPartition::get_saved_state(type, i, j);
             if (!state) {
                 return nullptr;
@@ -151,7 +148,7 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     template <typename F>
     inline void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                                   const unsigned j) {
-        const State* next_state = get_state(type, i, j, false);
+        const State* next_state = LinearPartitionInterface<TurboPartition>::get_state(type, i, j, false);
         if (next_state) {
             value_type weight = get_score() * linearx::constants::energy::INV_KT;
             if (turbofold.curr_itr > 0 && type == StateType::P) {
@@ -201,18 +198,14 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
         }
     }
 
-    inline HState* get_saved_state(const HStateType type, const int i, const int j,
-                                   const bool create = false) noexcept {
+    inline HState* get_saved_state(const HStateType type, const int i, const int j) noexcept {
         auto& beam = get_saved_beams(type)[i + j];
         const std::pair<int, int> key = {i, j};
         const auto it = beam.find(key);
         if (it != beam.end()) {
             return &it->second;
-        } else if (create) {
-            return &beam[key];
-        } else {
-            return nullptr;
         }
+        return nullptr;
     }
 
     inline HState* check_state(const HStateType type, const int i, const int j) {

@@ -191,7 +191,7 @@ class LinearPartition final : public LinearPartitionInterface<LinearPartition> {
     template <Mode mode, typename F>
     inline void update_state_alpha(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                                    const unsigned j) {
-        State* next_state = get_state(type, i, j, true);
+        State* next_state = LinearPartitionInterface<LinearPartition>::get_state(type, i, j, true);
         if constexpr (mode == Mode::BEST) {
             next_state->alpha =
                 std::max(next_state->alpha, (left ? left->alpha : 0) + (right ? right->alpha : 0) + get_score());
@@ -205,7 +205,7 @@ class LinearPartition final : public LinearPartitionInterface<LinearPartition> {
     template <typename F>
     inline void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                                   const unsigned j) {
-        const State* next_state = get_state(type, i, j, false);
+        const State* next_state = LinearPartitionInterface<LinearPartition>::get_state(type, i, j, false);
         if (next_state) {
             const value_type weight = get_score() * linearx::constants::energy::INV_KT;
             if (!right) {
