@@ -53,12 +53,6 @@ chmod +x build.sh
 ```
 This will produce the binaries under `./build/`.
 
-3) (Optional) Make Python wrappers executable:
-```bash
-chmod +x scripts/linearpartition.py
-chmod +x scripts/linearturbofold.py
-```
-
 ---
 
 ## Directory Layout (relevant pieces)
@@ -76,7 +70,6 @@ linearx/
 ├── src/                   # Source files for executables
 │   ├── partition/         # LinearPartition main
 │   └── turbofold/         # LinearTurboFold main
-├── scripts/               # Python wrappers and utilities
 ├── install.sh             # Script to install dependencies
 ├── build.sh               # Script to configure and build
 └── README.md
@@ -91,7 +84,7 @@ The Python wrappers simplify execution by validating arguments and calling the c
 
 ### 1) LinearPartition
 
-**Script**: `./scripts/linearpartition.py`
+**Script**: `./linearpartition.py`
 
 **Purpose**:
 - Partition function (ensemble free energy)
@@ -101,7 +94,7 @@ The Python wrappers simplify execution by validating arguments and calling the c
 
 #### Command-line synopsis
 ```bash
-./scripts/linearpartition.py [INPUT] [OPTIONS]
+./linearpartition.py [INPUT] [OPTIONS]
 ```
 
 - `INPUT`: (optional) Either a raw RNA sequence (e.g. `ACGUACGU`) or a FASTA file path.
@@ -127,22 +120,22 @@ The Python wrappers simplify execution by validating arguments and calling the c
 
 **Raw sequence (MFE, ThreshKnot, BPP saved)**
 ```bash
-./scripts/linearpartition.py "ACGUACGUAC" --mfe --tk --bpp --bpp-path ./outputs
+./linearpartition.py "CCCAAAGGG" --mfe --tk --bpp --bpp-path ./outputs
 ```
 
 **From FASTA file (partition function, verbose)**
 ```bash
-./scripts/linearpartition.py data/example.fa --verbose
+./linearpartition.py data/example.fa --verbose
 ```
 
 **From stdin (pipe a raw sequence)**
 ```bash
-echo ACGUACGU | ./scripts/linearpartition.py --mfe
+echo CCCAAAGGG | ./linearpartition.py --mfe
 ```
 
 **From stdin (pipe a tiny FASTA)**
 ```bash
-echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_out
+echo -e ">seq1\nCCCAAAGGG" | ./linearpartition.py --bpp --bpp-path ./bpp_out
 ```
 
 #### Expected outputs
@@ -162,7 +155,7 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 
 ### 2) LinearTurboFold
 
-**Script**: `./scripts/linearturbofold.py`
+**Script**: `./linearturbofold.py`
 
 **Purpose**:
 - TurboFold-style iterative folding/alignment across multiple sequences
@@ -170,7 +163,7 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 
 #### Command-line synopsis
 ```bash
-./scripts/linearturbofold.py <ms_path> [out_dir] [OPTIONS]
+./linearturbofold.py <ms_path> [out_dir] [OPTIONS]
 ```
 
 - `ms_path`: Path to an input FASTA file **or** a directory of FASTA files.
@@ -189,12 +182,12 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 
 **Single FASTA input**
 ```bash
-./scripts/linearturbofold.py data/ms.fa ./outputs --num-iterations 3 --lz --verbose --save-probs
+./linearturbofold.py data/ms.fa ./outputs --num-iterations 3 --lz --verbose --save-probs
 ```
 
 **Directory of FASTA files**
 ```bash
-./scripts/linearturbofold.py data/ms_dir ./outputs --it 4 -v
+./linearturbofold.py data/ms_dir ./outputs --it 4 -v
 ```
 
 The script will enumerate `*.fa`/`*.fasta` files and invoke the binary for each one, creating subdirectories under `./outputs/`.
@@ -210,7 +203,7 @@ The script will enumerate `*.fa`/`*.fasta` files and invoke the binary for each 
 ## FAQ
 
 **Q: Do I have to set executable bits for the Python scripts?**  
-A: Not strictly—running `python3 scripts/linearpartition.py …` works without `chmod +x`. But setting the executable bit allows `./scripts/linearpartition.py …`.
+A: Not strictly—running `python3 linearpartition.py …` works without `chmod +x`. But setting the executable bit allows `./linearpartition.py …`.
 
 **Q: Can I pass FASTA content directly as the first argument to LinearPartition?**  
 A: If the argument begins with `>`, the C++ program treats it as FASTA content. Alternatively, pipe FASTA via stdin to the Python wrapper.
