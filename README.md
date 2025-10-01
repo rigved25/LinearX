@@ -89,7 +89,7 @@ linearx/
 The Python wrappers simplify execution by validating arguments and calling the correct binary under `./build/`. You can pass a **raw sequence**, a **FASTA file path**, or **stdin** (piped input).
 
 
-### 1) LinearPartition (Python)
+### 1) LinearPartition
 
 **Script**: `./scripts/linearpartition.py`
 
@@ -160,7 +160,7 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 - **Performance**: For large sequences, use a release build (default in `build.sh`) and consider running without `--verbose` for cleaner logs.
 
 
-### 2) LinearTurboFold (Python)
+### 2) LinearTurboFold
 
 **Script**: `./scripts/linearturbofold.py`
 
@@ -176,20 +176,20 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 - `ms_path`: Path to an input FASTA file **or** a directory of FASTA files.
 - `out_dir`: (optional) Output directory. If `ms_path` is a directory, each file will get its own subdirectory.
 - `OPTIONS`:
-  - `--energy_model {0,1}` (default: `0`): 0=Vienna, 1=BL*
-  - `--num_iterations, -it N` (default: `3`): Number of TurboFold iterations
-  - `--use_lazy_outside, -lz`: Use lazy outside computation
-  - `--use_prev_itr_beta, -pb`: Use beta from previous iteration
-  - `--restrict_search, -rs`: Restrict search space
+  - `--energy-model {0,1}` (default: `0`): 0=Vienna, 1=BL*
+  - `--num-iterations, -it N` (default: `3`): Number of TurboFold iterations
+  - `--use-lazy-outside, -lz`: Use lazy outside computation
+  - `--use-prev-itr-beta, -pb`: Use beta from previous iteration
+  - `--restrict-search, -rs`: Restrict search space
   - `--verbose, -v`: Verbose output
-  - `--save_logs, -sl`: Save execution logs
-  - `--save_probs, -sp`: Save BPP and coincidence probabilities
+  - `--save-logs, -sl`: Save execution logs
+  - `--save-probs, -sp`: Save BPP and coincidence probabilities
 
 #### Examples
 
 **Single FASTA input**
 ```bash
-./scripts/linearturbofold.py data/ms.fa ./outputs --num_iterations 3 --lz --verbose --save_probs
+./scripts/linearturbofold.py data/ms.fa ./outputs --num-iterations 3 --lz --verbose --save-probs
 ```
 
 **Directory of FASTA files**
@@ -202,7 +202,7 @@ The script will enumerate `*.fa`/`*.fasta` files and invoke the binary for each 
 #### Expected outputs
 
 - Iteration logs (optionally saved with `--save_logs`)
-- BPP matrices and coincidence probabilities (if `--save_probs` is set)
+- BPP matrices and coincidence probabilities (if `--save-probs` is set)
 - Console logs indicating progress and execution time
 
 ---
