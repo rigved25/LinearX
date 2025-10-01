@@ -18,10 +18,9 @@ class Sequence {
     explicit Sequence(const std::string& seq);
     Sequence(const std::string& seq, const std::string& name, int id);
     Sequence(const std::string& seq, const std::string& name, int id,
-             const std::unordered_map<char, int>& encoding_scheme, bool randomize_N = false);
+             const std::unordered_map<char, int>& encoding_scheme);
 
     // encoding
-    void randomize_N();  // replace 'N' with random nucleotide
     void set_encoding(const std::unordered_map<char, int>& encoding_scheme);
 
     // length and access

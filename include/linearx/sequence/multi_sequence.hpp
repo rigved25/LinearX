@@ -47,8 +47,7 @@ class MultiSeq {
     float average_seq_identity() const;
 
     // read sequences from multi-FASTA file
-    bool read_fasta(const std::string& filepath, const std::unordered_map<char, int>& encoding_scheme = {},
-                    bool randomize_N = false);
+    bool read_fasta(const std::string& filepath, const std::unordered_map<char, int>& encoding_scheme = {});
 
     // write sequences to multi-FASTA file
     bool write_fasta(const std::string& filepath, int max_line_length = 0) const;

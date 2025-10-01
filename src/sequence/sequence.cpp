@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <fstream>
 #include <linearx/sequence/sequence.hpp>
-#include <random>
 #include <stdexcept>
 
 // default constructor
@@ -20,28 +19,11 @@ Sequence::Sequence(const std::string& seq_str, const std::string& name, int id) 
 
 // constructor with sequence, name, id, encoding
 Sequence::Sequence(const std::string& seq_str, const std::string& name, int id,
-                   const std::unordered_map<char, int>& encoding_scheme, bool randomize_N)
+                   const std::unordered_map<char, int>& encoding_scheme)
     : name(name), id(id), seq(seq_str) {
     std::transform(seq.begin(), seq.end(), seq.begin(), ::toupper);
-
-    if (randomize_N) {
-        this->randomize_N();
-    }
     if (!encoding_scheme.empty()) {
         set_encoding(encoding_scheme);
-    }
-}
-
-void Sequence::randomize_N() {
-    static const char bases[] = {'A', 'C', 'G', 'U'};
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<int> dis(0, 3);
-
-    for (char& ch : seq) {
-        if (ch == 'N') {
-            ch = bases[dis(gen)];
-        }
     }
 }
 

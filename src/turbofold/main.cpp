@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
     std::cerr << "Arguments:\n";
     std::cerr << "  msa_file_path: " << msa_file_path << "\n";
-    std::cerr << "  out_dir: " << out_dir << "\n";
+    std::cerr << "  out_dir: " << (out_dir.empty() ? "[not provided]" : out_dir) << "\n";
     std::cerr << "  energy_model: " << energy_model_choice << "\n";
     std::cerr << "  num_iterations: " << num_itr << "\n";
     std::cerr << "  use_lazy_outside: " << use_lazy_outside << "\n";
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 
     try {
         MultiSeq ms;
-        ms.read_fasta(msa_file_path, linearx::utils::VIENNA_NUC_ENCODING_SCHEME, true);
+        ms.read_fasta(msa_file_path, linearx::utils::VIENNA_NUC_ENCODING_SCHEME);
         EnergyModel energy_model(energy_model_choice == 0 ? EnergyParamsType::VIENNA : EnergyParamsType::BL_STAR);
         LinearTurbofold ltf(ms, energy_model);
         ltf.run(num_itr, use_lazy_outside, use_prev_itr_beta, restrict_search, verbose, save_logs, save_probs, out_dir);

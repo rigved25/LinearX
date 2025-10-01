@@ -29,7 +29,7 @@ TEST_CASE("MultiSeq find and replace", "[msq][2]") {
 
 TEST_CASE("MultiSeq FASTA read/write", "[msq][3]") {
     MultiSeq ms;
-    REQUIRE(ms.read_fasta("tests/data/s1.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME, true) == true);
+    REQUIRE(ms.read_fasta("tests/data/s1.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME) == true);
     REQUIRE(ms.size() > 0);
 
     bool write_ok = ms.write_fasta("tests/tmp/output.fa", 60);
@@ -42,7 +42,7 @@ TEST_CASE("MultiSeq FASTA read/write", "[msq][3]") {
 
 TEST_CASE("MultiSeq 10 Sequences FASTA read, ID and Sequence Identity", "[msq][4]") {
     MultiSeq ms;
-    REQUIRE(ms.read_fasta("tests/data/s3.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME, true) == true);
+    REQUIRE(ms.read_fasta("tests/data/s3.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME) == true);
     REQUIRE(ms.size() == 20);
 
     // check if the id is correctly assigned

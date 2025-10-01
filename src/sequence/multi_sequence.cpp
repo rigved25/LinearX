@@ -106,8 +106,7 @@ float MultiSeq::average_seq_identity() const {
     return total / pairs;
 }
 
-bool MultiSeq::read_fasta(const std::string& filepath, const std::unordered_map<char, int>& encoding_scheme,
-                          bool randomize_N) {
+bool MultiSeq::read_fasta(const std::string& filepath, const std::unordered_map<char, int>& encoding_scheme) {
     std::ifstream infile(filepath);
     if (!infile.is_open()) {
         std::cerr << "Error: Cannot open " << filepath << '\n';
@@ -122,7 +121,7 @@ bool MultiSeq::read_fasta(const std::string& filepath, const std::unordered_map<
 
         if (line[0] == '>') {
             if (!seq.empty()) {
-                sequences_.emplace_back(seq, name, k_id++, encoding_scheme, randomize_N);
+                sequences_.emplace_back(seq, name, k_id++, encoding_scheme);
                 seq.clear();
             }
             name = line.substr(1);
@@ -132,7 +131,7 @@ bool MultiSeq::read_fasta(const std::string& filepath, const std::unordered_map<
     }
 
     if (!seq.empty()) {
-        sequences_.emplace_back(seq, name, k_id++, encoding_scheme, randomize_N);
+        sequences_.emplace_back(seq, name, k_id++, encoding_scheme);
     }
 
     infile.close();

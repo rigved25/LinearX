@@ -39,11 +39,6 @@ inline void reset_beam_vector(std::vector<T>& vec, const int outer_size, const i
     } else {
         std::fill(vec.begin(), vec.end(), T());
     }
-    // vec.resize(outer_size);
-    // for (auto& map : vec) {
-    //     map.clear();              // reuses internal memory
-    //     map.reserve(inner_size);  // reserve space for efficiency (if needed)
-    // }
 }
 
 inline bool check_valid_pair(const int nuc1, const int nuc2) { return (nuc1 + nuc2) > 3 && (nuc1 + nuc2) % 2 != 0; }

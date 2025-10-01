@@ -17,10 +17,7 @@ LinearAlignmentInterface<T>::LinearAlignmentInterface(Sequence& seq1, Sequence& 
       seq_len_sum(seq1.length() + seq2.length()),
       alpha1(alpha1),
       alpha2(alpha2),
-      alpha3(alpha3) {
-    seq1.randomize_N();
-    seq2.randomize_N();
-}
+      alpha3(alpha3) {}
 
 template <typename T>
 void LinearAlignmentInterface<T>::use_prob_set1() {
@@ -37,7 +34,7 @@ void LinearAlignmentInterface<T>::use_prob_set2(float similarity) {
 }
 
 template <typename T>
-void LinearAlignmentInterface<T>::reset_beams(unsigned beam_size) {
+void LinearAlignmentInterface<T>::reset_beams(const unsigned beam_size) {
     reset_beam_vector(bestALN, seq_len_sum + 3);
     reset_beam_vector(bestINS1, seq_len_sum + 1);
     reset_beam_vector(bestINS2, seq_len_sum + 1);
@@ -71,6 +68,12 @@ value_type LinearAlignmentInterface<T>::get_trans_emit_prob(const int i, const i
         } else {
             nuci = seq1.enc[i - 1] - 1;
             nucj = seq2.enc[j - 1] - 1;
+        }
+        if (nuci < 0) {  // randomize 'N'
+            nuci = rand() % 4;
+        }
+        if (nucj < 0) {  // randomize 'N'
+            nucj = rand() % 4;
         }
         emit_idx = nuci * 5 + nucj;
     }

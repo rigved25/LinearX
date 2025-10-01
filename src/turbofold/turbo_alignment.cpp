@@ -10,11 +10,11 @@ TurboAlignment::TurboAlignment(const LinearTurbofold& turbofold, Sequence& seq1,
     reset_beams(turbofold.alignment_beam_size);
 }
 
-void TurboAlignment::reset_saved_beams(const unsigned beam_size) {
-    reset_beam_vector(saved_bestALN, seq_len_sum + 3, beam_size);
-    reset_beam_vector(saved_bestINS1, seq_len_sum + 1, beam_size);
-    reset_beam_vector(saved_bestINS2, seq_len_sum + 1, beam_size);
-}
+// void TurboAlignment::reset_saved_beams(const unsigned beam_size) {
+//     reset_beam_vector(saved_bestALN, seq_len_sum + 3, beam_size);
+//     reset_beam_vector(saved_bestINS1, seq_len_sum + 1, beam_size);
+//     reset_beam_vector(saved_bestINS2, seq_len_sum + 1, beam_size);
+// }
 
 void TurboAlignment::save_partition_function(const bool move) {
     // if move is true, the original beam data will be cleared

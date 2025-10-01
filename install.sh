@@ -12,3 +12,7 @@ chmod +X ./setup_env.sh
 # make build script executable
 cd ../../
 chmod +x ./build.sh
+
+# make python scripts executable
+chmod +x ./linearpartition.py
+chmod +x ./linearturbofold.py

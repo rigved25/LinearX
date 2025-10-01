@@ -45,19 +45,19 @@ def main():
 
     parser.add_argument("--energy_model", type=int, choices=[0, 1], default=0,
                         help="Energy model (0 = Vienna, 1 = BL*), default: 0")
-    parser.add_argument("--num_iterations", "-it", type=int, default=3,
+    parser.add_argument("--num-iterations", "-it", type=int, default=3,
                         help="Number of TurboFold iterations (default: 3)")
-    parser.add_argument("--use_lazy_outside", "-lz", action="store_true", default=False,
+    parser.add_argument("--use-lazy-outside", "-lz", action="store_true", default=False,
                         help="Use lazy outside computation (default: False)")
-    parser.add_argument("--use_prev_itr_beta", "-pb", action="store_true", default=False,
+    parser.add_argument("--use-prev-itr-beta", "-pb", action="store_true", default=False,
                         help="Use beta from previous iteration (default: False)")
-    parser.add_argument("--restrict_search", "-rs", action="store_true", default=False,
+    parser.add_argument("--restrict-search", "-rs", action="store_true", default=False,
                         help="Restrict search space (default: False)")
     parser.add_argument("--verbose", "-v", action="store_true", default=False,
                         help="Enable verbose output (default: False)")
-    parser.add_argument("--save_logs", "-sl", action="store_true", default=False,
+    parser.add_argument("--save-logs", "-sl", action="store_true", default=False,
                         help="Save execution logs (default: False)")
-    parser.add_argument("--save_probs", "-sp", action="store_true", default=False,
+    parser.add_argument("--save-probs", "-sp", action="store_true", default=False,
                         help="Save BPP and coincidence probabilities (default: False)")
 
     args = parser.parse_args()
@@ -77,7 +77,10 @@ def main():
 
         for f in fasta_files:
             msa_file = os.path.join(args.msa_path, f)
-            sub_out_dir = os.path.join(args.out_dir, os.path.splitext(f)[0])
+            if len(args.out_dir):
+                sub_out_dir = os.path.join(args.out_dir, os.path.splitext(f)[0])
+            else:
+                sub_out_dir = ""
             run_linearturbofold(msa_file, sub_out_dir, args)
 
     else:

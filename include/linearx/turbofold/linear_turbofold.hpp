@@ -45,7 +45,7 @@ class LinearTurbofold {
     value_type get_extrinsic_info(const Sequence& x, const int i, const int j) const;
     void run(const int num_itr = 3, const bool use_lazy_outside = true, const bool use_prev_itr_beta = false,
              const bool restrict_search = false, const bool verbose_output = false, const bool save_logs = false,
-             const bool save_probs = false, const std::string out_dir = "./ltf_output/");
+             const bool save_probs = false, const std::string out_dir = "");
 };
 
 class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
@@ -164,7 +164,7 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     }
 
     void calc_prob_accm();
-    void reset_saved_beams(const unsigned beam_size);
+    // void reset_saved_beams(const unsigned beam_size);
     void save_partition_function(const bool move, const unsigned beam_size);
 };
 
@@ -181,7 +181,7 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
     TurboAlignment(const LinearTurbofold& turbofold, Sequence& seq1, Sequence& seq2, const float alpha1 = 1.0,
                    const float alpha2 = 0.8, const float alpha3 = 0.5);
 
-    void reset_saved_beams(const unsigned beam_size);
+    // void reset_saved_beams(const unsigned beam_size);
     void save_partition_function(const bool move);
 
     inline std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>& get_saved_beams(

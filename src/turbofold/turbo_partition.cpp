@@ -13,13 +13,13 @@ TurboPartition::TurboPartition(LinearTurbofold &turbofold, const Sequence &seq, 
     reset_beams(turbofold.folding_beam_size);
 }
 
-void TurboPartition::reset_saved_beams(const unsigned beam_size) {
-    reset_beam_vector(saved_bestH, seq_length, beam_size);
-    reset_beam_vector(saved_bestP, seq_length, beam_size);
-    reset_beam_vector(saved_bestM, seq_length, beam_size);
-    reset_beam_vector(saved_bestM2, seq_length, beam_size);
-    reset_beam_vector(saved_bestMulti, seq_length, beam_size);
-}
+// void TurboPartition::reset_saved_beams(const unsigned beam_size) {
+//     reset_beam_vector(saved_bestH, seq_length, beam_size);
+//     reset_beam_vector(saved_bestP, seq_length, beam_size);
+//     reset_beam_vector(saved_bestM, seq_length, beam_size);
+//     reset_beam_vector(saved_bestM2, seq_length, beam_size);
+//     reset_beam_vector(saved_bestMulti, seq_length, beam_size);
+// }
 
 void TurboPartition::save_partition_function(const bool move, const unsigned beam_size) {
     // if move is true, the original beam data will be cleared
