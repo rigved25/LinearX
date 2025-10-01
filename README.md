@@ -71,7 +71,7 @@ linearx/
 ├── include/linearx/       # Header files for core modules
 │   ├── energy/            # Energy model definitions
 │   ├── partition/         # LinearPartition algorithm
-│   ├── sequence/          # Sequence and MSA utilities
+│   ├── sequence/          # Sequence and ms utilities
 │   └── turbofold/         # LinearTurboFold algorithm
 ├── src/                   # Source files for executables
 │   ├── partition/         # LinearPartition main
@@ -170,11 +170,11 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 
 #### Command-line synopsis
 ```bash
-./scripts/linearturbofold.py <msa_path> [out_dir] [OPTIONS]
+./scripts/linearturbofold.py <ms_path> [out_dir] [OPTIONS]
 ```
 
-- `msa_path`: Path to an input FASTA file **or** a directory of FASTA files.
-- `out_dir`: (optional) Output directory. If `msa_path` is a directory, each file will get its own subdirectory.
+- `ms_path`: Path to an input FASTA file **or** a directory of FASTA files.
+- `out_dir`: (optional) Output directory. If `ms_path` is a directory, each file will get its own subdirectory.
 - `OPTIONS`:
   - `--energy_model {0,1}` (default: `0`): 0=Vienna, 1=BL*
   - `--num_iterations, -it N` (default: `3`): Number of TurboFold iterations
@@ -189,12 +189,12 @@ echo -e ">seq1\nACGUACGU" | ./scripts/linearpartition.py --bpp --bpp-path ./bpp_
 
 **Single FASTA input**
 ```bash
-./scripts/linearturbofold.py data/msa.fa ./outputs --num_iterations 3 --lz --verbose --save_probs
+./scripts/linearturbofold.py data/ms.fa ./outputs --num_iterations 3 --lz --verbose --save_probs
 ```
 
 **Directory of FASTA files**
 ```bash
-./scripts/linearturbofold.py data/msa_dir ./outputs --it 4 -v
+./scripts/linearturbofold.py data/ms_dir ./outputs --it 4 -v
 ```
 
 The script will enumerate `*.fa`/`*.fasta` files and invoke the binary for each one, creating subdirectories under `./outputs/`.
