@@ -97,6 +97,11 @@ float Sequence::compute_seq_identity(const Sequence& seq2) const {
     return static_cast<float>(matches) / valid_positions;
 }
 
+void Sequence::set_seq(const std::string& new_seq) {
+    seq = new_seq;
+    std::transform(seq.begin(), seq.end(), seq.begin(), ::toupper);
+}
+
 void Sequence::add_nuc(char nucleotide) { seq += nucleotide; }
 
 void Sequence::insert_nuc(size_t index, char nucleotide) {
@@ -146,6 +151,28 @@ bool Sequence::read_fasta(const std::string& filepath) {
         std::cerr << "Warning: No valid sequence found in file " << filepath << std::endl;
         return false;
     }
+
+    return true;
+}
+
+bool Sequence::read_fasta_stream(std::istream& is) {
+    std::string line, seq_data, seq_name;
+    while (std::getline(is, line)) {
+        if (line.empty()) continue;
+        if (line[0] == '>') {
+            seq_name = line.substr(1);  // everything after '>'
+        } else {
+            for (char c : line) {
+                if (!std::isspace(static_cast<unsigned char>(c))) {
+                    seq_data.push_back(std::toupper(static_cast<unsigned char>(c)));
+                }
+            }
+        }
+    }
+    if (seq_data.empty()) {
+        return false;  // no sequence parsed
+    }
+    this->seq = seq_data;
 
     return true;
 }

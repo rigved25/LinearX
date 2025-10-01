@@ -73,6 +73,10 @@ add_subdirectory(tests)
 # Testing
 enable_testing()
 
+# Executable for linearpartition
+add_executable(linearpartition src/partition/main.cpp)
+target_link_libraries(linearpartition PRIVATE linearx_core)
+
 # Executable for linearturbofold
 add_executable(linearturbofold src/turbofold/main.cpp)
 target_link_libraries(linearturbofold PRIVATE linearx_core)

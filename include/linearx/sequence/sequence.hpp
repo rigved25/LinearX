@@ -17,8 +17,8 @@ class Sequence {
     Sequence();  // default
     explicit Sequence(const std::string& seq);
     Sequence(const std::string& seq, const std::string& name, int id);
-    Sequence(const std::string& seq, const std::string& name, int id, const std::unordered_map<char, int>& encoding_scheme,
-        bool randomize_N = false);
+    Sequence(const std::string& seq, const std::string& name, int id,
+             const std::unordered_map<char, int>& encoding_scheme, bool randomize_N = false);
 
     // encoding
     void randomize_N();  // replace 'N' with random nucleotide
@@ -39,6 +39,7 @@ class Sequence {
     float compute_seq_identity(const Sequence& seq2) const;
 
     // edit operations
+    void set_seq(const std::string& new_seq);
     void add_nuc(char nucleotide);
     void insert_nuc(size_t index, char nucleotide);
     void delete_nuc(size_t index);
@@ -47,6 +48,7 @@ class Sequence {
 
     // file operations
     bool read_fasta(const std::string& filepath);
+    bool read_fasta_stream(std::istream& is);
     bool write_fasta(const std::string& filepath) const;
 
     // printing and details
