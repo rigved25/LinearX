@@ -2,6 +2,7 @@
 #include <fstream>
 #include <linearx/alignment/config.hpp>
 #include <linearx/alignment/linear_align.hpp>
+#include <random>
 #include <set>
 
 using namespace linearx::utils;
@@ -70,10 +71,12 @@ value_type LinearAlignmentInterface<T>::get_trans_emit_prob(const int i, const i
             nucj = seq2.enc[j - 1] - 1;
         }
         if (nuci < 0) {  // randomize 'N'
-            nuci = rand() % 4;
+            unsigned seed = static_cast<unsigned>(i * 73856093u ^ j * 19349663u);
+            nuci = seed % 4;
         }
         if (nucj < 0) {  // randomize 'N'
-            nucj = rand() % 4;
+            unsigned seed = static_cast<unsigned>(j * 83492791u ^ i * 2654435761u);
+            nucj = seed % 4;
         }
         emit_idx = nuci * 5 + nucj;
     }
