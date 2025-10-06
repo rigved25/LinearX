@@ -36,7 +36,7 @@ class LinearTurbofold {
     LinearTurbofold(MultiSeq& msa, EnergyModel& energy_model, const unsigned alignment_beam_size = 100,
                     const unsigned folding_beam_size = 100,
                     const float alignment_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
-                    const float folding_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                    const float folding_pruning_threshold = 2 * linearx::constants::limits::DEVIATION_THRESHOLD,
                     const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
                     const bool allow_sharp_turn = false, const float alpha1 = 1.0, const float alpha2 = 0.8,
                     const float alpha3 = 0.5);
