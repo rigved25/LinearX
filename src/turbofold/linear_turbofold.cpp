@@ -184,17 +184,6 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
 
     vector<vector<value_type>> distances (seq_len, vector<value_type> (seq_len, 0));
     ProbabilisticModel model(out_dir_);
-
-    for (int r = 0; r<model.num_consistency_reps_; r++ ) {
-        posterior = model.LinearMultiConsistencyTransform(multi_seq, posterior);
-        // for(int x = 0; x < multi_seq.size(); x++){
-        //     for(int y = 0; y < multi_seq.size(); y++){
-        //         if(x == y) continue;
-        //         dump_coinc_probs(out_dir_ + "/cps/ct_" + std::to_string(r), posterior[x][y], multi_seq.at(x).length(), x, y);
-        //     }
-        // }
-
-    }
     
     fprintf(stderr, "[Multi Seq Align] Starting the Max Exp Accuracy calculation for all pairs\n");
 
@@ -243,6 +232,17 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
 
     fprintf(stderr, "[Multi Seq Align] Max Exp Accuracy calculation for all pairs completed (%.2f ms)\n", log.msa_mea_calc_time);
 
+    for (int r = 0; r<model.num_consistency_reps_; r++ ) {
+        posterior = model.LinearMultiConsistencyTransform(multi_seq, posterior);
+        // for(int x = 0; x < multi_seq.size(); x++){
+        //     for(int y = 0; y < multi_seq.size(); y++){
+        //         if(x == y) continue;
+        //         dump_coinc_probs(out_dir_ + "/cps/ct_" + std::to_string(r), posterior[x][y], multi_seq.at(x).length(), x, y);
+        //     }
+        // }
+
+    }
+    
     TreeNode *tree = TreeNode::ComputeTree(distances);
     
     multi_alignment = model.LinearComputeFinalAlignment(tree, &multi_seq, posterior, beam_size);
