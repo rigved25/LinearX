@@ -4,6 +4,7 @@
 #include <linearx/partition/linear_partition.hpp>
 #include <linearx/turbofold/utility.hpp>
 #include <linearx/utility.hpp>
+#include <linearx/turbofold/utils/ProbabilisticModel.hpp>
 
 // forward declarations
 class TurboPartition;
@@ -11,7 +12,8 @@ class TurboAlignment;
 
 class LinearTurbofold {
    private:
-    MultiSeq& msa;
+    MultiSeq& multi_seq;
+    MultiSeq* multi_alignment = nullptr;
     EnergyModel& energy_model;
 
     std::vector<float> seq_identities;  // sequence identities for all k*(k-1)/2 pairs
@@ -32,20 +34,38 @@ class LinearTurbofold {
     bool restrict_search_ = false;
     bool use_lazy_outside_ = false;
     bool use_prev_itr_beta_ = false;
+    
+    // run parameters
+    int num_itr_ = 3;
+    bool verbose_output_ = false;
+    bool save_logs_ = false;
+    bool save_probs_ = false;
+    std::string out_dir_ = "";
 
-    LinearTurbofold(MultiSeq& msa, EnergyModel& energy_model, const unsigned alignment_beam_size = 100,
+    std::vector<std::vector<std::unordered_map<int, value_type>*>> posterior;
+
+    LinearTurbofold(MultiSeq& multi_seq, EnergyModel& energy_model, const unsigned alignment_beam_size = 100,
                     const unsigned folding_beam_size = 100,
                     const float alignment_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                     const float folding_pruning_threshold = 2 * linearx::constants::limits::DEVIATION_THRESHOLD,
                     const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
                     const bool allow_sharp_turn = false, const float alpha1 = 1.0, const float alpha2 = 0.8,
-                    const float alpha3 = 0.5);
-
+                    const float alpha3 = 0.5, const int num_itr = 3, const bool verbose_output = false,
+                    const bool save_logs = false, const bool save_probs = false, const std::string out_dir = "");
+    ~LinearTurbofold();
     int get_seq_pair_index(int k1, int k2) const;
+    
     value_type get_extrinsic_info(const Sequence& x, const int i, const int j) const;
-    void run(const int num_itr = 3, const bool use_lazy_outside = true, const bool use_prev_itr_beta = false,
-             const bool restrict_search = false, const bool verbose_output = false, const bool save_logs = false,
-             const bool save_probs = false, const std::string out_dir = "");
+    void dump_coinc_probs(const std::string &filepath, std::unordered_map<int, value_type>* posterior, int seqlen, int k1, int k2);
+    // void dump_coinc_aln_probs(const std::string &filepath, const float threshold, std::unordered_map<int, AlnProbs>* coinc_prob, int seqlen);
+    // void dump_extrinsic_info(const std::string &filepath, int iteration);
+    // void dump_match_scores(const std::string &filepath, int iteration);
+    // void dump_pairwise_match_scores(const std::string &filepath, int iteration, int sample_rate = 10);
+    
+    void run_phmm_alignment(TurboFoldLog& log);
+    void multiple_sequence_alignment(TurboFoldLog& log, unsigned int beam_size = 100);
+    void run();
+         
 };
 
 class TurboPartition final : public LinearPartitionInterface<TurboPartition> {

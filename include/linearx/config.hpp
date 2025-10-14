@@ -1,7 +1,7 @@
 // linearx/config.hpp
 #pragma once
 
-// #define FAST_MATH  // comment this line to use value_type as double
+#define FAST_MATH  // comment this line to use value_type as double
 #define FAST_LOG  // comment this line to use approximate log from log_math.hpp
 
 #ifdef FAST_MATH

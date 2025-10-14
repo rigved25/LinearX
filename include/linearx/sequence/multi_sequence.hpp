@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 class MultiSeq {
    public:
@@ -24,6 +25,10 @@ class MultiSeq {
     // access a sequence with bounds checking
     Sequence& at(size_t index);
     const Sequence& at(size_t index) const;
+
+    //! Extracts all sequences from MultiSeq object whose index is given by a set. 
+    //! Projects the multiple sequences to subset and returns as a new MultiSeq object.
+    MultiSeq *Project(const std::set<int> &indices);
 
     // get all sequences
     const std::vector<Sequence>& get_sequences() const;

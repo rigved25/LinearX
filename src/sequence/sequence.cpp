@@ -79,6 +79,53 @@ float Sequence::compute_seq_identity(const Sequence& seq2) const {
     return static_cast<float>(matches) / valid_positions;
 }
 
+//! Returns a new deep copy of the seqeuence.
+Sequence* Sequence::clone() const {
+    Sequence *ret = new Sequence();
+
+    ret->id = id;
+    ret->seq = seq; 
+    ret->name = name;
+    ret->enc = enc;
+
+    return ret;
+}
+
+//! Given an vector<char> containing the skeleton for an alignment and the identity of the current character.
+//! Create a new sequence with all necesssary gaps added.
+//! For example: Given alignment = "XXXBBYYYBBYYXX", the new sequence is "ATGCC---GT--CA".
+//!                                                                      (XXXBBYYYBBYYXX)
+Sequence * Sequence::add_gaps(std::string *alignment, char idd){
+    Sequence *ret = new Sequence();
+
+    ret->id = id;
+    ret->name = name;
+    ret->enc = enc;
+
+    std::string::iterator dataIter = seq.begin();
+
+    for (std::string::iterator iter = alignment->begin(); iter != alignment->end(); ++iter){
+        if (*iter == 'B' || *iter == idd){
+            ret->seq.push_back(*dataIter);
+            ++dataIter;
+        }
+        else
+            ret->seq.push_back('-');
+    }
+
+    return ret;
+}
+
+//! Returns a vector<int> containing the indices of every character in the sequence.
+//! For instance, if the data is "ATGCC---GT--CA", the method returns {0,1,2,3,4,8,9,12,13}.
+std::vector<int> * Sequence::get_mapping() const {
+    std::vector<int> *ret = new std::vector<int>();
+    for (int i = 0; i < length(); i++){
+        if (seq[i] != '-') ret->push_back (i);
+    }
+    return ret;
+}
+
 void Sequence::set_seq(const std::string& new_seq) {
     seq = new_seq;
     std::transform(seq.begin(), seq.end(), seq.begin(), ::toupper);
@@ -155,6 +202,7 @@ bool Sequence::read_fasta_stream(std::istream& is) {
         return false;  // no sequence parsed
     }
     this->seq = seq_data;
+    this->name = seq_name;
 
     return true;
 }

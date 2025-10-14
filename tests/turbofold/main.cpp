@@ -8,5 +8,5 @@ TEST_CASE("Simple 5 Sequence", "[tf][1]") {
     ms.read_fasta("tests/data/s4.fasta", linearx::utils::VIENNA_NUC_ENCODING_SCHEME);
     EnergyModel energy_model(EnergyParamsType::VIENNA);
     LinearTurbofold ltf(ms, energy_model);
-    ltf.run(3);
+    ltf.run();
 }

@@ -1,4 +1,5 @@
 // src/sequence/structure.cpp
+#include <functional>
 #include <iostream>
 #include <linearx/sequence/structure.hpp>
 #include <linearx/utility.hpp>

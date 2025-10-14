@@ -2,8 +2,11 @@
 #pragma once
 
 #include <iostream>
-#include <linearx/energy/params/EnergyParams.hpp>
 #include <vector>
+#include <cmath>
+#include <cstring>
+
+#include <linearx/energy/params/EnergyParams.hpp>
 
 #define NUC_TO_PAIR(x, y)                \
     (x == 1 ? (y == 4 ? 5 : 0)           \

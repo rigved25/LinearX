@@ -1,5 +1,6 @@
 // src/alignment/linear_align.cpp
 #include <fstream>
+#include <iomanip>
 #include <linearx/alignment/config.hpp>
 #include <linearx/alignment/linear_align.hpp>
 #include <random>
@@ -132,10 +133,99 @@ void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose
                             "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
                             j, prob);
                 }
-                prob = min(prob, 1.0);
+                prob = min(prob, value_type(1.0));
                 prob_rev_idx[j].push_back(i);
                 ++num_saved;
                 ++it;  // move to the next element if not erased
+            }
+        }
+    }
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time =
+        chrono::duration_cast<chrono::microseconds>(end_time - start_time).count() / 1000.0;  // in milliseconds
+    if (verbose_output) {
+        fprintf(stderr, "[LinearAlignment] Coincidence Probabilities in %f ms: %lu (saved) + %lu (pruned)\n",
+                execution_time, num_saved, num_pruned);
+    }
+    log.cp_exec_time = execution_time;
+}
+
+template <typename T>
+void LinearAlignmentInterface<T>::compute_posterior(std::vector<std::vector<std::unordered_map<int, value_type>*>>& posterior, bool verbose_output) {
+    auto start_time = chrono::high_resolution_clock::now();
+    value_type probcons_thresh = 0.01;
+    const int k1 = seq1.id;
+    const int k2 = seq2.id;
+
+    // clear the previous matrix
+    delete[] posterior[k1][k2];
+    delete[] posterior[k2][k1];
+    posterior[k1][k2] = new std::unordered_map<int, value_type>[seq1.length()];  // reallocate memory
+    posterior[k2][k1] = new std::unordered_map<int, value_type>[seq2.length()];  // reallocate memory
+
+    const value_type p_xy = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
+    for (int s = 0; s <= seq_len_sum; ++s) {
+        vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(HStateType::ALN);
+        for (auto& item : beam[s]) {
+            const int i = item.first.first;
+            const int j = item.first.second;
+            HState& state = item.second;
+
+            const value_type prob = LOG_DIV(LOG_MUL(state.alpha, state.beta), p_xy);
+            if (prob > -linearx::constants::limits::DEVIATION_THRESHOLD && i > 0 && j > 0) {
+                auto [ptr_posterior_ij, inserted1] = posterior[k1][k2][i - 1].try_emplace(j - 1, LOG_ZERO);
+                ptr_posterior_ij->second = LOG_SUM(ptr_posterior_ij->second, prob);
+                auto [ptr_posterior_ji, inserted2] = posterior[k2][k1][j - 1].try_emplace(i - 1, LOG_ZERO);
+                ptr_posterior_ji->second = LOG_SUM(ptr_posterior_ji->second, prob);
+            }
+        }
+    }
+
+    unsigned long num_pruned = 0;  // for keeping track of pruned P(i,j)s
+    unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
+    const value_type fam_threshold = phmm->get_fam_threshold();
+    for (int i = 0; i < seq1.length(); ++i) {
+        for (auto it = posterior[k1][k2][i].begin(); it != posterior[k1][k2][i].end();) {
+            const int j = it->first;
+            value_type& probij = it->second;
+
+            auto it2 = posterior[k2][k1][j].find(i);
+            if (it2 == posterior[k2][k1][j].end()) {
+                fprintf(stderr,
+                    "[LinearAlignment: Warning] Posterior value not found! bpp(%d, %d): %.5f\n", i,
+                    j, probij);
+            }
+            value_type& probji = it2->second;
+
+            if (probij < fam_threshold) {
+                it = posterior[k1][k2][i].erase(it);  // erase and get the next valid iterator
+                it2 = posterior[k2][k1][j].erase(it2);
+                ++num_pruned;
+            } else {
+                probij = EXP(probij);
+                if (probij > 1.001) {
+                    fprintf(stderr,
+                            "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
+                            j, probij);
+                }
+                probij = min(probij, value_type(1.0));
+
+                probji = EXP(probji);
+                if (probji > 1.001) {
+                    fprintf(stderr,
+                            "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
+                            j, probji);
+                }
+                probji = min(probji, value_type(1.0));
+
+                if (probij < probcons_thresh) {
+                    it = posterior[k1][k2][i].erase(it);  // erase and get the next valid iterator
+                    it2 = posterior[k2][k1][j].erase(it2);
+                    ++num_pruned;
+                } else {
+                    ++num_saved;
+                    ++it; // move to the next element if not erased
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 // src/turbofold/turbo_partition.cpp
+#include <chrono>
 #include <linearx/partition/linear_partition.hpp>
 #include <linearx/turbofold/linear_turbofold.hpp>
 

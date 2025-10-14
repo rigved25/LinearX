@@ -42,8 +42,8 @@ class LinearAlignmentInterface {
         }
         const value_type t1 = sqrt(pm1->upstrm[i] * pm2->upstrm[j]);
         const value_type t2 = sqrt(pm1->dwnstrm[i] * pm2->dwnstrm[j]);
-        const value_type t3 = sqrt(std::max(1 - pm1->upstrm[i] - pm1->dwnstrm[i], 0.0) *
-                                   std::max(1 - pm2->upstrm[j] - pm2->dwnstrm[j], 0.0));
+        const value_type t3 = sqrt(std::max(1 - pm1->upstrm[i] - pm1->dwnstrm[i], (value_type)0.0) *
+                                   std::max(1 - pm2->upstrm[j] - pm2->dwnstrm[j], (value_type)0.0));
         value_type output = ((t1 + t2) * alpha1) + (t3 * alpha2) + (alpha3);
         output = LOG(output);
         return output;
@@ -131,6 +131,7 @@ class LinearAlignmentInterface {
                          const bool verbose_output = true);
 
     void compute_coincidence_probabilities(const bool verbose_output = true);
+    void compute_posterior(std::vector<std::vector<std::unordered_map<int, value_type>*>>& posterior, const bool verbose_output = true);
     void dump_coinc_probs(const std::string& out_dir) const;
     inline value_type get_cp(const int i, const int j) const {
         const auto& cp_i = cp[i];

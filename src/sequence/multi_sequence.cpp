@@ -170,3 +170,49 @@ void MultiSeq::print(std::ostream& out, bool use_enc) const {
         s.print(out, use_enc);
     }
 }
+
+//! Extracts all sequences from MultiSequence object whose index is given by a set. 
+//! Projects the multiple sequences to subset and returns as a new MultiSequence object.
+MultiSeq * MultiSeq::Project(const std::set<int> &indices){
+    std::vector<std::string::iterator> oldPtrs(indices.size());
+    std::vector<std::string> newPtrs(indices.size(), "");
+
+    int i = 0;
+    for(std::set<int>::const_iterator iter = indices.begin(); iter != indices.end(); ++iter){
+        oldPtrs[i++] = at(*iter).seq.begin();
+    }
+
+    // Computes new length.
+    // removes all gap columns
+    int oldLength = at(*indices.begin()).seq.length();
+    int newLength = 0;
+    for (i = 0; i < oldLength; ++i) {
+        bool found = false;
+        for (int j = 0; j < (int) indices.size(); ++j) {
+            if (oldPtrs[j][i] != '-') {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            for (int j = 0; j < (int) indices.size(); ++j) {
+                newPtrs[j].push_back(oldPtrs[j][i]);
+            }
+        }
+    }
+
+    MultiSeq *ret = new MultiSeq();
+    i = 0;
+    for (int idx : indices) {
+        const Sequence &original = at(idx);
+        Sequence newSeq;
+        newSeq.seq = newPtrs[i++];
+        newSeq.id = original.id;
+        newSeq.name = original.name;
+        newSeq.enc = original.enc;
+        ret->add_sequence(newSeq);
+    }
+
+    return ret;
+}

@@ -7,6 +7,7 @@
 #include <linearx/constants.hpp>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 
 enum Mode { BEST, PARTITION_INSIDE, PARTITION_OUTSIDE };
 
@@ -26,6 +27,63 @@ struct PairHash {
     std::size_t operator()(const std::pair<int, int>& p) const noexcept {
         return (static_cast<std::size_t>(p.first) << 32) | static_cast<std::size_t>(p.second);
     }
+};
+
+// A cache-friendly 2D view backed by a single contiguous 1D array.
+// Provides row access via operator[] so callers can use a[i][j].
+template <typename T>
+class Flat2D {
+   public:
+    Flat2D() : rows_(0), cols_(0) {}
+    Flat2D(const int rows, const int cols, const T& init = T()) { resize(rows, cols, init); }
+
+    inline void resize(const int rows, const int cols, const T& init = T()) {
+        rows_ = rows;
+        cols_ = cols;
+        data_.assign(static_cast<size_t>(rows) * static_cast<size_t>(cols), init);
+    }
+
+    inline int rows() const noexcept { return rows_; }
+    inline int cols() const noexcept { return cols_; }
+    inline size_t size() const noexcept { return data_.size(); }
+
+    inline T* data() noexcept { return data_.data(); }
+    inline const T* data() const noexcept { return data_.data(); }
+
+    // Row proxy for a[i][j] indexing
+    class Row {
+       public:
+        explicit Row(T* ptr) : ptr_(ptr) {}
+        inline T& operator[](const int j) noexcept { return ptr_[j]; }
+        inline const T& operator[](const int j) const noexcept { return ptr_[j]; }
+
+       private:
+        T* ptr_;
+    };
+
+    class ConstRow {
+       public:
+        explicit ConstRow(const T* ptr) : ptr_(ptr) {}
+        inline const T& operator[](const int j) const noexcept { return ptr_[j]; }
+
+       private:
+        const T* ptr_;
+    };
+
+    inline Row operator[](const int i) noexcept { return Row(&data_[static_cast<size_t>(i) * cols_]); }
+    inline ConstRow operator[](const int i) const noexcept {
+        return ConstRow(&data_[static_cast<size_t>(i) * cols_]);
+    }
+
+    inline T& operator()(const int i, const int j) noexcept { return data_[static_cast<size_t>(i) * cols_ + j]; }
+    inline const T& operator()(const int i, const int j) const noexcept {
+        return data_[static_cast<size_t>(i) * cols_ + j];
+    }
+
+   private:
+    int rows_;
+    int cols_;
+    std::vector<T> data_;
 };
 
 template <typename T>

@@ -2,6 +2,8 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
+
 
 class Structure {
    private:

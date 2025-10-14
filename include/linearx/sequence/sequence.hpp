@@ -36,6 +36,9 @@ class Sequence {
     void remove_gaps();
     void swap_nuc(char nuc1, char nuc2);
     float compute_seq_identity(const Sequence& seq2) const;
+    Sequence *clone() const ;
+    Sequence *add_gaps(std::string *alignment, char id);
+    std::vector<int> *get_mapping () const;
 
     // edit operations
     void set_seq(const std::string& new_seq);

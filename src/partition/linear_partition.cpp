@@ -85,7 +85,7 @@ void LinearPartitionInterface<T>::compute_bpp_matrix(const unsigned beam_size, c
                             "[LinearPartition Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
                             j, prob);
                 }
-                this->bpp[j][i] = min(prob, 1.0);  // Clamp the probability to [0, 1]
+                this->bpp[j][i] = min(prob, (value_type)1.0);  // Clamp the probability to [0, 1]
             }
         }
     }

@@ -33,11 +33,15 @@ Phmm::Phmm(const char* phmm_pars_file) {
 
     // load all parameters from file
     for (int cnt = 0; cnt < N_BINZ * (N_STATES + N_OUTPUTS) * N_STATES; cnt++) {
-        fscanf(fam_par_file, "%lf", &fam_hmm_pars[cnt]);
+        double value = 0.0;
+        fscanf(fam_par_file, "%lf", &value);
+        fam_hmm_pars[cnt] = static_cast<value_type>(value);
     }
 
     for (int cnt = 0; cnt < N_BINZ; cnt++) {
-        fscanf(fam_par_file, "%lf", &fam_thresholds[cnt]);
+        double value = 0.0;
+        fscanf(fam_par_file, "%lf", &value);
+        fam_thresholds[cnt] = static_cast<value_type>(value);
     }
 
     fclose(fam_par_file);

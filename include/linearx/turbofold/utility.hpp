@@ -21,6 +21,13 @@ struct TurboFoldLog {
     std::vector<value_type> pf_itr_exec_times;
     value_type itrs_exec_time;
 
+    // MSA timing fields
+    value_type msa_mea_calc_time;      // Time for calculating MEA distances
+    value_type msa_compute_trees_time; // Time for computing guide trees
+    value_type msa_process_tree_time;  // Time for processing guide tree
+    value_type msa_iterative_refine_time; // Time for iterative refinement
+    value_type msa_total_time;         // Total MSA time
+
     TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool use_prev_itr_beta, bool restrict_search,
                  float alignment_pruning_threshold, float folding_pruning_threshold)
         : num_iterations(num_iterations),
@@ -29,11 +36,18 @@ struct TurboFoldLog {
           restrict_search(restrict_search),
           alignment_pruning_threshold(alignment_pruning_threshold),
           folding_pruning_threshold(folding_pruning_threshold) {
-        aln_logs.resize(num_iterations + 1);
+        aln_logs.resize(num_iterations + 2);  // +2 to account for extra MSA iteration
         pf_logs.resize(num_iterations + 1);
-        aln_itr_exec_times.resize(num_iterations + 1);
+        aln_itr_exec_times.resize(num_iterations + 2);  // +2 to account for extra MSA iteration
         pf_itr_exec_times.resize(num_iterations + 1);
         itrs_exec_time = 0.0;
+
+        // Initialize MSA timing fields
+        msa_mea_calc_time = 0.0;
+        msa_compute_trees_time = 0.0;
+        msa_process_tree_time = 0.0;
+        msa_iterative_refine_time = 0.0;
+        msa_total_time = 0.0;
     }
 
     inline void save_threshknot_db(const std::string& out_dir) const {
@@ -64,34 +78,36 @@ struct TurboFoldLog {
         std::filesystem::create_directories(aln_log_dir);
         std::filesystem::create_directories(pf_log_dir);
 
-        for (int itr = 0; itr <= num_iterations; ++itr) {
-            // -- Alignment logs (skip itr 0)
-            if (itr > 0) {
-                std::ofstream aln_log(aln_log_dir + "/itr_" + std::to_string(itr) + ".txt");
-                if (!aln_log)
-                    throw std::runtime_error("Failed to open alignment log file for iteration " + std::to_string(itr));
+        // -- Alignment logs (skip itr 0, include extra MSA iteration at num_iterations+1)
+        for (int itr = 1; itr <= num_iterations + 1; ++itr) {
+            if (aln_logs[itr].empty()) continue;  // skip if no alignment data for this iteration
+            
+            std::ofstream aln_log(aln_log_dir + "/itr_" + std::to_string(itr) + ".txt");
+            if (!aln_log)
+                throw std::runtime_error("Failed to open alignment log file for iteration " + std::to_string(itr));
 
-                aln_log << "=== Alignment Logs: Iteration " << itr << " ===\n\n";
-                int pair_idx = 0;
-                for (const auto& log : aln_logs[itr]) {
-                    aln_log << "----- Pair Index: " << pair_idx++ << " -----\n";
-                    aln_log << "  Sequence Identity: " << log.seq_identity << "\n";
-                    aln_log << "  Best Execution Time (ms): " << log.best_exec_time << " ms\n";
-                    aln_log << "  Inside Execution Time (ms): " << log.exec_time.first << " ms\n";
-                    double outside_pct =
-                        (log.exec_time.first > 0.0) ? (100.0 * log.exec_time.second / log.exec_time.first) : 0.0;
-                    aln_log << "  Outside Execution Time (ms): " << log.exec_time.second << " ms (" << outside_pct
-                            << "% of inside)\n";
-                    aln_log << "  Coincidence Probs Execution Time: " << log.cp_exec_time << " ms\n";
-                    aln_log << "  Scores (inside, outside): " << log.total_score.first << ", " << log.total_score.second
-                            << "\n";
-                    aln_log << "  Effective Beam Size (inside, outside): " << log.effective_beam_size.first << ", "
-                            << log.effective_beam_size.second << "\n";
-                }
-                aln_log.close();
+            aln_log << "=== Alignment Logs: Iteration " << itr << " ===\n\n";
+            int pair_idx = 0;
+            for (const auto& log : aln_logs[itr]) {
+                aln_log << "----- Pair Index: " << pair_idx++ << " -----\n";
+                aln_log << "  Sequence Identity: " << log.seq_identity << "\n";
+                aln_log << "  Best Execution Time (ms): " << log.best_exec_time << " ms\n";
+                aln_log << "  Inside Execution Time (ms): " << log.exec_time.first << " ms\n";
+                double outside_pct =
+                    (log.exec_time.first > 0.0) ? (100.0 * log.exec_time.second / log.exec_time.first) : 0.0;
+                aln_log << "  Outside Execution Time (ms): " << log.exec_time.second << " ms (" << outside_pct
+                        << "% of inside)\n";
+                aln_log << "  Coincidence Probs Execution Time: " << log.cp_exec_time << " ms\n";
+                aln_log << "  Scores (inside, outside): " << log.total_score.first << ", " << log.total_score.second
+                        << "\n";
+                aln_log << "  Effective Beam Size (inside, outside): " << log.effective_beam_size.first << ", "
+                        << log.effective_beam_size.second << "\n";
             }
+            aln_log.close();
+        }
 
-            // -- Partition logs (always present)
+        // -- Partition logs (always present, up to num_iterations)
+        for (int itr = 0; itr <= num_iterations; ++itr) {
             std::ofstream pf_log(pf_log_dir + "/itr_" + std::to_string(itr) + ".txt");
             if (!pf_log)
                 throw std::runtime_error("Failed to open partition log file for iteration " + std::to_string(itr));
@@ -118,6 +134,7 @@ struct TurboFoldLog {
         itrs_exec_time = 0.0;
         for (const auto& t : aln_itr_exec_times) itrs_exec_time += t;
         for (const auto& t : pf_itr_exec_times) itrs_exec_time += t;
+        itrs_exec_time += msa_total_time;
 
         // --- write top-level summary file
         std::ofstream summary(out_dir + "/logs/log.txt");
@@ -141,6 +158,12 @@ struct TurboFoldLog {
         summary << "\n";
 
         summary << "itrs_exec_time (ms): " << itrs_exec_time << "\n";
+
+        summary << "msa_mea_calc_time (ms): " << msa_mea_calc_time << "\n";
+        summary << "msa_compute_trees_time (ms): " << msa_compute_trees_time << "\n";
+        summary << "msa_process_tree_time (ms): " << msa_process_tree_time << "\n";
+        summary << "msa_iterative_refine_time (ms): " << msa_iterative_refine_time << "\n";
+        summary << "msa_total_time (ms): " << msa_total_time << "\n";
         summary.close();
     }
 };

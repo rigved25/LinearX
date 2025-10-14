@@ -41,8 +41,12 @@ int main(int argc, char* argv[]) {
         MultiSeq ms;
         ms.read_fasta(msa_file_path, linearx::utils::VIENNA_NUC_ENCODING_SCHEME);
         EnergyModel energy_model(energy_model_choice == 0 ? EnergyParamsType::VIENNA : EnergyParamsType::BL_STAR);
-        LinearTurbofold ltf(ms, energy_model);
-        ltf.run(num_itr, use_lazy_outside, use_prev_itr_beta, restrict_search, verbose, save_logs, save_probs, out_dir);
+        LinearTurbofold ltf(ms, energy_model, 100, 100, 
+                           linearx::constants::limits::DEVIATION_THRESHOLD,
+                           2 * linearx::constants::limits::DEVIATION_THRESHOLD,
+                           0.3, 0.3, 3, false, 1.0, 0.8, 0.5,
+                           num_itr, verbose, save_logs, save_probs, out_dir);
+        ltf.run();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return EXIT_FAILURE;

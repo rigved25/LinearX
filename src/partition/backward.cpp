@@ -98,7 +98,7 @@ void LinearPartitionInterface<T>::compute_outside(const bool use_lazy_outside, c
     const float effective_beam_size = float(states_visited) / (4 * seq_length);  // 4 beams (M, M2, P, Multi) per j
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(log.exec_time.first, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, (value_type)1.0));
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
         fprintf(stderr, "  - Visited States (%.2f%%): %lu (visited) / %lu (total)\n",
                 100.0 * states_visited / total_states, states_visited, total_states);
@@ -465,7 +465,7 @@ void LinearPartitionInterface<T>::run_regular_outside(const bool verbose_output)
     const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(log.exec_time.first, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, (value_type)1.0));
         fprintf(stderr, "  - Alpha(C(n)): %.5f | Beta(C(0)): %.5f\n", bestC[seq_length - 1].alpha, bestC[-1].beta);
     }
 

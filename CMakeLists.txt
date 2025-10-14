@@ -9,19 +9,30 @@ include(CheckIPOSupported)
 check_ipo_supported(RESULT result OUTPUT output)
 message(STATUS "IPO/LTO support: ${result} (${output})")
 
-# -------- OpenMP Setup for Apple Silicon --------
-# if(APPLE)
-#     # Use Homebrew LLVM
-#     set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
-#     set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+# -------- OpenMP Setup --------
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found")
+    # For Apple Silicon with Homebrew LLVM
+    if(APPLE)
+        # Use Homebrew LLVM
+        set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
+        set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
 
-#     # Add OpenMP flags manually
-#     add_compile_options(-Xpreprocessor -fopenmp)
-#     add_link_options(-L/opt/homebrew/opt/libomp/lib -lomp)
+        # Add OpenMP flags manually
+        add_compile_options(-Xpreprocessor -fopenmp)
+        add_link_options(-L/opt/homebrew/opt/libomp/lib -lomp)
 
-#     # Add include path manually
-#     include_directories(SYSTEM /opt/homebrew/opt/libomp/include)
-# endif()
+        # Add include path manually
+        include_directories(SYSTEM /opt/homebrew/opt/libomp/include)
+    else()
+        # Standard OpenMP setup for other systems
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    endif()
+else()
+    message(STATUS "OpenMP not found")
+endif()
 
 # Optimization flags
 add_compile_options(
@@ -65,6 +76,11 @@ add_library(linearx_core ${CORE_SRC})
 target_compile_definitions(linearx_core PRIVATE
     PARAM_FILE_PATH="${CMAKE_BINARY_DIR}/fam_hmm_pars.txt"
 )
+
+# Check GCC version for filesystem library linking
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries(linearx_core PRIVATE stdc++fs)
+endif()
 
 # Subdirectories
 add_subdirectory(external/Catch2)

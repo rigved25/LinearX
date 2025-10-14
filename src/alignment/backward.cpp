@@ -107,7 +107,7 @@ void LinearAlignmentInterface<T>::compute_outside(bool use_lazy_outside, value_t
     const float effective_beam_size = float(states_visited) / (3 * seq_len_sum);
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(log.exec_time.first, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, value_type(1.0)));
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
         fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
                 100.0 * states_visited / total_states, states_visited, total_states);
@@ -286,7 +286,7 @@ void LinearAlignmentInterface<T>::run_normal_outside(bool verbose_output) {
     const float effective_beam_size = float(states_visited) / (3 * seq_len_sum);
     if (verbose_output) {
         fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
-                100.0 * execution_time / max(log.exec_time.first, 1.0));
+                100.0 * execution_time / max(log.exec_time.first, value_type(1.0)));
         fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, (unsigned long)0);
         fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
                 100.0 * states_visited / states_visited, states_visited, states_visited);
