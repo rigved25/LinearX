@@ -9,6 +9,17 @@ include(CheckIPOSupported)
 check_ipo_supported(RESULT result OUTPUT output)
 message(STATUS "IPO/LTO support: ${result} (${output})")
 
+# -------- Boost Setup --------
+find_package(Boost REQUIRED)
+if(Boost_FOUND)
+    message(STATUS "Boost found - Version: ${Boost_VERSION}")
+    message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+    message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Boost not found! Please install boost in your conda environment.")
+endif()
+
 # -------- OpenMP Setup --------
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
@@ -79,6 +90,12 @@ target_compile_definitions(linearx_core PRIVATE
 
 # Check GCC version for filesystem library linking
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries(linearx_core PRIVATE stdc++fs)
+endif()
+
+# For GCC 8.x and some other compilers, we need to explicitly link stdc++fs
+# even for GCC >= 9.0 in some cases
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(linearx_core PRIVATE stdc++fs)
 endif()
 

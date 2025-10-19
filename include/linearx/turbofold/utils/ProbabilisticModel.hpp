@@ -30,7 +30,12 @@ class ProbabilisticModel {
     unsigned int num_iterative_refinement_reps_ = 100;
     unsigned int num_consistency_reps_ = 2;
 
-    
+    ProbabilisticModel(const std::string& out_dir) : out_dir_(out_dir + "/"),
+                                                    num_iterative_refinement_reps_(100),
+                                                    skip_beam_prune_(6),
+                                                    num_consistency_reps_(2)
+    {}
+
     inline unsigned beam_prune(std::unordered_map<std::pair<int, int>, MEAState, linearx::utils::PairHash>& beamstep, int run_beam_size) {
         if (run_beam_size == 0 || beamstep.size() <= run_beam_size) {
             return 0;
@@ -56,16 +61,6 @@ class ProbabilisticModel {
         return num_pruned;
     }
 
-    ProbabilisticModel(const std::string& out_dir) : out_dir_(out_dir),
-                                               num_iterative_refinement_reps_(100),
-                                               skip_beam_prune_(6),
-                                               num_consistency_reps_(2)
-                                               {
-                                                    if (!out_dir.empty()) {
-                                                        out_dir_ = out_dir + "/";
-                                                    }
-                                               }
-
     pair<string *, value_type> LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
 
     vector<vector<unordered_map<int, value_type>*>> LinearMultiConsistencyTransform(MultiSeq &sequences, vector<vector<unordered_map<int, value_type>*>> &posterior);
@@ -74,11 +69,11 @@ class ProbabilisticModel {
 
     unordered_map<int, value_type>* LinearMultiAlnResults(MultiSeq* align1, MultiSeq* align2, const vector<vector<unordered_map<int, value_type>*>> &posterior, value_type cutoff) const;
 
-    MultiSeq* LinearAlignAlignments(MultiSeq* align1, MultiSeq* align2, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
+    pair<MultiSeq*, value_type> LinearAlignAlignments(MultiSeq* align1, MultiSeq* align2, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
 
-    MultiSeq* LinearProcessTree(const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
+    pair<MultiSeq*, value_type> LinearProcessTree(const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
 
-    void LinearDoIterativeRefinement (const vector<vector<unordered_map<int, value_type>*>> &posterior, MultiSeq* alignment, int i, int hmmBeam);
+    pair<MultiSeq*, value_type> LinearDoIterativeRefinement (const vector<vector<unordered_map<int, value_type>*>> &posterior, MultiSeq* alignment, int i, int hmmBeam);
 
     MultiSeq* LinearComputeFinalAlignment(const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
 

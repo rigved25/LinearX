@@ -294,7 +294,7 @@ unordered_map<int, value_type>* ProbabilisticModel::LinearMultiAlnResults(MultiS
     return transformation;
 }
 
-MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq* align1, MultiSeq* align2, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
+pair<MultiSeq*, value_type> ProbabilisticModel::LinearAlignAlignments (MultiSeq* align1, MultiSeq* align2, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
 
     // Choose the alignment routine depending on the "cosmetic" gap penalties used
     unordered_map<int, value_type>* posterior_matrix = LinearMultiAlnResults(align1, align2, posterior, 0.01f);
@@ -302,6 +302,9 @@ MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq* align1, MultiSeq*
     pair<string*, value_type> alignment = LinearComputeAlignment(hmmBeam, align1->at(0).length(), align2->at(0).length(), posterior_matrix);
     delete[] posterior_matrix;
 
+    fprintf(stderr, "Alignment: %s\n", alignment.first->c_str());
+    fprintf(stderr, "MEA score: %f\n", alignment.second);
+    
     // Build final alignment
     MultiSeq *result = new MultiSeq();
     for (int i = 0; i < align1->size(); i++)
@@ -309,23 +312,30 @@ MultiSeq* ProbabilisticModel::LinearAlignAlignments (MultiSeq* align1, MultiSeq*
     for (int i = 0; i < align2->size(); i++)
         result->add_sequence (  *(align2->at(i).add_gaps(alignment.first, 'Y')) );
 
+    value_type mea_score = alignment.second;
     delete alignment.first;
 
-    return result;
+    return make_pair(result, mea_score);
 }
 
-MultiSeq* ProbabilisticModel::LinearProcessTree (const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
+pair<MultiSeq*, value_type> ProbabilisticModel::LinearProcessTree (const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
     MultiSeq *result;
+    value_type mea_score = 0.0;
 
     // Check if this is an internal node of the alignment tree
     if (tree->GetSequenceLabel() == -1){
-        MultiSeq *alignLeft = LinearProcessTree (tree->GetLeftChild(), sequences, posterior, hmmBeam);
-        MultiSeq *alignRight = LinearProcessTree (tree->GetRightChild(), sequences, posterior, hmmBeam);
+        auto left_result = LinearProcessTree (tree->GetLeftChild(), sequences, posterior, hmmBeam);
+        auto right_result = LinearProcessTree (tree->GetRightChild(), sequences, posterior, hmmBeam);
+
+        MultiSeq *alignLeft = left_result.first;
+        MultiSeq *alignRight = right_result.first;
 
         assert (alignLeft);
         assert (alignRight);
-        
-        result = LinearAlignAlignments (alignLeft, alignRight, posterior, hmmBeam);
+
+        auto alignment_result = LinearAlignAlignments (alignLeft, alignRight, posterior, hmmBeam);
+        result = alignment_result.first;
+        mea_score = alignment_result.second;
         assert (result);
 
         delete alignLeft;
@@ -335,49 +345,77 @@ MultiSeq* ProbabilisticModel::LinearProcessTree (const TreeNode *tree, MultiSeq*
     else {
         result = new MultiSeq(); assert (result);
         result->add_sequence( *(sequences->at(tree->GetSequenceLabel()).clone()) );
+        mea_score = 0.0; // No alignment for single sequences
     }
 
-    return result;
+    return make_pair(result, mea_score);
 }
 
-void ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unordered_map<int, value_type>*>> &posterior, MultiSeq* alignment, int i, int hmmBeam){
+pair<MultiSeq*, value_type> ProbabilisticModel::LinearDoIterativeRefinement (const vector<vector<unordered_map<int, value_type>*>> &posterior, MultiSeq* alignment, int i, int hmmBeam){
     set<int> groupOne, groupTwo;
 
     randomnumber rn;
     rn.seed(1234+i);
 
     // Create two separate groups
-    for (int i = 0; i < alignment->size(); i++){
+    for (int j = 0; j < alignment->size(); j++){
         int x = rn.roll_int(1,10);
 
         if (x % 2)
-            groupOne.insert (i);
+            groupOne.insert (j);
         else
-            groupTwo.insert (i);
+            groupTwo.insert (j);
     }
 
-    if (groupOne.empty() || groupTwo.empty()) return;
+    if (groupOne.empty() || groupTwo.empty()) {
+        // Return the original alignment with a default MEA score of 0
+        return make_pair(new MultiSeq(*alignment), 0.0);
+    }
 
     // Project into the two groups
     MultiSeq *groupOneSeqs = alignment->Project (groupOne); assert (groupOneSeqs);
     MultiSeq *groupTwoSeqs = alignment->Project (groupTwo); assert (groupTwoSeqs);
 
     // Realign
-    alignment = LinearAlignAlignments (groupOneSeqs, groupTwoSeqs, posterior, hmmBeam); 
+    auto alignment_result = LinearAlignAlignments (groupOneSeqs, groupTwoSeqs, posterior, hmmBeam);
 
     delete groupOneSeqs;
     delete groupTwoSeqs;
+
+    return alignment_result;
 }
 
 MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
-    MultiSeq* alignment = LinearProcessTree (tree, sequences, posterior, hmmBeam);
+    auto tree_result = LinearProcessTree (tree, sequences, posterior, hmmBeam);
 
-    // alignment->print();
+    // Initialize best alignment with the tree result and its actual MEA score
+    MultiSeq* best_alignment = tree_result.first;
+    value_type best_mea = tree_result.second;
 
-    // Iterative refinement
-    for (int i = 0; i < num_iterative_refinement_reps_; i++)
-        LinearDoIterativeRefinement (posterior, alignment, i, hmmBeam);
+    fprintf(stderr, "Initial tree alignment MEA: %f\n", best_mea);
+    fprintf(stderr, "\nStarting iterative refinement\n");
 
-    return alignment;
+    // Iterative refinement - track the best alignment by MEA score
+    for (int i = 0; i < num_iterative_refinement_reps_; i++) {
+        auto refinement_result = LinearDoIterativeRefinement (posterior, best_alignment, i, hmmBeam);
+        MultiSeq* new_alignment = refinement_result.first;
+        value_type new_mea = refinement_result.second;
+
+        fprintf(stderr, "Iteration %d - New MEA: %f, Current best: %f\n", i, new_mea, best_mea);
+
+        // Keep the alignment with higher MEA score
+        if (new_mea > best_mea) {
+            fprintf(stderr, "  -> Updating best alignment (new MEA %f > old %f)\n", new_mea, best_mea);
+            delete best_alignment;
+            best_alignment = new_alignment;
+            best_mea = new_mea;
+        } else {
+            fprintf(stderr, "  -> Keeping current alignment\n");
+            delete new_alignment;
+        }
+    }
+
+    fprintf(stderr, "Final best MEA: %f\n", best_mea);
+    return best_alignment;
 }
 

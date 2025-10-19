@@ -187,11 +187,9 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
     
     fprintf(stderr, "[Multi Seq Align] Starting the Max Exp Accuracy calculation for all pairs\n");
 
-    auto mea_start_time = std::chrono::high_resolution_clock::now();
-
     // Parallelize the MEA calculations using OpenMP
     #pragma omp parallel for schedule(dynamic) if(seq_len > 1)
-    for (int i = 0; i < seq_len; i++) {
+    for (int x = 0; x < seq_len; x++) {
         // // Progress reporting (only from master thread to avoid interleaved output)
         // #pragma omp critical
         // {
@@ -200,17 +198,17 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
         //     }
         // }
 
-        for (int j = i + 1; j < seq_len; j++) {
-            size_t seq1length = multi_seq.at(i).length();
-            size_t seq2length = multi_seq.at(j).length();
+        for (int y = x + 1; y < seq_len; y++) {
+            size_t seq1length = multi_seq.at(x).length();
+            size_t seq2length = multi_seq.at(y).length();
 
-            pair<string*, value_type> pair_alignment = model.LinearComputeAlignment(beam_size, seq1length, seq2length, posterior[i][j]);
+            pair<string*, value_type> pair_alignment = model.LinearComputeAlignment(beam_size, seq1length, seq2length, posterior[x][y]);
 
             // Guard against inflated MEA by capping per-position reward at 1.0
             value_type distance = pair_alignment.second / static_cast<value_type>(std::min(seq1length, seq2length));
 
             // Each thread writes to independent locations in the distance matrix
-            distances[i][j] = distances[j][i] = distance;
+            distances[x][y] = distances[y][x] = distance;
 
             // Thread-safe print result
             // #pragma omp critical
@@ -223,14 +221,12 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
     }
 
     fprintf(stderr, "[Multi Seq Align] Distance matrix computation completed\n");
-    auto mea_end_time = std::chrono::high_resolution_clock::now();
-    log.msa_mea_calc_time = std::chrono::duration_cast<std::chrono::milliseconds>(mea_end_time - mea_start_time).count();
 
     // For now, set total MSA time to MEA calculation time
     // When full MSA is implemented, this will include process tree and iterative refinement
     log.msa_total_time = log.msa_mea_calc_time;
 
-    fprintf(stderr, "[Multi Seq Align] Max Exp Accuracy calculation for all pairs completed (%.2f ms)\n", log.msa_mea_calc_time);
+    fprintf(stderr, "[Multi Seq Align] Max Exp Accuracy calculation for all pairs completed \n");
 
     for (int r = 0; r<model.num_consistency_reps_; r++ ) {
         posterior = model.LinearMultiConsistencyTransform(multi_seq, posterior);
@@ -243,14 +239,18 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
 
     }
     
-    TreeNode *tree = TreeNode::ComputeTree(distances);
+    fprintf(stderr, "[Multi Seq Align] Starting Compute Tree Calculation\n");
+    auto mea_start_time = std::chrono::high_resolution_clock::now();
+
+    TreeNode *tree = TreeNode::FastComputeTree(distances);
+    
+    auto mea_end_time = std::chrono::high_resolution_clock::now();
+    log.msa_mea_calc_time = std::chrono::duration_cast<std::chrono::milliseconds>(mea_end_time - mea_start_time).count();
+    fprintf(stderr, "[Multi Seq Align] Compute Tree completed (%.2f ms)\n", log.msa_mea_calc_time);
     
     multi_alignment = model.LinearComputeFinalAlignment(tree, &multi_seq, posterior, beam_size);
 
-    // delete tree;
-
-    // return alignment;
-
+    delete tree;
 }
 
 void LinearTurbofold::run() {

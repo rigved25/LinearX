@@ -27,7 +27,10 @@ Currently included programs:
 
 ## Prerequisites
 
-- **Python**: 3.8 or newer
+- **Conda/Miniconda**: For managing dependencies and environments
+- **Python**: 3.8 or newer (installed via conda)
+- **Boost**: C++ libraries (automatically installed via conda)
+- **CMake**: Build system (automatically installed via conda)
 - **Built executables**:
   - `./build/linearpartition`
   - `./build/linearturbofold`
@@ -40,18 +43,80 @@ Currently included programs:
 
 ## Build & Install (one-time)
 
-1) Install dependencies:
+### Quick Setup (Recommended)
+
+1) **Create and activate conda environment:**
 ```bash
+# Create a new environment with Python 3.8
+conda create -n linearx python=3.8 -c conda-forge
+conda activate linearx
+```
+
+2) **Clone and setup the project:**
+```bash
+git clone <your-repo-url>
+cd LinearX
+
+# Install dependencies and setup submodules
 chmod +x install.sh
 ./install.sh
 ```
 
-2) Configure and build:
+3) **Build the project:**
 ```bash
 chmod +x build.sh
 ./build.sh
 ```
+
 This will produce the binaries under `./build/`.
+
+### Manual Setup (Alternative)
+
+If you prefer to manage dependencies manually:
+
+1) **Create conda environment:**
+```bash
+conda create -n linearx python=3.8 -c conda-forge
+conda activate linearx
+```
+
+2) **Install required packages:**
+```bash
+conda install -c conda-forge boost cmake
+```
+
+3) **Setup submodules:**
+```bash
+git submodule update --init --recursive
+cd external/rna-eval
+chmod +x ./setup_env.sh
+./setup_env.sh
+cd ../../
+```
+
+4) **Make scripts executable:**
+```bash
+chmod +x build.sh linearpartition.py linearturbofold.py
+```
+
+5) **Build:**
+```bash
+./build.sh
+```
+
+### Important Notes
+
+- **Always activate your conda environment** before building or running:
+  ```bash
+  conda activate linearx
+  ```
+
+- **For runtime**, ensure the boost libraries are found:
+  ```bash
+  export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+  ```
+
+- **If you encounter boost linking issues**, the build script will provide helpful error messages.
 
 ---
 

@@ -7,6 +7,7 @@
 #include <vector>
 #include <cassert>
 #include <linearx/config.hpp>
+#include <boost/heap/fibonacci_heap.hpp>
 
 using namespace std;
 
@@ -42,6 +43,10 @@ public:
 
     //! Computes a guide tree based on a given distance matrix. 
     static TreeNode *ComputeTree(const vector<vector<value_type> > &distMatrix);
+
+    //! Computes a guide tree based on a given distance matrix using a max Fibonacci heap.
+    static TreeNode *FastComputeTree(const vector<vector<value_type> > &distMatrix);
+
 };
 
 #endif
