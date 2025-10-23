@@ -219,7 +219,12 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
     }
 
     inline HState* get_saved_state(const HStateType type, const int i, const int j) noexcept {
-        auto& beam = get_saved_beams(type)[i + j];
+        auto& beams = get_saved_beams(type);
+        const int s = i + j;
+        if (s >= beams.size()) {
+            return nullptr;  // Out of bounds - no saved states on first iteration
+        }
+        auto& beam = beams[s];
         const std::pair<int, int> key = {i, j};
         const auto it = beam.find(key);
         if (it != beam.end()) {

@@ -49,6 +49,10 @@ class LinearAlignmentInterface {
         return output;
     }
 
+    inline HState* get_saved_state(const HStateType type, const int i, const int j) {
+        return static_cast<T*>(this)->get_saved_state(type, i, j);
+    }
+
     inline HState* check_state(const HStateType type, const int i, const int j) {
         return static_cast<T*>(this)->check_state(type, i, j);
     }
@@ -126,6 +130,8 @@ class LinearAlignmentInterface {
 
     template <Mode mode>
     void compute_inside(const unsigned beam_size = 100, bool verbose_output = true);
+    void compute_inside_BEST(const unsigned beam_size = 0, bool verbose_output = true);
+    void compute_inside_BEST3(const unsigned beam_size = 0, bool verbose_output = true);
     void compute_outside(const bool use_lazy_outside,
                          const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                          const bool verbose_output = true);
@@ -151,5 +157,10 @@ class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {
 
     inline HState* check_state(const HStateType type, const int i, const int j) {
         return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
+    }
+
+    inline HState* get_saved_state(const HStateType type, const int i, const int j) {
+        (void)type; (void)i; (void)j;
+        return nullptr;  // LinearAlignment has no saved states
     }
 };

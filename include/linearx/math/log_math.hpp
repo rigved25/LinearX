@@ -13,7 +13,7 @@ namespace linearx::math {
 
 static const value_type LOG_ZERO = -log(DBL_MAX) * 1000;
 static const value_type LOG_ONE = 0.0;
-#define IS_LOG_ZERO(x) (x <= LOG_ZERO)
+#define IS_LOG_ZERO(x) (x <= linearx::math::LOG_ZERO)
 
 // Calculates log1p(exp(x))  -- used for calculating xlog_sum.
 inline value_type log1pexp(value_type x) noexcept {

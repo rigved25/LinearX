@@ -148,7 +148,10 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         const int aln_pair_index = get_seq_pair_index(k1, k2);
         aln.use_prob_set1();
         aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-        aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+        if(curr_itr == 1)
+            aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+        else
+            aln.compute_inside_BEST3(alignment_beam_size, verbose_output_);
         seq_identities[aln_pair_index] = aln.get_alignment().average_seq_identity();
         aln.log.seq_identity = seq_identities[aln_pair_index];
         aln.reset_beams(alignment_beam_size);
@@ -164,7 +167,8 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         } else {
             aln.compute_coincidence_probabilities(verbose_output_);
         }
-        if (restrict_search_ && curr_itr <= num_itr_) {
+        // if (restrict_search_ && curr_itr <= num_itr_) { // save partition function for the num_itr_ + 1 iteration
+        if (curr_itr <= num_itr_) {
             aln.save_partition_function(true);
         }
         aln.reset_beams(alignment_beam_size);
