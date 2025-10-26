@@ -151,7 +151,8 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         if(curr_itr == 1)
             aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
         else
-            aln.compute_inside_BEST3(alignment_beam_size, verbose_output_);
+            aln.compute_inside_Astar(alignment_beam_size, verbose_output_);
+        // aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
         seq_identities[aln_pair_index] = aln.get_alignment().average_seq_identity();
         aln.log.seq_identity = seq_identities[aln_pair_index];
         aln.reset_beams(alignment_beam_size);
@@ -190,6 +191,8 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
     ProbabilisticModel model(out_dir_);
     
     fprintf(stderr, "[Multi Seq Align] Starting the Max Exp Accuracy calculation for all pairs\n");
+    
+    auto mea_calc_start_time = std::chrono::high_resolution_clock::now();
 
     // Parallelize the MEA calculations using OpenMP
     #pragma omp parallel for schedule(dynamic) if(seq_len > 1)
@@ -223,15 +226,15 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
             delete pair_alignment.first;
         }
     }
+    
+    auto mea_calc_end_time = std::chrono::high_resolution_clock::now();
+    log.msa_mea_calc_time = std::chrono::duration_cast<std::chrono::milliseconds>(mea_calc_end_time - mea_calc_start_time).count();
 
-    fprintf(stderr, "[Multi Seq Align] Distance matrix computation completed\n");
+    fprintf(stderr, "[Multi Seq Align] Max Exp Accuracy computation completed (%.2f ms)\n", log.msa_mea_calc_time);
 
-    // For now, set total MSA time to MEA calculation time
-    // When full MSA is implemented, this will include process tree and iterative refinement
-    log.msa_total_time = log.msa_mea_calc_time;
-
-    fprintf(stderr, "[Multi Seq Align] Max Exp Accuracy calculation for all pairs completed \n");
-
+    fprintf(stderr, "[Multi Seq Align] Starting Consistency Transformation\n");
+    auto consistency_transform_start_time = std::chrono::high_resolution_clock::now();
+    
     for (int r = 0; r<model.num_consistency_reps_; r++ ) {
         posterior = model.LinearMultiConsistencyTransform(multi_seq, posterior);
         // for(int x = 0; x < multi_seq.size(); x++){
@@ -243,18 +246,25 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
 
     }
     
+    auto consistency_transform_end_time = std::chrono::high_resolution_clock::now();
+    log.msa_consistency_transform_time = std::chrono::duration_cast<std::chrono::milliseconds>(consistency_transform_end_time - consistency_transform_start_time).count();
+    fprintf(stderr, "[Multi Seq Align] Consistency Transformation completed (%.2f ms)\n", log.msa_consistency_transform_time);
+
     fprintf(stderr, "[Multi Seq Align] Starting Compute Tree Calculation\n");
-    auto mea_start_time = std::chrono::high_resolution_clock::now();
+    auto compute_tree_start_time = std::chrono::high_resolution_clock::now();
 
     TreeNode *tree = TreeNode::FastComputeTree(distances);
     
-    auto mea_end_time = std::chrono::high_resolution_clock::now();
-    log.msa_mea_calc_time = std::chrono::duration_cast<std::chrono::milliseconds>(mea_end_time - mea_start_time).count();
-    fprintf(stderr, "[Multi Seq Align] Compute Tree completed (%.2f ms)\n", log.msa_mea_calc_time);
+    auto compute_tree_end_time = std::chrono::high_resolution_clock::now();
+    log.msa_compute_trees_time = std::chrono::duration_cast<std::chrono::milliseconds>(compute_tree_end_time - compute_tree_start_time).count();
+    fprintf(stderr, "[Multi Seq Align] Compute Tree completed (%.2f ms)\n", log.msa_compute_trees_time);
     
-    multi_alignment = model.LinearComputeFinalAlignment(tree, &multi_seq, posterior, beam_size);
+    multi_alignment = model.LinearComputeFinalAlignment(tree, &multi_seq, posterior, beam_size, &log);
 
     delete tree;
+    
+    // Calculate total MSA time (sum of all components)
+    log.msa_total_time = log.msa_mea_calc_time + log.msa_consistency_transform_time + log.msa_compute_trees_time + log.msa_process_tree_time + log.msa_iterative_refine_time;
 }
 
 void LinearTurbofold::run() {

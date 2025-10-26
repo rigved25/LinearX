@@ -2,6 +2,7 @@
 #include <linearx/turbofold/utils/random.h>
 #include <algorithm>
 #include <vector>
+#include <chrono>
 
 
 /////////////////////////////////////////////////////////////////
@@ -26,7 +27,7 @@ pair<string *, value_type> ProbabilisticModel::LinearComputeAlignment(int hmmBea
 
     for (int s = 0; s <= seq1Length + seq2Length; ++s) {
         // Beam pruning
-        if (s % skip_beam_prune_ == 0 || s % skip_beam_prune_ == 1) beam_prune(beam[s], hmmBeam);
+        if (beam[s].size() > hmmBeam + skip_beam_prune_) beam_prune(beam[s], hmmBeam);
         // if (beam[s].size() > hmmBeam) beam_prune(beam[s], hmmBeam);
 
 
@@ -209,7 +210,7 @@ vector<vector<unordered_map<int, value_type>*>> ProbabilisticModel::LinearMultiC
             for (int i = 0; i < seq1Length; i++){
                 for(auto &item : original[i]){
                     int j = item.first;
-                    if (transformation[i].find(j) == transformation[i].end()) continue; // N.B.
+                    if (transformation[i].find(j) == transformation[i].end()) continue;
                     if (transformation[i][j] >= 0.01){
                         new_posterior[x][y][i][j] = transformation[i][j];
                         new_posterior[y][x][j][i] = transformation[i][j];
@@ -385,8 +386,15 @@ pair<MultiSeq*, value_type> ProbabilisticModel::LinearDoIterativeRefinement (con
     return alignment_result;
 }
 
-MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam){
+MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam, TurboFoldLog* log){
+    auto process_tree_start = std::chrono::high_resolution_clock::now();
     auto tree_result = LinearProcessTree (tree, sequences, posterior, hmmBeam);
+    auto process_tree_end = std::chrono::high_resolution_clock::now();
+    
+    if (log) {
+        log->msa_process_tree_time = std::chrono::duration_cast<std::chrono::milliseconds>(process_tree_end - process_tree_start).count();
+        fprintf(stderr, "[MSA] Tree processing completed (%.2f ms)\n", log->msa_process_tree_time);
+    }
 
     // Initialize best alignment with the tree result and its actual MEA score
     MultiSeq* best_alignment = tree_result.first;
@@ -395,6 +403,8 @@ MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree,
     fprintf(stderr, "Initial tree alignment MEA: %f\n", best_mea);
     fprintf(stderr, "\nStarting iterative refinement\n");
 
+    auto iterative_refine_start = std::chrono::high_resolution_clock::now();
+    
     // Iterative refinement - track the best alignment by MEA score
     for (int i = 0; i < num_iterative_refinement_reps_; i++) {
         auto refinement_result = LinearDoIterativeRefinement (posterior, best_alignment, i, hmmBeam);
@@ -413,6 +423,13 @@ MultiSeq* ProbabilisticModel::LinearComputeFinalAlignment (const TreeNode *tree,
             fprintf(stderr, "  -> Keeping current alignment\n");
             delete new_alignment;
         }
+    }
+    
+    auto iterative_refine_end = std::chrono::high_resolution_clock::now();
+    
+    if (log) {
+        log->msa_iterative_refine_time = std::chrono::duration_cast<std::chrono::milliseconds>(iterative_refine_end - iterative_refine_start).count();
+        fprintf(stderr, "[MSA] Iterative refinement completed (%.2f ms)\n", log->msa_iterative_refine_time);
     }
 
     fprintf(stderr, "Final best MEA: %f\n", best_mea);

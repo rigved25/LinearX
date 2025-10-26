@@ -11,7 +11,7 @@
 #include "linearx/utility.hpp"
 #include "linearx/math/log_math.hpp"
 #include "linearx/sequence/multi_sequence.hpp"
-
+#include "linearx/turbofold/utility.hpp"
 
 using namespace linearx::utils;
 
@@ -75,6 +75,6 @@ class ProbabilisticModel {
 
     pair<MultiSeq*, value_type> LinearDoIterativeRefinement (const vector<vector<unordered_map<int, value_type>*>> &posterior, MultiSeq* alignment, int i, int hmmBeam);
 
-    MultiSeq* LinearComputeFinalAlignment(const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam);
+    MultiSeq* LinearComputeFinalAlignment(const TreeNode *tree, MultiSeq* sequences, const vector<vector<unordered_map<int, value_type>*>> &posterior, int hmmBeam, TurboFoldLog* log = nullptr);
 
 };

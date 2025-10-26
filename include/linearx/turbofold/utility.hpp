@@ -5,6 +5,8 @@
 #include <fstream>
 #include <linearx/alignment/utility.hpp>
 #include <linearx/partition/utility.hpp>
+#include <linearx/sequence/structure.hpp>
+#include <linearx/sequence/sequence.hpp>
 #include <stdexcept>
 
 struct TurboFoldLog {
@@ -26,6 +28,7 @@ struct TurboFoldLog {
     value_type msa_compute_trees_time; // Time for computing guide trees
     value_type msa_process_tree_time;  // Time for processing guide tree
     value_type msa_iterative_refine_time; // Time for iterative refinement
+    value_type msa_consistency_transform_time; // Time for consistency transformation
     value_type msa_total_time;         // Total MSA time
 
     TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool use_prev_itr_beta, bool restrict_search,
@@ -47,6 +50,7 @@ struct TurboFoldLog {
         msa_compute_trees_time = 0.0;
         msa_process_tree_time = 0.0;
         msa_iterative_refine_time = 0.0;
+        msa_consistency_transform_time = 0.0;
         msa_total_time = 0.0;
     }
 
@@ -163,6 +167,7 @@ struct TurboFoldLog {
         summary << "msa_compute_trees_time (ms): " << msa_compute_trees_time << "\n";
         summary << "msa_process_tree_time (ms): " << msa_process_tree_time << "\n";
         summary << "msa_iterative_refine_time (ms): " << msa_iterative_refine_time << "\n";
+        summary << "msa_consistency_transform_time (ms): " << msa_consistency_transform_time << "\n";
         summary << "msa_total_time (ms): " << msa_total_time << "\n";
         summary.close();
     }
