@@ -64,7 +64,7 @@ class LinearTurbofold {
     
     void run_phmm_alignment(TurboFoldLog& log);
     void multiple_sequence_alignment(TurboFoldLog& log, unsigned int beam_size = 100);
-    void run();
+    void run(const bool use_lazy_outside = false, const bool use_prev_itr_beta = false, const bool restrict_search = false);
          
 };
 
@@ -136,20 +136,23 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
     }
 
     inline State* check_state(const StateType type, const int i, const int j) {
-        if (turbofold.restrict_search_ && turbofold.curr_itr > 0 && type != StateType::H && type != StateType::C) {
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 0 && type != StateType::C) {
             State* state = TurboPartition::get_saved_state(type, i, j);
             if (!state) {
                 return nullptr;
             }
-            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
-                return nullptr;
-            }
-            if (!turbofold.use_lazy_outside_ &&
-                LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) <= -turbofold.folding_pruning_threshold) {
-                return nullptr;
+            if (type != StateType::H) {  // no pruning for H states
+                if (turbofold.use_lazy_outside_) {
+                    if (state->beta <= linearx::math::LOG_ZERO) {
+                        return nullptr;
+                    }
+                } else if (LOG_DIV(LOG_MUL(state->alpha, state->beta), total_inside) <=
+                           -turbofold.folding_pruning_threshold) {
+                    return nullptr;
+                }
             }
         }
-        return LinearPartitionInterface<TurboPartition>::get_state(type, i, j, true);
+        return LinearPartitionInterface<TurboPartition>::get_state<true>(type, i, j);
     }
 
     template <Mode mode, typename F>
@@ -239,13 +242,13 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
             if (!state) {
                 return nullptr;
             }
-            if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
-                return nullptr;
-            }
-            if (!turbofold.use_lazy_outside_ &&
-                LOG_DIV(LOG_MUL(state->alpha, state->beta),
-                        saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
-                    -turbofold.alignment_pruning_threshold) {
+            if (turbofold.use_lazy_outside_) {
+                if (state->beta <= linearx::math::LOG_ZERO) {
+                    return nullptr;
+                }
+            } else if (LOG_DIV(LOG_MUL(state->alpha, state->beta),
+                               saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
+                       -turbofold.alignment_pruning_threshold) {
                 return nullptr;
             }
         }

@@ -151,7 +151,7 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         if(curr_itr == 1)
             aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
         else
-            aln.compute_inside_Astar(alignment_beam_size, verbose_output_);
+            aln.compute_inside_Astar(use_lazy_outside_, alignment_beam_size, verbose_output_);
         // aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
         seq_identities[aln_pair_index] = aln.get_alignment().average_seq_identity();
         aln.log.seq_identity = seq_identities[aln_pair_index];
@@ -162,9 +162,17 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
         aln.compute_inside<PARTITION_INSIDE>(alignment_beam_size, verbose_output_);
         aln.compute_outside(use_lazy_outside_, alignment_pruning_threshold, verbose_output_);
+        
+        // // Dump beams for debugging lazy_outside with Astar
+        // if (out_dir_.length() > 0 && curr_itr > 0) {
+        //     std::string beam_dir = out_dir_ + "/beams/itr_" + std::to_string(curr_itr);
+        //     std::string prefix = "seq" + std::to_string(k1) + "_seq" + std::to_string(k2) + "_";
+        //     aln.dump_beams(beam_dir, prefix);
+        // }
+        
         if (curr_itr == num_itr_ + 1) {
             aln.compute_posterior(posterior, verbose_output_);
-            dump_coinc_probs(out_dir_ + "/cps/itr_" + std::to_string(curr_itr), posterior[k1][k2], aln.seq1.length(), k1, k2);
+            // dump_coinc_probs(out_dir_ + "/cps/itr_" + std::to_string(curr_itr), posterior[k1][k2], aln.seq1.length(), k1, k2);
         } else {
             aln.compute_coincidence_probabilities(verbose_output_);
         }
@@ -267,7 +275,11 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
     log.msa_total_time = log.msa_mea_calc_time + log.msa_consistency_transform_time + log.msa_compute_trees_time + log.msa_process_tree_time + log.msa_iterative_refine_time;
 }
 
-void LinearTurbofold::run() {
+void LinearTurbofold::run(const bool use_lazy_outside, const bool use_prev_itr_beta, const bool restrict_search) {
+    use_lazy_outside_ = use_lazy_outside;
+    use_prev_itr_beta_ = use_prev_itr_beta;
+    restrict_search_ = restrict_search;
+    
     TurboFoldLog log(num_itr_, use_lazy_outside_, use_prev_itr_beta_, restrict_search_, alignment_pruning_threshold,
                      folding_pruning_threshold);
     std::cout << "Running LinearTurboFold with " << multi_seq.size() << " sequences\n";
@@ -320,11 +332,7 @@ void LinearTurbofold::run() {
             
             run_phmm_alignment(log);
 
-            auto msa_start_time = std::chrono::high_resolution_clock::now();
             multiple_sequence_alignment(log);
-            auto msa_end_time = std::chrono::high_resolution_clock::now();
-
-            (void)msa_start_time; (void)msa_end_time; // silence unused if not used elsewhere
 
             multi_alignment->write_fasta(out_dir_ + "/probcons_msa.fasta");
         }
@@ -335,6 +343,8 @@ void LinearTurbofold::run() {
     log.itrs_exec_time = 0.0;
     for (const auto& t : log.pf_itr_exec_times) log.itrs_exec_time += t;
     for (const auto& t : log.aln_itr_exec_times) log.itrs_exec_time += t;
+    log.itrs_exec_time += log.msa_total_time;
+
     fprintf(stdout, "Total iterations time: %.2fms\n", log.itrs_exec_time);
 
     // get threshknot structures for each sequence

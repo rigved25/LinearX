@@ -184,48 +184,34 @@ void LinearAlignmentInterface<T>::compute_posterior(std::vector<std::vector<std:
     unsigned long num_pruned = 0;  // for keeping track of pruned P(i,j)s
     unsigned long num_saved = 0;   // for keeping track of saved P(i,j)s
     const value_type fam_threshold = phmm->get_fam_threshold();
+    const value_type log_probcons_thresh = LOG(probcons_thresh);  // Convert to log space once
+    
+    // Optimized pruning
     for (int i = 0; i < seq1.length(); ++i) {
         for (auto it = posterior[k1][k2][i].begin(); it != posterior[k1][k2][i].end();) {
             const int j = it->first;
-            value_type& probij = it->second;
-
-            auto it2 = posterior[k2][k1][j].find(i);
-            if (it2 == posterior[k2][k1][j].end()) {
-                fprintf(stderr,
-                    "[LinearAlignment: Warning] Posterior value not found! bpp(%d, %d): %.5f\n", i,
-                    j, probij);
-            }
-            value_type& probji = it2->second;
-
-            if (probij < fam_threshold) {
-                it = posterior[k1][k2][i].erase(it);  // erase and get the next valid iterator
-                it2 = posterior[k2][k1][j].erase(it2);
+            value_type& prob = it->second;
+            
+            // Combined threshold check in log space
+            if (prob < std::max(fam_threshold, log_probcons_thresh)) {
+                it = posterior[k1][k2][i].erase(it);
+                posterior[k2][k1][j].erase(i);  // Direct erase - no find() needed!
                 ++num_pruned;
             } else {
-                probij = EXP(probij);
-                if (probij > 1.001) {
+                // Single EXP conversion
+                prob = EXP(prob);
+                if (prob > 1.001) {
                     fprintf(stderr,
                             "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
-                            j, probij);
+                            j, prob);
                 }
-                probij = min(probij, value_type(1.0));
-
-                probji = EXP(probji);
-                if (probji > 1.001) {
-                    fprintf(stderr,
-                            "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
-                            j, probji);
-                }
-                probji = min(probji, value_type(1.0));
-
-                if (probij < probcons_thresh) {
-                    it = posterior[k1][k2][i].erase(it);  // erase and get the next valid iterator
-                    it2 = posterior[k2][k1][j].erase(it2);
-                    ++num_pruned;
-                } else {
-                    ++num_saved;
-                    ++it; // move to the next element if not erased
-                }
+                prob = std::min(prob, value_type(1.0));
+                
+                // Mirror to reverse matrix (direct assignment - no find() needed!)
+                posterior[k2][k1][j][i] = prob;
+                
+                ++num_saved;
+                ++it;
             }
         }
     }
@@ -306,6 +292,66 @@ void LinearAlignmentInterface<T>::print_beams() const {
                       << " " << item.second.beta << std::endl;
         }
     }
+}
+
+template <typename T>
+void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const std::string& prefix) const {
+    // Create output directory if it doesn't exist
+    std::string mkdir_cmd = "mkdir -p " + out_dir;
+    system(mkdir_cmd.c_str());
+    
+    // Dump ALN beam
+    std::string aln_file = out_dir + "/" + prefix + "ALN_beam.txt";
+    std::ofstream aln_out(aln_file);
+    aln_out << "# beam_index i j alpha beta alpha+beta\n";
+    for (int s = 0; s < bestALN.size(); ++s) {
+        for (const auto& item : bestALN[s]) {
+            const int i = item.first.first;
+            const int j = item.first.second;
+            const value_type alpha = item.second.alpha;
+            const value_type beta = item.second.beta;
+            const value_type sum = alpha + beta;
+            aln_out << s << " " << i << " " << j << " " 
+                   << alpha << " " << beta << " " << sum << "\n";
+        }
+    }
+    aln_out.close();
+    
+    // Dump INS1 beam
+    std::string ins1_file = out_dir + "/" + prefix + "INS1_beam.txt";
+    std::ofstream ins1_out(ins1_file);
+    ins1_out << "# beam_index i j alpha beta alpha+beta\n";
+    for (int s = 0; s < bestINS1.size(); ++s) {
+        for (const auto& item : bestINS1[s]) {
+            const int i = item.first.first;
+            const int j = item.first.second;
+            const value_type alpha = item.second.alpha;
+            const value_type beta = item.second.beta;
+            const value_type sum = alpha + beta;
+            ins1_out << s << " " << i << " " << j << " " 
+                    << alpha << " " << beta << " " << sum << "\n";
+        }
+    }
+    ins1_out.close();
+    
+    // Dump INS2 beam
+    std::string ins2_file = out_dir + "/" + prefix + "INS2_beam.txt";
+    std::ofstream ins2_out(ins2_file);
+    ins2_out << "# beam_index i j alpha beta alpha+beta\n";
+    for (int s = 0; s < bestINS2.size(); ++s) {
+        for (const auto& item : bestINS2[s]) {
+            const int i = item.first.first;
+            const int j = item.first.second;
+            const value_type alpha = item.second.alpha;
+            const value_type beta = item.second.beta;
+            const value_type sum = alpha + beta;
+            ins2_out << s << " " << i << " " << j << " " 
+                    << alpha << " " << beta << " " << sum << "\n";
+        }
+    }
+    ins2_out.close();
+    
+    std::cerr << "[LinearAlignment] Dumped beams to " << out_dir << " with prefix '" << prefix << "'\n";
 }
 
 // Instantiate templates for LinearAlignmentInterface with desired types

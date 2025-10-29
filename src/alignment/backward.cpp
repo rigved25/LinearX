@@ -89,7 +89,7 @@ void LinearAlignmentInterface<T>::compute_outside(bool use_lazy_outside, value_t
     };
 
     if (verbose_output) {
-        cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
+        cerr << "[LinearAlignment] Running Lazy Outside Algorithm:" << endl;
     }
     auto start_time = chrono::high_resolution_clock::now();
     process_beam(bestALN[seq_len_sum + 2], HStateType::ALN);
@@ -233,7 +233,7 @@ template <typename T>
 void LinearAlignmentInterface<T>::run_normal_outside(bool verbose_output) {
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
-        cerr << "[LinearAlignment] Running Outside Algorithm:" << endl;
+        cerr << "[LinearAlignment] Running Normal Outside Algorithm:" << endl;
     }
     unsigned long states_visited = 0;
     unsigned long edges_saved = 0;

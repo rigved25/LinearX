@@ -130,7 +130,7 @@ class LinearAlignmentInterface {
 
     template <Mode mode>
     void compute_inside(const unsigned beam_size = 100, bool verbose_output = true);
-    void compute_inside_Astar(const unsigned beam_size = 0, bool verbose_output = true);
+    void compute_inside_Astar(const bool use_lazy_outside, const unsigned beam_size = 0, bool verbose_output = true);
     void compute_outside(const bool use_lazy_outside,
                          const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                          const bool verbose_output = true);
@@ -147,6 +147,7 @@ class LinearAlignmentInterface {
     void print_alpha_beta() const;
     void print_seqs() const;
     void print_beams() const;
+    void dump_beams(const std::string& out_dir, const std::string& prefix = "") const;
 };
 
 class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {

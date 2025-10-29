@@ -13,15 +13,15 @@ using namespace std;
 using namespace linearx::utils;
 
 template <typename T>
-void LinearAlignmentInterface<T>::compute_inside_Astar(const unsigned beam_size, bool verbose_output) {
+void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outside, const unsigned beam_size, bool verbose_output) {
     run_beam_size_ = beam_size;
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
-        fprintf(stderr, "[LinearAlignment] Running Inside Algorithm:\n");
+        fprintf(stderr, "[LinearAlignment] Running Inside Algorithm (A*):\n");
     }
 
     struct HeapEntry {
-        value_type priority;  // -LOG_MUL(alpha + beta)
+        value_type priority;  // -LOG_MUL(alpha, beta) for A* heuristic
         int i;
         int j;
     };
@@ -42,35 +42,43 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const unsigned beam_size,
     const int dest_seq1 = seq1.length() + 1;
     const int dest_seq2 = seq2.length() + 1;
 
-    auto get_priority = [&](const HStateType type, const int i, const int j, const value_type alpha) -> value_type {
-        value_type combined = alpha;
-        if (HState* saved = get_saved_state(type, i, j); saved && saved->beta > linearx::math::LOG_ZERO) {
-            combined = LOG_MUL(alpha, saved->beta);
+    auto try_push_state = [&](int i, int j, HStateType h, value_type alpha) -> bool {
+        // Check if we should explore
+        HState* saved = get_saved_state(h, i, j);
+        
+        if (use_lazy_outside && saved && saved->beta <= linearx::math::LOG_ZERO) {
+            return false;  // Skip: invalid beta indicates unpromising state
         }
-        return -combined;
-    };
-
-    auto push_or_update = [&](int i, int j, HStateType h, value_type alpha) {
+        
+        // Compute priority
+        value_type priority;
+        if (saved && saved->beta > linearx::math::LOG_ZERO) {
+            priority = -LOG_MUL(alpha, saved->beta);  // A* heuristic
+        } else {
+            priority = -alpha;  // No heuristic available
+        }
+        
+        // Update heap and handle map
         const Key key{i, j};
-        const value_type new_priority = get_priority(h, i, j, alpha);
         auto it = handle_map.find(key);
         if (it == handle_map.end()) {
-            Handle hdl = frontier.push({new_priority, i, j});
+            Handle hdl = frontier.push({priority, i, j});
             handle_map.emplace(key, hdl);
         } else {
             Handle hdl = it->second;
-            if (new_priority < (*hdl).priority) {
-                (*hdl).priority = new_priority;
+            if (priority < (*hdl).priority) {
+                (*hdl).priority = priority;
                 (*hdl).i = i;
                 (*hdl).j = j;
                 frontier.update(hdl);
             }
         }
+        return true;
     };
 
     // Push starting state (0, 0)
     HState& start_state = get_beams(HStateType::ALN)[0][{0, 0}];
-    push_or_update(0, 0, HStateType::ALN, start_state.alpha);
+    try_push_state(0, 0, HStateType::ALN, start_state.alpha);
 
     value_type best_score = linearx::math::LOG_ZERO;
 
@@ -113,11 +121,13 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const unsigned beam_size,
                 const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
                 auto& next_beam = get_beams(nh);
                 HState& next_state = next_beam[ni + nj][{ni, nj}];
-                if (candidate_alpha <= next_state.alpha) {  // alpha is already better and beta stays the same
-                    return;
+                
+                if (candidate_alpha <= next_state.alpha) {
+                    return; // alpha is already better and beta stays the same
                 }
+                
                 next_state.alpha = candidate_alpha;
-                push_or_update(ni, nj, nh, candidate_alpha);
+                try_push_state(ni, nj, nh, candidate_alpha);  // Check + push in one step
             };
 
             if (i < seq1.length() && j <= seq2.length()) {                
