@@ -42,7 +42,7 @@ struct TraceInfo {
     constexpr TraceInfo(int i, int j, int t, StateType type_left, StateType type_right)
         : i(i), j(j), t(t), type_left(type_left), type_right(type_right) {}  // parameterized constructor
 
-    inline void reset() {
+    void reset() {
         i = -1;
         j = -1;
         t = -1;
@@ -50,7 +50,7 @@ struct TraceInfo {
         type_right = H;
     }
 
-    inline void set(int i, int j, int t, StateType type_left, StateType type_right) {
+    void set(int i, int j, int t, StateType type_left, StateType type_right) {
         this->i = i;
         this->j = j;
         this->t = t;
@@ -69,26 +69,26 @@ struct HEdge {
     HEdge(value_type weight, State* left, State* right)
         : weight(weight), left(left), right(right) {}  // parameterized constructor
 
-    inline void reset() {
+    void reset() {
         weight = linearx::math::LOG_ZERO;
         left = nullptr;
         right = nullptr;
     }
 
-    inline void set(value_type weight, State* left, State* right) {
+    void set(value_type weight, State* left, State* right) {
         this->weight = weight;
         this->left = left;
         this->right = right;
     }
 
     // set next_state alpha using current states and the edge
-    inline void update_state_alpha(State& next_state) {
+    void update_state_alpha(State& next_state) {
         const value_type prev_score = (left ? left->alpha : 0) + (right ? right->alpha : 0);  // unary or binary edge
         next_state.alpha = LOG_SUM(next_state.alpha, prev_score + weight);
     }
 
     // set current states beta using next_state and the edge
-    inline void update_state_beta(const State& next_state) {
+    void update_state_beta(const State& next_state) {
         if (!right) {
             left->beta = LOG_SUM(left->beta, weight + next_state.beta);
         } else {

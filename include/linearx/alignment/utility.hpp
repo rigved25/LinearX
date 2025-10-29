@@ -36,21 +36,21 @@ struct AlnEdge {
     AlnEdge() : weight(linearx::math::LOG_ZERO), prev(nullptr) {};                 // Default constructor
     AlnEdge(HState* prev, value_type weight = 0) : prev(prev), weight(weight) {};  // Parameterized constructor
 
-    inline void reset() {
+    void reset() {
         weight = linearx::math::LOG_ZERO;
         prev = nullptr;
     }
 
-    inline void set(HState* prev, const value_type weight = 0) {
+    void set(HState* prev, const value_type weight = 0) {
         this->prev = prev;
         this->weight = weight;
     }
 
-    inline void update_state_alpha(HState& next_state) {
+    void update_state_alpha(HState& next_state) {
         next_state.alpha = LOG_SUM(next_state.alpha, LOG_MUL(prev->alpha, weight));
     }
 
-    inline void update_state_beta(HState& next_state) {
+    void update_state_beta(HState& next_state) {
         prev->beta = LOG_SUM(prev->beta, LOG_MUL(next_state.beta, weight));
     }
 };

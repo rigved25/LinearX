@@ -34,12 +34,8 @@ class LinearPartitionInterface {
     std::vector<std::unordered_map<int, State>> bestMulti;
     VectorWithNegOneIndex<State> bestC;
 
-    inline State* check_state(const StateType type, const int i, const int j) {
-        return static_cast<T*>(this)->check_state(type, i, j);
-    }
-
     template <Mode mode, typename F>
-    inline void update_state(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+    void update_state(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                              const unsigned j) {
         if constexpr (mode == Mode::PARTITION_OUTSIDE) {
             static_cast<T*>(this)->update_state_beta(std::forward<F>(get_score), left, right, type, i, j);
@@ -49,7 +45,7 @@ class LinearPartitionInterface {
         }
     }
 
-    inline virtual unsigned long beam_prune(std::unordered_map<int, State>& beamstep, const unsigned beam_size,
+    virtual unsigned long beam_prune(std::unordered_map<int, State>& beamstep, const unsigned beam_size,
                                             const StateType type, const int j) {
         if (beam_size == 0 || beamstep.size() <= beam_size) {
             return 0;
@@ -102,8 +98,9 @@ class LinearPartitionInterface {
     value_type get_ensemble_energy() const;
     void print_alpha_beta() const;
     Structure get_mfe_structure();
-
-    inline State* get_state(const StateType type, const int i, const int j, const bool create = false) noexcept {
+    
+    template <bool Create>
+    State* get_state(StateType type, int i, int j) noexcept {
         std::unordered_map<int, State>* beam = nullptr;
         switch (type) {
             case H:
@@ -122,21 +119,19 @@ class LinearPartitionInterface {
                 beam = &bestM[j];
                 break;
             case C:
-                return &bestC[j];  // special case
+                return &bestC[j];  // special case - no map
             default:
                 return nullptr;
         }
-        if (create) {
-            return &(*beam)[i];
+        if constexpr (Create) {
+            return &(*beam)[i];  // may insert
+        } else {
+            const auto it = beam->find(i);  // no insert
+            return (it != beam->end()) ? &it->second : nullptr;
         }
-        const auto it = beam->find(i);
-        if (it != beam->end()) {
-            return &it->second;
-        }
-        return nullptr;
     }
 
-    inline value_type get_bpp(const int i, const int j) const {
+    value_type get_bpp(const int i, const int j) const {
         const auto& bpp_j = bpp[j];
         const auto item = bpp_j.find(i);
         return item == bpp_j.end() ? 0.0 : item->second;
@@ -184,14 +179,10 @@ class LinearPartition final : public LinearPartitionInterface<LinearPartition> {
     LinearPartition(const Sequence& seq, const EnergyModel& energy_model, const bool allow_sharp_turn = false)
         : LinearPartitionInterface<LinearPartition>(seq, energy_model, allow_sharp_turn) {}
 
-    inline State* check_state(const StateType type, const int i, const int j) {
-        return LinearPartitionInterface<LinearPartition>::get_state(type, i, j, true);
-    }
-
     template <Mode mode, typename F>
-    inline void update_state_alpha(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+    void update_state_alpha(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                                    const unsigned j) {
-        State* next_state = LinearPartitionInterface<LinearPartition>::get_state(type, i, j, true);
+        State* next_state = LinearPartitionInterface<LinearPartition>::get_state<true>(type, i, j);
         if constexpr (mode == Mode::BEST) {
             next_state->alpha =
                 std::max(next_state->alpha, (left ? left->alpha : 0) + (right ? right->alpha : 0) + get_score());
@@ -203,9 +194,9 @@ class LinearPartition final : public LinearPartitionInterface<LinearPartition> {
     }
 
     template <typename F>
-    inline void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
+    void update_state_beta(F&& get_score, State* left, State* right, const StateType type, const unsigned i,
                                   const unsigned j) {
-        const State* next_state = LinearPartitionInterface<LinearPartition>::get_state(type, i, j, false);
+        const State* next_state = LinearPartitionInterface<LinearPartition>::get_state<false>(type, i, j);
         if (next_state) {
             const value_type weight = get_score() * linearx::constants::energy::INV_KT;
             if (!right) {

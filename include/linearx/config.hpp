@@ -11,7 +11,7 @@ using value_type = double;
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define FORCE_INLINE inline __attribute__((always_inline))
+#define FORCE_INLINE __attribute__((always_inline)) inline
 #elif defined(_MSC_VER)
 #define FORCE_INLINE __forceinline
 #else

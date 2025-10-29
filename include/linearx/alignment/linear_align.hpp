@@ -36,7 +36,7 @@ class LinearAlignmentInterface {
 
     void set_prob_accm(linearx::utils::ProbAccm& prob_accm1, linearx::utils::ProbAccm& prob_accm2);
 
-    inline value_type get_match_score(const unsigned i, const unsigned j) const {
+    value_type get_match_score(const unsigned i, const unsigned j) const {
         if (!pm1 || !pm2 || i >= seq1.length() || j >= seq2.length()) {
             return linearx::math::LOG_ONE;
         }
@@ -53,11 +53,11 @@ class LinearAlignmentInterface {
         return static_cast<T*>(this)->get_saved_state(type, i, j);
     }
 
-    inline HState* check_state(const HStateType type, const int i, const int j) {
+    HState* check_state(const HStateType type, const int i, const int j) {
         return static_cast<T*>(this)->check_state(type, i, j);
     }
 
-    inline unsigned beam_prune(std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>& beamstep) {
+    unsigned beam_prune(std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>& beamstep) {
         if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
             return 0;
         }
@@ -98,7 +98,7 @@ class LinearAlignmentInterface {
 
     void reset_beams(const unsigned beam_size);
 
-    inline std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>& get_beams(
+    std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>& get_beams(
         HStateType type) noexcept {
         switch (type) {
             case ALN:
@@ -112,7 +112,7 @@ class LinearAlignmentInterface {
         }
     }
 
-    inline HState* get_state(const HStateType type, const int i, const int j, const bool create = false) noexcept {
+    HState* get_state(const HStateType type, const int i, const int j, const bool create = false) noexcept {
         auto& beam = get_beams(type)[i + j];
         const std::pair<int, int> key = {i, j};
         const auto it = beam.find(key);
@@ -138,7 +138,7 @@ class LinearAlignmentInterface {
     void compute_coincidence_probabilities(const bool verbose_output = true);
     void compute_posterior(std::vector<std::vector<std::unordered_map<int, value_type>*>>& posterior, const bool verbose_output = true);
     void dump_coinc_probs(const std::string& out_dir) const;
-    inline value_type get_cp(const int i, const int j) const {
+    value_type get_cp(const int i, const int j) const {
         const auto& cp_i = cp[i];
         const auto it = cp_i.find(j);
         return it == cp_i.end() ? 0.0 : it->second;
@@ -155,7 +155,7 @@ class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {
     LinearAlignment(Sequence& seq1, Sequence& seq2, float alpha1 = 1.0, float alpha2 = 0.8, float alpha3 = 0.5)
         : LinearAlignmentInterface<LinearAlignment>(seq1, seq2, alpha1, alpha2, alpha3) {}
 
-    inline HState* check_state(const HStateType type, const int i, const int j) {
+    HState* check_state(const HStateType type, const int i, const int j) {
         return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
     }
 

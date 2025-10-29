@@ -52,13 +52,28 @@ add_compile_options(
     -march=native
     -flto
     -ffast-math
-    # -fno-rtti
     -fno-math-errno
     -funroll-loops
     -fomit-frame-pointer
+    # -fno-rtti
     # -Rpass=inline
     # -Rpass-missed=inline
 )
+
+# LLVM/Clang specific optimization flags
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -mllvm
+        -inline-threshold=1000
+    )
+endif()
+
+# GCC specific optimization flags
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(
+        -finline-limit=1000
+    )
+endif()
 
 # Optional: disable asserts
 # add_compile_definitions(NDEBUG)
