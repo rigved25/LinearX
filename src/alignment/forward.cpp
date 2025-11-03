@@ -43,12 +43,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
     const int dest_seq2 = seq2.length() + 1;
 
     auto try_push_state = [&](int i, int j, HStateType h, value_type alpha) -> bool {
-        // Check if we should explore
         HState* saved = get_saved_state(h, i, j);
-        
-        if (use_lazy_outside && saved && saved->beta <= linearx::math::LOG_ZERO) {
-            return false;  // Skip: invalid beta indicates unpromising state
-        }
         
         // Compute priority
         value_type priority;
@@ -112,6 +107,12 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
                 if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
                     return;
                 }
+                
+                // Check if we should explore
+                HState* next_state = check_state(nh, ni, nj);
+                if (!next_state) {
+                    return;
+                }
 
                 value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
                 if (nh == HStateType::ALN) {
@@ -119,14 +120,11 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
                 }
 
                 const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
-                auto& next_beam = get_beams(nh);
-                HState& next_state = next_beam[ni + nj][{ni, nj}];
-                
-                if (candidate_alpha <= next_state.alpha) {
-                    return; // alpha is already better and beta stays the same
+                if (candidate_alpha <= next_state->alpha) {
+                    return;  // alpha is already better and beta stays the same
                 }
-                
-                next_state.alpha = candidate_alpha;
+
+                next_state->alpha = candidate_alpha;
                 try_push_state(ni, nj, nh, candidate_alpha);  // Check + push in one step
             };
 

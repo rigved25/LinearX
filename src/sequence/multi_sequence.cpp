@@ -5,6 +5,7 @@
 #include <linearx/sequence/multi_sequence.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <filesystem>
 
 // default constructor
 MultiSeq::MultiSeq() = default;
@@ -139,6 +140,18 @@ bool MultiSeq::read_fasta(const std::string& filepath, const std::unordered_map<
 }
 
 bool MultiSeq::write_fasta(const std::string& filepath, int max_line_length) const {
+    // Create parent directory if it doesn't exist
+    std::filesystem::path file_path(filepath);
+    std::filesystem::path dir_path = file_path.parent_path();
+    if (!dir_path.empty()) {
+        try {
+            std::filesystem::create_directories(dir_path);
+        } catch (const std::exception& e) {
+            std::cerr << "Error: Could not create directory: " << dir_path << " (" << e.what() << ")\n";
+            return false;
+        }
+    }
+    
     std::ofstream outfile(filepath);
     if (!outfile.is_open()) {
         std::cerr << "Error: Cannot open file for writing: " << filepath << '\n';
