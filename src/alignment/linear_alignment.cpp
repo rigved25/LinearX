@@ -128,11 +128,11 @@ void LinearAlignmentInterface<T>::compute_coincidence_probabilities(bool verbose
                 ++num_pruned;
             } else {
                 prob = EXP(prob);
-                if (prob > 1.001) {
-                    fprintf(stderr,
-                            "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
-                            j, prob);
-                }
+                // if (prob > 1.001) {
+                //     fprintf(stderr,
+                //             "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
+                //             j, prob);
+                // }
                 prob = min(prob, value_type(1.0));
                 prob_rev_idx[j].push_back(i);
                 ++num_saved;
@@ -200,11 +200,11 @@ void LinearAlignmentInterface<T>::compute_posterior(std::vector<std::vector<std:
             } else {
                 // Single EXP conversion
                 prob = EXP(prob);
-                if (prob > 1.001) {
-                    fprintf(stderr,
-                            "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
-                            j, prob);
-                }
+                // if (prob > 1.001) {
+                //     fprintf(stderr,
+                //             "[LinearAlignment: Warning] BPP value too high, something is wrong! bpp(%d, %d): %.5f\n", i,
+                //             j, prob);
+                // }
                 prob = std::min(prob, value_type(1.0));
                 
                 // Mirror to reverse matrix (direct assignment - no find() needed!)
