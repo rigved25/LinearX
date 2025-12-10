@@ -217,7 +217,7 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
             size_t seq1length = multi_seq.at(x).length();
             size_t seq2length = multi_seq.at(y).length();
 
-            pair<string*, value_type> pair_alignment = model.LinearComputeAlignment(beam_size, seq1length, seq2length, posterior[x][y]);
+            pair<string*, value_type> pair_alignment = model.LinearComputeAlignmentDijkstra(beam_size, seq1length, seq2length, posterior[x][y]);
 
             // Guard against inflated MEA by capping per-position reward at 1.0
             value_type distance = pair_alignment.second / static_cast<value_type>(std::min(seq1length, seq2length));

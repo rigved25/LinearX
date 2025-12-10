@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <utility>
+#include <limits>
 
 #include "GuideTree.h"
 #include "linearx/utility.hpp"
@@ -16,11 +17,38 @@
 using namespace linearx::utils;
 
 struct MEAState {
-    value_type score;
-    char traceback;  // 'D'=diagonal, 'U'=up, 'L'=left
+    value_type score;      // MEA reward (standard DP)
+    char traceback;        // 'D'=diagonal, 'U'=up, 'L'=left
 
-    MEAState() : score(linearx::math::LOG_ZERO), traceback('\0') {}
+    MEAState()
+        : score(linearx::math::LOG_ZERO),
+          traceback('\0') {}
+
     MEAState(value_type s, char t) : score(s), traceback(t) {}
+};
+
+struct DijkstraLazyState {
+    value_type score;      // reward accumulated along path
+    value_type cost;       // priority value (1 - prob accum)
+    char traceback;
+
+    DijkstraLazyState()
+        : score(linearx::math::LOG_ZERO),
+          cost(std::numeric_limits<value_type>::infinity()),
+          traceback('\0') {}
+
+    DijkstraLazyState(value_type s, value_type c, char t) : score(s), cost(c), traceback(t) {}
+};
+
+struct DijkstraState {
+    value_type cost;
+    char traceback;
+
+    DijkstraState()
+        : cost(std::numeric_limits<value_type>::infinity()),
+          traceback('\0') {}
+
+    DijkstraState(value_type c, char t) : cost(c), traceback(t) {}
 };
 
 class ProbabilisticModel {
@@ -62,6 +90,12 @@ class ProbabilisticModel {
     }
 
     pair<string *, value_type> LinearComputeAlignment(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
+    pair<string *, value_type> LinearComputeAlignmentDijkstraScore(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
+    pair<string *, value_type> LinearComputeAlignmentDijkstraCost(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
+    pair<string *, value_type> LinearComputeAlignmentDijkstra(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
+    pair<string *, value_type> LinearComputeAlignmentDijkstraLogs(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
+
+    // pair<string *, value_type> LinearComputeAlignmentDijkstraEfficient(int hmmBeam, int seq1Length, int seq2Length, const unordered_map<int, value_type>* posterior);
 
     vector<vector<unordered_map<int, value_type>*>> LinearMultiConsistencyTransform(MultiSeq &sequences, vector<vector<unordered_map<int, value_type>*>> &posterior);
 

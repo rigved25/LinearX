@@ -2,7 +2,8 @@
 #include <linearx/alignment/config.hpp>
 #include <linearx/alignment/linear_align.hpp>
 
-#include <boost/heap/fibonacci_heap.hpp>
+// #include <boost/heap/fibonacci_heap.hpp>
+#include <boost/heap/d_ary_heap.hpp>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -32,7 +33,8 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
         }
     };
 
-    using Heap = boost::heap::fibonacci_heap<HeapEntry, boost::heap::compare<EntryCompare>>;
+    // using Heap = boost::heap::fibonacci_heap<HeapEntry, boost::heap::compare<EntryCompare>>;
+    using Heap = boost::heap::d_ary_heap<HeapEntry, boost::heap::compare<EntryCompare>, boost::heap::mutable_<true>, boost::heap::arity<2>>;
     using Handle = typename Heap::handle_type;
     using Key = std::pair<int, int>;
 
