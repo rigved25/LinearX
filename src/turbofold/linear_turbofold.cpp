@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <linearx/turbofold/linear_turbofold.hpp>
 #include <chrono>
+#include <cstdlib>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -146,22 +147,67 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         const int k1 = aln.seq1.id;
         const int k2 = aln.seq2.id;
         const int aln_pair_index = get_seq_pair_index(k1, k2);
+
+        // --- Time: best mode prob setup ---
+        auto t0 = std::chrono::high_resolution_clock::now();
         aln.use_prob_set1();
         aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
-        if(curr_itr == 1)
+        auto t1 = std::chrono::high_resolution_clock::now();
+        aln.log.best_prob_setup_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
+        if(curr_itr == 1){
             aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
-        else
+            aln.compute_outside_BEST(true, alignment_pruning_threshold, verbose_output_);
+
+            // if (out_dir_.length() > 0) {
+            //     std::string beam_dir = out_dir_ + "/best_beams/itr_" + std::to_string(curr_itr);
+            //     std::string prefix = "seq" + std::to_string(k1) + "_seq" + std::to_string(k2) + "_";
+            //     aln.dump_beams(beam_dir, prefix);
+            // }
+        }
+        else{
             aln.compute_inside_Astar(use_lazy_outside_, alignment_beam_size, verbose_output_);
-        // aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+            // aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+            aln.log.best_exec_time.second = 0.0;  // Best Outside does not run after itr 1
+            aln.log.save_best_pf_time = 0.0;
+        }
+
+        // Traceback before save so that when we use swap (long seqs) beams are still valid.
+        t0 = std::chrono::high_resolution_clock::now();
         seq_identities[aln_pair_index] = aln.get_alignment().average_seq_identity();
         aln.log.seq_identity = seq_identities[aln_pair_index];
+        t1 = std::chrono::high_resolution_clock::now();
+        aln.log.traceback_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
+        // Save best beams (length-based: swap if long, copy if medium/short). Only for iter 1.
+        if (curr_itr == 1) {
+            t0 = std::chrono::high_resolution_clock::now();
+            aln.save_partition_function(false);
+            t1 = std::chrono::high_resolution_clock::now();
+            aln.log.save_best_pf_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        }
+
+        // --- Time: reset beams after best mode ---
+        t0 = std::chrono::high_resolution_clock::now();
         aln.reset_beams(alignment_beam_size);
+        t1 = std::chrono::high_resolution_clock::now();
+        aln.log.best_reset_beams_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
 
         // PARTITION MODE
+        // --- Time: partition mode prob setup ---
+        t0 = std::chrono::high_resolution_clock::now();
         aln.use_prob_set2(seq_identities[aln_pair_index]);
         aln.set_prob_accm(pfs[k1].prob_accm, pfs[k2].prob_accm);
+        t1 = std::chrono::high_resolution_clock::now();
+        aln.log.partition_prob_setup_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
         aln.compute_inside<PARTITION_INSIDE>(alignment_beam_size, verbose_output_);
         aln.compute_outside(use_lazy_outside_, alignment_pruning_threshold, verbose_output_);
+        // if (out_dir_.length() > 0) {
+        //     std::string beam_dir = out_dir_ + "/partition_inside/itr_" + std::to_string(curr_itr);
+        //     std::string prefix = "seq" + std::to_string(k1) + "_seq" + std::to_string(k2) + "_";
+        //     aln.dump_beams(beam_dir, prefix);
+        // }
         
         // // Dump beams for debugging lazy_outside with Astar
         // if (out_dir_.length() > 0 && curr_itr > 0) {
@@ -177,10 +223,21 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
             aln.compute_coincidence_probabilities(verbose_output_);
         }
         // if (restrict_search_ && curr_itr <= num_itr_) { // save partition function for the num_itr_ + 1 iteration
+
+        // --- Time: save partition function (length-based: swap if long, move if medium/short) ---
+        t0 = std::chrono::high_resolution_clock::now();
         if (curr_itr <= num_itr_) {
             aln.save_partition_function(true);
         }
+        t1 = std::chrono::high_resolution_clock::now();
+        aln.log.save_partition_pf_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
+        // --- Time: reset beams after partition mode ---
+        t0 = std::chrono::high_resolution_clock::now();
         aln.reset_beams(alignment_beam_size);
+        t1 = std::chrono::high_resolution_clock::now();
+        aln.log.partition_reset_beams_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
         log.aln_logs[curr_itr].emplace_back(aln.log);
     }
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -217,7 +274,7 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
             size_t seq1length = multi_seq.at(x).length();
             size_t seq2length = multi_seq.at(y).length();
 
-            pair<string*, value_type> pair_alignment = model.LinearComputeAlignmentDijkstra(beam_size, seq1length, seq2length, posterior[x][y]);
+            pair<string*, value_type> pair_alignment = model.LinearComputeAlignment(beam_size, seq1length, seq2length, posterior[x][y]);
 
             // Guard against inflated MEA by capping per-position reward at 1.0
             value_type distance = pair_alignment.second / static_cast<value_type>(std::min(seq1length, seq2length));

@@ -30,3 +30,10 @@ inline constexpr value_type DEVIATION_THRESHOLD = 9.91152;
 inline constexpr value_type EPSILON = 1e-300;
 
 }  // namespace linearx::constants::limits
+
+namespace linearx::constants::alignment {
+
+/// Above this seq_len_sum (seq1.len + seq2.len) we use swap in save_partition_function; below it we use copy/move.
+inline constexpr int SAVE_SWAP_THRESHOLD = 1500;
+
+}  // namespace linearx::constants::alignment

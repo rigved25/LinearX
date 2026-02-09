@@ -22,11 +22,14 @@ class LinearAlignmentInterface {
 
     std::pair<unsigned long, unsigned long> backward_update(const int i, const int j, const HState& state,
                                                             const HStateType type, const value_type edge_threshold);
+    std::pair<unsigned long, unsigned long> backward_update_BEST(const int i, const int j, const HState& state,
+                                                                const HStateType type, const value_type edge_threshold);
 
     template <Mode mode>
     void get_incoming_edges(const int i, const int j, const HStateType type);
 
     void run_normal_outside(const bool verbose_output);
+    void run_normal_outside_best(const bool verbose_output);
 
    protected:
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> bestALN;
@@ -56,6 +59,11 @@ class LinearAlignmentInterface {
     HState* check_state(const HStateType type, const int i, const int j) {
         return static_cast<T*>(this)->check_state(type, i, j);
     }
+
+    HState* check_state_best(const HStateType type, const int i, const int j) {
+        return static_cast<T*>(this)->check_state_best(type, i, j);
+    }
+
 
     unsigned beam_prune(std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>& beamstep) {
         if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
@@ -131,9 +139,13 @@ class LinearAlignmentInterface {
     template <Mode mode>
     void compute_inside(const unsigned beam_size = 100, bool verbose_output = true);
     void compute_inside_Astar(const bool use_lazy_outside, const unsigned beam_size = 0, bool verbose_output = true);
+    void compute_inside_Astar_lazy(const bool use_lazy_outside, const unsigned beam_size = 0, bool verbose_output = true);
     void compute_outside(const bool use_lazy_outside,
                          const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                          const bool verbose_output = true);
+    void compute_outside_BEST(const bool use_lazy_outside,
+                             const value_type deviation_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
+                             const bool verbose_output = true);
 
     void compute_coincidence_probabilities(const bool verbose_output = true);
     void compute_posterior(std::vector<std::vector<std::unordered_map<int, value_type>*>>& posterior, const bool verbose_output = true);
@@ -156,6 +168,10 @@ class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {
         : LinearAlignmentInterface<LinearAlignment>(seq1, seq2, alpha1, alpha2, alpha3) {}
 
     HState* check_state(const HStateType type, const int i, const int j) {
+        return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
+    }
+
+    HState* check_state_best(const HStateType type, const int i, const int j) {
         return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
     }
 

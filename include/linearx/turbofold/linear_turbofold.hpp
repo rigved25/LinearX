@@ -5,6 +5,7 @@
 #include <linearx/turbofold/utility.hpp>
 #include <linearx/utility.hpp>
 #include <linearx/turbofold/utils/ProbabilisticModel.hpp>
+#include <iostream>
 
 // forward declarations
 class TurboPartition;
@@ -207,6 +208,8 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
     // void reset_saved_beams(const unsigned beam_size);
     void save_partition_function(const bool move);
 
+    void save_partition_function_old(const bool move);
+    
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>& get_saved_beams(
         HStateType type) {
         switch (type) {
@@ -237,6 +240,17 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
     }
 
     HState* check_state(const HStateType type, const int i, const int j) {
+        if (turbofold.curr_itr == 1) {
+            // Filter partition mode using BEST outside results.
+            // Since LHS_best < LHS_partition, we CANNOT use LHS_best > -threshold to filter.
+            // Instead, just check if the state was visited during BEST outside (has valid beta).
+            // The BEST outside threshold already does the pruning.
+            const HState* state = TurboAlignment::get_saved_state(type, i, j);
+            if (!state || state->beta <= linearx::math::LOG_ZERO) {
+                return nullptr;
+            }
+        }
+
         if (turbofold.restrict_search_ && turbofold.curr_itr > 1) {
             HState* state = TurboAlignment::get_saved_state(type, i, j);
             if (!state) {
@@ -248,6 +262,50 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
                 }
             } else if (LOG_DIV(LOG_MUL(state->alpha, state->beta),
                                saved_bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha) <=
+                       -turbofold.alignment_pruning_threshold) {
+                return nullptr;
+            }
+        }
+        return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
+    }
+
+    HState* check_state_best(const HStateType type, const int i, const int j) {
+
+
+        // Only filter in PARTITION mode for iterations > 1.
+        // BEST mode (A*) in iteration 2+ should NOT be filtered because:
+        // - Probability weights change between iterations
+        // - States pruned by lazy outside in iter N may be needed in iter N+1
+        // - A* needs freedom to find the optimal path with new weights
+        if (turbofold.restrict_search_ && turbofold.curr_itr > 1) {
+            static unsigned long missing_end_reports = 0;
+            static unsigned long missing_state_reports = 0;
+            HState* end_state =
+                TurboAlignment::get_saved_state(HStateType::ALN, seq1.length() + 1, seq2.length() + 1);
+            if (!end_state) {
+                if (missing_end_reports < 5) {
+                    std::cerr << "[TurboAlignment] Saved BEST end state missing; "
+                              << "skip pruning for (" << i << "," << j << ") in itr "
+                              << turbofold.curr_itr << "\n";
+                    missing_end_reports++;
+                }
+                return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
+            }
+            HState* state = TurboAlignment::get_saved_state(type, i, j);
+            if (!state) {
+                if (missing_state_reports < 5) {
+                    std::cerr << "[TurboAlignment] Saved state missing at (" << i << "," << j
+                              << "), type " << static_cast<int>(type) << " in itr "
+                              << turbofold.curr_itr << "; allow creation\n";
+                    missing_state_reports++;
+                }
+                return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
+            }
+            if (turbofold.use_lazy_outside_) {
+                if (state->beta <= linearx::math::LOG_ZERO) {
+                    return nullptr;
+                }
+            } else if (LOG_DIV(LOG_MUL(state->alpha, state->beta), end_state->alpha) <=
                        -turbofold.alignment_pruning_threshold) {
                 return nullptr;
             }

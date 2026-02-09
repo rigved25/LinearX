@@ -300,10 +300,11 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
     std::string mkdir_cmd = "mkdir -p " + out_dir;
     system(mkdir_cmd.c_str());
     
+    const value_type alpha_max = bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha;
     // Dump ALN beam
     std::string aln_file = out_dir + "/" + prefix + "ALN_beam.txt";
     std::ofstream aln_out(aln_file);
-    aln_out << "# beam_index i j alpha beta alpha+beta\n";
+    aln_out << "# beam_index i j alpha beta alpha+beta alpha+beta-alpha_max\n";
     for (int s = 0; s < bestALN.size(); ++s) {
         for (const auto& item : bestALN[s]) {
             const int i = item.first.first;
@@ -311,8 +312,8 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
             const value_type alpha = item.second.alpha;
             const value_type beta = item.second.beta;
             const value_type sum = alpha + beta;
-            aln_out << s << " " << i << " " << j << " " 
-                   << alpha << " " << beta << " " << sum << "\n";
+            aln_out << s << " " << i << " " << j << " "
+                   << alpha << " " << beta << " " << sum << " " << (sum - alpha_max) << "\n";
         }
     }
     aln_out.close();
@@ -320,7 +321,7 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
     // Dump INS1 beam
     std::string ins1_file = out_dir + "/" + prefix + "INS1_beam.txt";
     std::ofstream ins1_out(ins1_file);
-    ins1_out << "# beam_index i j alpha beta alpha+beta\n";
+    ins1_out << "# beam_index i j alpha beta alpha+beta alpha+beta-alpha_max\n";
     for (int s = 0; s < bestINS1.size(); ++s) {
         for (const auto& item : bestINS1[s]) {
             const int i = item.first.first;
@@ -328,8 +329,8 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
             const value_type alpha = item.second.alpha;
             const value_type beta = item.second.beta;
             const value_type sum = alpha + beta;
-            ins1_out << s << " " << i << " " << j << " " 
-                    << alpha << " " << beta << " " << sum << "\n";
+            ins1_out << s << " " << i << " " << j << " "
+                    << alpha << " " << beta << " " << sum << " " << (sum - alpha_max) << "\n";
         }
     }
     ins1_out.close();
@@ -337,7 +338,7 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
     // Dump INS2 beam
     std::string ins2_file = out_dir + "/" + prefix + "INS2_beam.txt";
     std::ofstream ins2_out(ins2_file);
-    ins2_out << "# beam_index i j alpha beta alpha+beta\n";
+    ins2_out << "# beam_index i j alpha beta alpha+beta alpha+beta-alpha_max\n";
     for (int s = 0; s < bestINS2.size(); ++s) {
         for (const auto& item : bestINS2[s]) {
             const int i = item.first.first;
@@ -345,8 +346,8 @@ void LinearAlignmentInterface<T>::dump_beams(const std::string& out_dir, const s
             const value_type alpha = item.second.alpha;
             const value_type beta = item.second.beta;
             const value_type sum = alpha + beta;
-            ins2_out << s << " " << i << " " << j << " " 
-                    << alpha << " " << beta << " " << sum << "\n";
+            ins2_out << s << " " << i << " " << j << " "
+                    << alpha << " " << beta << " " << sum << " " << (sum - alpha_max) << "\n";
         }
     }
     ins2_out.close();

@@ -22,17 +22,21 @@ IterationTotals = Dict[int, MetricTotals]
 
 
 ALIGNMENT_METRICS: Mapping[str, Tuple[str, re.Pattern[str]]] = {
-    "best": (
-        "Best",
-        re.compile(r"Best Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
+    "best_inside": (
+        "Best Inside",
+        re.compile(r"Best Inside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
+    ),
+    "best_outside": (
+        "Best Outside",
+        re.compile(r"Best Outside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
     ),
     "inside": (
-        "Inside",
-        re.compile(r"Inside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
+        "Partition Inside",
+        re.compile(r"^\s*Inside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
     ),
     "outside": (
-        "Outside",
-        re.compile(r"Outside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
+        "Partition Outside",
+        re.compile(r"^\s*Outside Execution Time \(ms\):\s*([0-9.]+)\s*ms", re.IGNORECASE),
     ),
     "coincidence": (
         "Coincidence",
@@ -58,7 +62,8 @@ PARTITION_METRICS: Mapping[str, Tuple[str, re.Pattern[str]]] = {
 }
 
 ALIGNMENT_COLORS = {
-    "best": "#4E79A7",
+    "best_inside": "#4E79A7",
+    "best_outside": "#A0CBE8",
     "inside": "#F28E2C",
     "outside": "#E15759",
     "coincidence": "#76B7B2",
@@ -170,6 +175,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional filename for the output plot. Defaults to "
         "'<dataset>_iteration_stacked.png'.",
     )
+    parser.add_argument(
+        "--ymax",
+        type=float,
+        default=None,
+        help="Fixed Y-axis maximum (ms). If not set, auto-scales to data.",
+    )
     return parser
 
 
@@ -207,7 +218,7 @@ def main() -> None:
         axes[0],
         alignment_iters,
         alignment_totals,
-        ["best", "inside", "outside", "coincidence"],
+        ["best_inside", "best_outside", "inside", "outside", "coincidence"],
         {key: label for key, (label, _) in ALIGNMENT_METRICS.items()},
         ALIGNMENT_COLORS,
         f"Alignment Metrics ({dataset_label})",
@@ -220,8 +231,12 @@ def main() -> None:
         ["inside", "outside", "bpp"],
         {key: label for key, (label, _) in PARTITION_METRICS.items()},
         PARTITION_COLORS,
-        f"Partition Metrics ({dataset_label})",
+        f"Folding Metrics ({dataset_label})",
     )
+
+    if args.ymax is not None:
+        axes[0].set_ylim(0, args.ymax)
+        axes[1].set_ylim(0, args.ymax)
 
     fig.suptitle("Iteration-wise Timing Breakdown", fontsize=16, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.95])

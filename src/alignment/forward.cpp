@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <queue>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -15,7 +16,6 @@ using namespace linearx::utils;
 
 template <typename T>
 void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outside, const unsigned beam_size, bool verbose_output) {
-    run_beam_size_ = beam_size;
     const auto start_time = chrono::high_resolution_clock::now();
     if (verbose_output) {
         fprintf(stderr, "[LinearAlignment] Running Inside Algorithm (A*):\n");
@@ -153,7 +153,147 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
     }
 
     log.total_score.first = best_score;
-    log.best_exec_time = execution_time;
+    log.best_exec_time.first = execution_time;
+    log.states_pruned.first = 0;
+    log.effective_beam_size.first = beam_size;
+}
+
+template <typename T>
+void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_outside, const unsigned beam_size, bool verbose_output) {
+    run_beam_size_ = beam_size;
+    const auto start_time = chrono::high_resolution_clock::now();
+    if (verbose_output) {
+        fprintf(stderr, "[LinearAlignment] Running Inside Algorithm (A* lazy):\n");
+    }
+    (void)use_lazy_outside;  // kept for API parity
+
+    struct HeapEntry {
+        value_type priority;  // -LOG_MUL(alpha, beta) for A* heuristic
+        int i;
+        int j;
+    };
+
+    struct EntryCompare {
+        bool operator()(const HeapEntry& lhs, const HeapEntry& rhs) const {
+            return lhs.priority > rhs.priority;  // min-heap
+        }
+    };
+
+    using Heap = std::priority_queue<HeapEntry, std::vector<HeapEntry>, EntryCompare>;
+    using Key = std::pair<int, int>;
+
+    Heap frontier;
+    // Track the best (lowest) priority seen so far for each (i, j).
+    // This emulates decrease-key behavior: only the best entry for a key is considered;
+    // worse duplicates become stale and are skipped when popped.
+    std::unordered_map<Key, value_type, PairHash> best_priority;
+
+    const int dest_seq1 = seq1.length() + 1;
+    const int dest_seq2 = seq2.length() + 1;
+
+    auto push_state = [&](int i, int j, HStateType h, value_type alpha) {
+        HState* saved = get_saved_state(h, i, j);
+
+        value_type priority;
+        if (saved && saved->beta > linearx::math::LOG_ZERO) {
+            priority = -LOG_MUL(alpha, saved->beta);  // A* heuristic
+        } else {
+            priority = -alpha;  // No heuristic available
+        }
+
+        const Key key{i, j};
+        auto it = best_priority.find(key);
+        if (it == best_priority.end() || priority < it->second) {
+            best_priority[key] = priority;
+            frontier.push({priority, i, j});
+        }
+    };
+
+    // Push starting state (0, 0)
+    HState& start_state = get_beams(HStateType::ALN)[0][{0, 0}];
+    push_state(0, 0, HStateType::ALN, start_state.alpha);
+
+    value_type best_score = linearx::math::LOG_ZERO;
+
+    while (!frontier.empty()) {
+        HeapEntry top = frontier.top();
+        frontier.pop();
+
+        const int i = top.i;
+        const int j = top.j;
+        const Key key{i, j};
+        // Skip stale entries that are not the current best for this (i, j)
+        auto best_it = best_priority.find(key);
+        if (best_it != best_priority.end() && top.priority > best_it->second) {
+            continue;
+        }
+
+        const int s = i + j;
+
+        // Check goal
+        if (i == dest_seq1 && j == dest_seq2) {
+            best_score = get_beams(HStateType::ALN)[s][{i, j}].alpha;
+            break;
+        }
+
+        // Process all three state types at (i, j)
+        for (const HStateType h : hstate_types) {
+            auto& beam = get_beams(h);
+            auto it = beam[s].find({i, j});
+            if (it == beam[s].end()) {
+                continue;
+            }
+
+            HState& state = it->second;
+
+            auto propagate = [&](int ni, int nj, HStateType nh) {
+                if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
+                    return;
+                }
+
+                HState* next_state = check_state(nh, ni, nj);
+                if (!next_state) {
+                    return;
+                }
+
+                value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
+                if (nh == HStateType::ALN) {
+                    edge_weight = LOG_MUL(edge_weight, get_match_score(i, j));
+                }
+
+                const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
+                if (candidate_alpha <= next_state->alpha) {
+                    return;  // alpha is already better and beta stays the same
+                }
+
+                next_state->alpha = candidate_alpha;
+                push_state(ni, nj, nh, candidate_alpha);
+            };
+
+            if (i < seq1.length() && j <= seq2.length()) {
+                propagate(i + 1, j, HStateType::INS1);
+            }
+
+            if (i <= seq1.length() && j < seq2.length()) {
+                propagate(i, j + 1, HStateType::INS2);
+            }
+
+            const bool end_check = (i == seq1.length() && j == seq2.length());
+            if ((i < seq1.length() && j < seq2.length()) || end_check) {
+                propagate(i + 1, j + 1, HStateType::ALN);
+            }
+        }
+    }
+
+    const auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    if (verbose_output) {
+        fprintf(stderr, "  - Execution Time: %.3f ms\n", execution_time);
+        fprintf(stderr, "  - Score: %.4f\n", best_score);
+    }
+
+    log.total_score.first = best_score;
+    log.best_exec_time.first = execution_time;
     log.states_pruned.first = 0;
     log.effective_beam_size.first = beam_size;
 }
@@ -242,7 +382,7 @@ void LinearAlignmentInterface<T>::compute_inside(const unsigned beam_size, bool 
     // update logs
     log.total_score.first = bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha;
     if constexpr (mode == Mode::BEST) {
-        log.best_exec_time = execution_time;
+        log.best_exec_time.first = execution_time;
     } else {
         log.exec_time.first = execution_time;
     }

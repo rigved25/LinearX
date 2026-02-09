@@ -95,7 +95,10 @@ struct TurboFoldLog {
             for (const auto& log : aln_logs[itr]) {
                 aln_log << "----- Pair Index: " << pair_idx++ << " -----\n";
                 aln_log << "  Sequence Identity: " << log.seq_identity << "\n";
-                aln_log << "  Best Execution Time (ms): " << log.best_exec_time << " ms\n";
+                aln_log << "  Best Inside Execution Time (ms): " << log.best_exec_time.first << " ms\n";
+                aln_log << "  Best Outside Execution Time (ms): " << log.best_exec_time.second << " ms\n";
+                aln_log << "  Best Total Execution Time (ms): "
+                        << (log.best_exec_time.first + log.best_exec_time.second) << " ms\n";
                 aln_log << "  Inside Execution Time (ms): " << log.exec_time.first << " ms\n";
                 double outside_pct =
                     (log.exec_time.first > 0.0) ? (100.0 * log.exec_time.second / log.exec_time.first) : 0.0;
@@ -106,6 +109,24 @@ struct TurboFoldLog {
                         << "\n";
                 aln_log << "  Effective Beam Size (inside, outside): " << log.effective_beam_size.first << ", "
                         << log.effective_beam_size.second << "\n";
+                // Overhead timing breakdown
+                aln_log << "  --- Overhead Timing Breakdown ---\n";
+                aln_log << "  Best Prob Setup Time (ms): " << log.best_prob_setup_time << " ms\n";
+                aln_log << "  Save Best PF Time (ms): " << log.save_best_pf_time << " ms\n";
+                aln_log << "  Traceback + Seq Identity Time (ms): " << log.traceback_time << " ms\n";
+                aln_log << "  Best Reset Beams Time (ms): " << log.best_reset_beams_time << " ms\n";
+                aln_log << "  Partition Prob Setup Time (ms): " << log.partition_prob_setup_time << " ms\n";
+                aln_log << "  Save Partition PF Time (ms): " << log.save_partition_pf_time << " ms\n";
+                aln_log << "  Partition Reset Beams Time (ms): " << log.partition_reset_beams_time << " ms\n";
+                value_type total_overhead = log.best_prob_setup_time + log.save_best_pf_time +
+                    log.traceback_time + log.best_reset_beams_time +
+                    log.partition_prob_setup_time + log.save_partition_pf_time +
+                    log.partition_reset_beams_time;
+                value_type total_core = log.best_exec_time.first + log.best_exec_time.second +
+                    log.exec_time.first + log.exec_time.second + log.cp_exec_time;
+                aln_log << "  Total Overhead Time (ms): " << total_overhead << " ms\n";
+                aln_log << "  Total Core Time (ms): " << total_core << " ms\n";
+                aln_log << "  Total Pair Time (ms): " << (total_overhead + total_core) << " ms\n";
             }
             aln_log.close();
         }

@@ -133,6 +133,150 @@ void LinearAlignmentInterface<T>::compute_outside(bool use_lazy_outside, value_t
 }
 
 template <typename T>
+void LinearAlignmentInterface<T>::compute_outside_BEST(bool use_lazy_outside, value_type deviation_threshold,
+                                                  bool verbose_output) {
+    if (!use_lazy_outside) {
+        return run_normal_outside_best(verbose_output);
+    }
+
+    const value_type global_threshold =
+        bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha - deviation_threshold;
+    unsigned long total_states = 0, states_visited = 0;
+    unsigned long edges_saved = 0, edges_pruned = 0;
+    auto process_beam = [&](unordered_map<pair<int, int>, HState, PairHash>& beam, const HStateType type) {
+        for (auto& item : beam) {
+            const int i = item.first.first;
+            const int j = item.first.second;
+            HState& state = item.second;
+            if (state.alpha + state.beta > global_threshold) {
+                value_type edge_threshold = global_threshold - state.beta;
+                pair<int, int> local_edges_info = backward_update_BEST(i, j, state, type, edge_threshold);
+                edges_saved += local_edges_info.first;
+                edges_pruned += local_edges_info.second;
+                states_visited += 1;
+            }
+            total_states += 1;
+        }
+    };
+
+    if (verbose_output) {
+        cerr << "[LinearAlignment] Running Lazy Outside Algorithm (BEST):" << endl;
+    }
+    auto start_time = chrono::high_resolution_clock::now();
+    process_beam(bestALN[seq_len_sum + 2], HStateType::ALN);
+    for (int s = seq_len_sum; s > 0; --s) {
+        if (verbose_output) {
+            linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum - 1);
+        }
+        // reverse topological order: ALN->INS2->INS1
+        process_beam(bestALN[s], HStateType::ALN);
+        process_beam(bestINS2[s], HStateType::INS2);
+        process_beam(bestINS1[s], HStateType::INS1);
+    }
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const float effective_beam_size = float(states_visited) / (3 * seq_len_sum);
+    if (verbose_output) {
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
+                100.0 * execution_time / max(log.best_exec_time.first, value_type(1.0)));
+        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, edges_pruned);
+        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
+                100.0 * states_visited / total_states, states_visited, total_states);
+        fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
+        fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
+                bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
+    }
+    // clean up
+    incoming_edges.clear();
+    incoming_edges.shrink_to_fit();
+    saved_edges.clear();
+    saved_edges.shrink_to_fit();
+
+    // update logs
+    log.lazy_outside = true;
+    log.best_exec_time.second = execution_time;
+    log.total_score.second = bestALN[0][{0, 0}].beta;
+    log.effective_beam_size.second = effective_beam_size;
+    log.states_visited.second = states_visited;
+    log.states_pruned.second = total_states - states_visited;
+    log.edges_saved = edges_saved;
+    log.edges_pruned = edges_pruned;
+}
+
+template <typename T>
+void LinearAlignmentInterface<T>::run_normal_outside_best(bool verbose_output) {
+    const auto start_time = chrono::high_resolution_clock::now();
+    if (verbose_output) {
+        cerr << "[LinearAlignment] Running Normal Outside Algorithm (BEST):" << endl;
+    }
+    unsigned long states_visited = 0;
+    unsigned long edges_saved = 0;
+    for (int s = seq_len_sum; s >= 0; --s) {
+        if (verbose_output) {
+            linearx::utils::io::showProgressBar(seq_len_sum - s, seq_len_sum);
+        }
+        for (const HStateType h : hstate_types) {
+            vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(h);
+            for (const auto& item : beam[s]) {
+                const int i = item.first.first;
+                const int j = item.first.second;
+                HState& state = beam[s][{i, j}];
+                states_visited += 1;
+                // INS1
+                if (i < seq1.length() && j <= seq2.length()) {
+                    auto it = bestINS1[s + 1].find({i + 1, j});
+                    if ((it != bestINS1[s + 1].end())) {
+                        edges_saved += 1;
+                        const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                        state.beta = std::max(state.beta, it->second.beta + new_score);
+                    }
+                }
+                // INS2
+                if (i <= seq1.length() && j < seq2.length()) {
+                    auto it = bestINS2[s + 1].find({i, j + 1});
+                    if ((it != bestINS2[s + 1].end())) {
+                        edges_saved += 1;
+                        const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                        state.beta = std::max(state.beta, it->second.beta + new_score);
+                    }
+                }
+                // ALN
+                const bool end_check = (i == seq1.length() && j == seq2.length());
+                if ((i < seq1.length() && j < seq2.length()) || end_check) {
+                    auto it = bestALN[s + 2].find({i + 1, j + 1});
+                    if (it != bestALN[s + 2].end()) {
+                        edges_saved += 1;
+                        value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                        new_score = LOG_MUL(new_score, get_match_score(i, j));
+                        state.beta = std::max(state.beta, it->second.beta + new_score);
+                    }
+                }
+            }
+        }
+    }
+    auto end_time = chrono::high_resolution_clock::now();
+    const value_type execution_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    const float effective_beam_size = float(states_visited) / (3 * seq_len_sum);
+    if (verbose_output) {
+        fprintf(stderr, "  - Execution Time: %.2f ms (%.2f%% of inside time)\n", execution_time,
+                100.0 * execution_time / max(log.best_exec_time.first, value_type(1.0)));
+        fprintf(stderr, "  - Visited Edges: %lu (saved) + %lu (pruned)\n", edges_saved, (unsigned long)0);
+        fprintf(stderr, "  - Visited Nodes (%.2f%%): %lu (visited) / %lu (total)\n",
+                100.0 * states_visited / states_visited, states_visited, states_visited);
+        fprintf(stderr, "  - Effective Beam Size: %.2f\n", effective_beam_size);
+        fprintf(stderr, "  - Alpha(ALN(n)): %.5f | Beta(ALN(0)): %.5f\n",
+                bestALN[seq_len_sum + 2][{seq1.length() + 1, seq2.length() + 1}].alpha, bestALN[0][{0, 0}].beta);
+    }
+
+    log.lazy_outside = false;
+    log.best_exec_time.second = execution_time;
+    log.total_score.second = bestALN[0][{0, 0}].beta;
+    log.effective_beam_size.second = effective_beam_size;
+    log.states_visited.second = states_visited;
+    log.edges_saved = edges_saved;
+}
+
+template <typename T>
 pair<unsigned long, unsigned long> LinearAlignmentInterface<T>::backward_update(const int i, const int j,
                                                                                 const HState& state,
                                                                                 const HStateType type,
@@ -188,6 +332,59 @@ pair<unsigned long, unsigned long> LinearAlignmentInterface<T>::backward_update(
 }
 
 template <typename T>
+pair<unsigned long, unsigned long> LinearAlignmentInterface<T>::backward_update_BEST(const int i, const int j,
+                                                                                    const HState& state,
+                                                                                    const HStateType type,
+                                                                                    const value_type edge_threshold) {
+    if ((i == 0 || j == 0) && type == HStateType::ALN) {
+        return make_pair(0, 0);
+    }
+
+    get_incoming_edges<Mode::PARTITION_OUTSIDE>(i, j, type);
+    if (incoming_edges.empty()) {
+        return make_pair(0, 0);
+    }
+
+    saved_edges.clear();
+    saved_edges.reserve(incoming_edges.size());
+    AlnEdge* best_edge = nullptr;
+
+    value_type best_inside = LOG_ZERO;
+
+    unsigned long edges_pruned = 0;
+    unsigned long edges_saved = 0;
+
+    for (auto& edge : incoming_edges) {
+        value_type edge_inside = LOG_MUL(edge.prev->alpha, edge.weight);
+        if (edge_inside > edge_threshold) {  // keep the edge
+            saved_edges.push_back(&edge);
+        } else {  // prune the edge
+            edges_pruned++;
+            if (saved_edges.empty() && edge_inside >= best_inside) {
+                best_inside = edge_inside;
+                best_edge = &edge;
+            }
+        }
+    }
+
+    if (saved_edges.empty()) {
+        if (best_edge) {
+            saved_edges.push_back(best_edge);
+            edges_pruned -= 1;  // one more edge recovered
+        } else {
+            return make_pair(0, edges_pruned);
+        }
+    }
+
+    for (auto& edge : saved_edges) {
+        edge->prev->beta = std::max(edge->prev->beta, LOG_MUL(state.beta, edge->weight));
+    }
+
+    edges_saved += saved_edges.size();
+    return make_pair(edges_saved, edges_pruned);
+}
+
+template <typename T>
 template <Mode mode>
 void LinearAlignmentInterface<T>::get_incoming_edges(const int i, const int j, const HStateType type) {
     if constexpr (mode == Mode::BEST) {
@@ -216,10 +413,11 @@ void LinearAlignmentInterface<T>::get_incoming_edges(const int i, const int j, c
         auto it = mp.find({p, q});
         if (it != mp.end()) {
             value_type edge_weight = get_trans_emit_prob(i, j, type, h_prev);
+            // For ALN edges, include the match score in edge weight
+            if (type == HStateType::ALN) {
+                edge_weight = LOG_MUL(edge_weight, get_match_score(i - 1, j - 1));
+            }
             if constexpr (mode == Mode::BEST) {
-                if (type == HStateType::ALN) {
-                    edge_weight = LOG_MUL(edge_weight, get_match_score(i - 1, j - 1));
-                }
                 AlnEdge new_edge(&(it->second), edge_weight);
                 update_best_trace(new_edge, h_prev);
             } else {

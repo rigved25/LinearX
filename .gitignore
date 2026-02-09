@@ -6,3 +6,6 @@ outputs
 .DS_Store
 input*
 graphs*
+plotting*
+scripts*
+linearpartition*
