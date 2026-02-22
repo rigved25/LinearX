@@ -157,7 +157,11 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
 
         if(curr_itr == 1){
             aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
-            aln.compute_outside_BEST(true, alignment_pruning_threshold, verbose_output_);
+            if (max_marginal_) {
+                aln.compute_outside_BEST(true, alignment_pruning_threshold, verbose_output_);
+            } else {
+                aln.log.best_exec_time.second = 0.0;  // Best Outside skipped (max_marginal disabled)
+            }
 
             // if (out_dir_.length() > 0) {
             //     std::string beam_dir = out_dir_ + "/best_beams/itr_" + std::to_string(curr_itr);
@@ -166,8 +170,11 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
             // }
         }
         else{
-            aln.compute_inside_Astar(use_lazy_outside_, alignment_beam_size, verbose_output_);
-            // aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+            if (astar_viterbi_) {
+                aln.compute_inside_Astar(use_lazy_outside_, alignment_beam_size, verbose_output_);
+            } else {
+                aln.compute_inside<BEST>(alignment_beam_size, verbose_output_);
+            }
             aln.log.best_exec_time.second = 0.0;  // Best Outside does not run after itr 1
             aln.log.save_best_pf_time = 0.0;
         }
@@ -179,8 +186,8 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         t1 = std::chrono::high_resolution_clock::now();
         aln.log.traceback_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
 
-        // Save best beams (length-based: swap if long, copy if medium/short). Only for iter 1.
-        if (curr_itr == 1) {
+        // Save best beams (length-based: swap if long, copy if medium/short). Only for iter 1 with max_marginal.
+        if (max_marginal_ && curr_itr == 1) {
             t0 = std::chrono::high_resolution_clock::now();
             aln.save_partition_function(false);
             t1 = std::chrono::high_resolution_clock::now();
@@ -226,7 +233,8 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
 
         // --- Time: save partition function (length-based: swap if long, move if medium/short) ---
         t0 = std::chrono::high_resolution_clock::now();
-        if (curr_itr <= num_itr_) {
+        if ((restrict_search_ || (use_lazy_outside_ && astar_viterbi_)) 
+                && curr_itr <= num_itr_) {
             aln.save_partition_function(true);
         }
         t1 = std::chrono::high_resolution_clock::now();
@@ -332,12 +340,13 @@ void LinearTurbofold::multiple_sequence_alignment(TurboFoldLog& log, unsigned in
     log.msa_total_time = log.msa_mea_calc_time + log.msa_consistency_transform_time + log.msa_compute_trees_time + log.msa_process_tree_time + log.msa_iterative_refine_time;
 }
 
-void LinearTurbofold::run(const bool use_lazy_outside, const bool use_prev_itr_beta, const bool restrict_search) {
+void LinearTurbofold::run(const bool use_lazy_outside, const bool restrict_search, const bool astar_viterbi, const bool max_marginal) {
     use_lazy_outside_ = use_lazy_outside;
-    use_prev_itr_beta_ = use_prev_itr_beta;
     restrict_search_ = restrict_search;
+    astar_viterbi_ = astar_viterbi;
+    max_marginal_ = max_marginal;
     
-    TurboFoldLog log(num_itr_, use_lazy_outside_, use_prev_itr_beta_, restrict_search_, alignment_pruning_threshold,
+    TurboFoldLog log(num_itr_, use_lazy_outside_, restrict_search_, astar_viterbi_, max_marginal_, alignment_pruning_threshold,
                      folding_pruning_threshold);
     std::cout << "Running LinearTurboFold with " << multi_seq.size() << " sequences\n";
     for (curr_itr = 0; curr_itr <= num_itr_; ++curr_itr) {

@@ -12,8 +12,9 @@
 struct TurboFoldLog {
     int num_iterations;
     bool use_lazy_outside;
-    bool use_prev_itr_beta;
     bool restrict_search;
+    bool astar_viterbi;
+    bool max_marginal;
     float alignment_pruning_threshold;
     float folding_pruning_threshold;
     std::vector<std::pair<const Sequence*, const Structure*>> seqs_strucs;
@@ -31,12 +32,13 @@ struct TurboFoldLog {
     value_type msa_consistency_transform_time; // Time for consistency transformation
     value_type msa_total_time;         // Total MSA time
 
-    TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool use_prev_itr_beta, bool restrict_search,
+    TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool restrict_search, bool astar_viterbi, bool max_marginal,
                  float alignment_pruning_threshold, float folding_pruning_threshold)
         : num_iterations(num_iterations),
           use_lazy_outside(use_lazy_outside),
-          use_prev_itr_beta(use_prev_itr_beta),
           restrict_search(restrict_search),
+          astar_viterbi(astar_viterbi),
+          max_marginal(max_marginal),
           alignment_pruning_threshold(alignment_pruning_threshold),
           folding_pruning_threshold(folding_pruning_threshold) {
         aln_logs.resize(num_iterations + 2);  // +2 to account for extra MSA iteration
@@ -169,8 +171,9 @@ struct TurboFoldLog {
 
         summary << "num_iterations: " << num_iterations << "\n";
         summary << "use_lazy_outside: " << use_lazy_outside << "\n";
-        summary << "use_prev_itr_beta: " << use_prev_itr_beta << "\n";
         summary << "restrict_search: " << restrict_search << "\n";
+        summary << "astar_viterbi: " << astar_viterbi << "\n";
+        summary << "max_marginal: " << max_marginal << "\n";
         summary << "alignment_pruning_threshold: " << alignment_pruning_threshold << "\n";
         summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
 

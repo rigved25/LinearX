@@ -64,6 +64,9 @@ class LinearAlignmentInterface {
         return static_cast<T*>(this)->check_state_best(type, i, j);
     }
 
+    HState* check_state_AStar(const HStateType type, const int i, const int j) {
+        return static_cast<T*>(this)->check_state_AStar(type, i, j);
+    }
 
     unsigned beam_prune(std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>& beamstep) {
         if (run_beam_size_ == 0 || beamstep.size() <= run_beam_size_) {
@@ -172,6 +175,10 @@ class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {
     }
 
     HState* check_state_best(const HStateType type, const int i, const int j) {
+        return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
+    }
+
+    HState* check_state_AStar(const HStateType type, const int i, const int j) {
         return LinearAlignmentInterface<LinearAlignment>::get_state(type, i, j, true);
     }
 

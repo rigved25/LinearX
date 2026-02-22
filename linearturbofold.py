@@ -14,8 +14,9 @@ def run_linearturbofold(msa_file, out_dir, args):
         str(args.energy_model),
         str(args.num_iterations),
         str(int(args.use_lazy_outside)),
-        str(int(args.use_prev_itr_beta)),
         str(int(args.restrict_search)),
+        str(int(args.astar_viterbi)),
+        str(int(args.max_marginal)),
         str(int(args.verbose)),
         str(int(args.save_logs)),
         str(int(args.save_probs)),
@@ -49,10 +50,12 @@ def main():
                         help="Number of TurboFold iterations (default: 3)")
     parser.add_argument("--use-lazy-outside", "-lz", action="store_true", default=False,
                         help="Use lazy outside computation (default: False)")
-    parser.add_argument("--use-prev-itr-beta", "-pb", action="store_true", default=False,
-                        help="Use beta from previous iteration (default: False)")
     parser.add_argument("--restrict-search", "-rs", action="store_true", default=False,
                         help="Restrict search space (default: False)")
+    parser.add_argument("--astar-viterbi", "-av", action="store_true", default=False,
+                        help="Use A* Viterbi search in iterations 2+ (default: False)")
+    parser.add_argument("--max-marginal", "-mm", action="store_true", default=False,
+                        help="Enable max-marginal: compute and save best-mode beta, prune partition alpha (default: False)")
     parser.add_argument("--verbose", "-v", action="store_true", default=False,
                         help="Enable verbose output (default: False)")
     parser.add_argument("--save-logs", "-sl", action="store_true", default=False,

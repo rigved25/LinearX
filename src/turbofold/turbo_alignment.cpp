@@ -18,6 +18,8 @@ TurboAlignment::TurboAlignment(const LinearTurbofold& turbofold, Sequence& seq1,
 //     reset_beam_vector(saved_bestINS2, seq_len_sum + 1, beam_size);
 // }
 void TurboAlignment::save_partition_function(const bool move) {
+    total_inside_alignment = bestALN[seq_len_sum + 2].at({seq1.length() + 1, seq2.length() + 1}).alpha;
+
     if (seq_len_sum > linearx::constants::alignment::SAVE_SWAP_THRESHOLD) {
         // Long sequences: O(1) swap to avoid large copy/dealloc cost. Caller must call reset_beams() after.
         std::swap(bestALN, saved_bestALN);

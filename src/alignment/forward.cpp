@@ -111,7 +111,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
                 }
                 
                 // Check if we should explore
-                HState* next_state = check_state(nh, ni, nj);
+                HState* next_state = check_state_AStar(nh, ni, nj);
                 if (!next_state) {
                     return;
                 }
