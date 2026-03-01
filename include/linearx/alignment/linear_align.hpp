@@ -56,6 +56,10 @@ class LinearAlignmentInterface {
         return static_cast<T*>(this)->get_saved_state(type, i, j);
     }
 
+    inline HState* get_saved_viterbi_state(const HStateType type, const int i, const int j) {
+        return static_cast<T*>(this)->get_saved_viterbi_state(type, i, j);
+    }
+
     HState* check_state(const HStateType type, const int i, const int j) {
         return static_cast<T*>(this)->check_state(type, i, j);
     }
@@ -183,6 +187,11 @@ class LinearAlignment final : public LinearAlignmentInterface<LinearAlignment> {
     }
 
     inline HState* get_saved_state(const HStateType type, const int i, const int j) {
+        (void)type; (void)i; (void)j;
+        return nullptr;  // LinearAlignment has no saved states
+    }
+
+    inline HState* get_saved_viterbi_state(const HStateType type, const int i, const int j) {
         (void)type; (void)i; (void)j;
         return nullptr;  // LinearAlignment has no saved states
     }

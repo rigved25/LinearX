@@ -25,6 +25,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
         value_type priority;  // -LOG_MUL(alpha, beta) for A* heuristic
         int i;
         int j;
+        HStateType h;         // state type we arrived in at (i, j)
     };
 
     struct EntryCompare {
@@ -45,21 +46,21 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
     const int dest_seq2 = seq2.length() + 1;
 
     auto try_push_state = [&](int i, int j, HStateType h, value_type alpha) -> bool {
-        HState* saved = get_saved_state(h, i, j);
+        HState* saved = get_saved_viterbi_state(h, i, j);
         
         // Compute priority
         value_type priority;
         if (saved && saved->beta > linearx::math::LOG_ZERO) {
             priority = -LOG_MUL(alpha, saved->beta);  // A* heuristic
         } else {
-            priority = -alpha;  // No heuristic available
+            return false;  // Should not reach this step
         }
         
         // Update heap and handle map
         const Key key{i, j};
         auto it = handle_map.find(key);
         if (it == handle_map.end()) {
-            Handle hdl = frontier.push({priority, i, j});
+            Handle hdl = frontier.push({priority, i, j, h});
             handle_map.emplace(key, hdl);
         } else {
             Handle hdl = it->second;
@@ -67,6 +68,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
                 (*hdl).priority = priority;
                 (*hdl).i = i;
                 (*hdl).j = j;
+                (*hdl).h = h;
                 frontier.update(hdl);
             }
         }
@@ -85,6 +87,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
 
         const int i = top.i;
         const int j = top.j;
+        const HStateType h = top.h;
         const int s = i + j;
 
         handle_map.erase({i, j});
@@ -95,53 +98,63 @@ void LinearAlignmentInterface<T>::compute_inside_Astar(const bool use_lazy_outsi
             break;
         }
 
-        // Process all three state types at (i, j)
-        for (const HStateType h : hstate_types) {
-            auto& beam = get_beams(h);
-            auto it = beam[s].find({i, j});
-            if (it == beam[s].end()) {
-                continue;
+        // Process only the state type we arrived in (h) at (i, j)
+        auto& beam = get_beams(h);
+        auto it = beam[s].find({i, j});
+        if (it == beam[s].end()) {
+            continue;
+        }
+
+        HState& state = it->second;
+
+        auto propagate = [&](int ni, int nj, HStateType nh) {
+            if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
+                return;
+            }
+            
+            // No Need of Beam + Heap because we use last iterations beta which 
+            // is already beam pruned or posterior pruned
+            
+            // // Optional beam + heap impl - per (i+j) layer
+            // if (beam_size > 0) {
+            //     auto& next_beam_vec = get_beams(nh);
+            //     auto& next_beam = next_beam_vec[ni + nj];
+            //     if (next_beam.size() >= beam_size) {
+            //         return;
+            //     }
+            // }
+
+            // Check if we should explore
+            HState* next_state = check_state_AStar(nh, ni, nj);
+            if (!next_state) {
+                return;
             }
 
-            HState& state = it->second;
-
-            auto propagate = [&](int ni, int nj, HStateType nh) {
-                if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
-                    return;
-                }
-                
-                // Check if we should explore
-                HState* next_state = check_state_AStar(nh, ni, nj);
-                if (!next_state) {
-                    return;
-                }
-
-                value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
-                if (nh == HStateType::ALN) {
-                    edge_weight = LOG_MUL(edge_weight, get_match_score(i, j));
-                }
-
-                const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
-                if (candidate_alpha <= next_state->alpha) {
-                    return;  // alpha is already better and beta stays the same
-                }
-
-                next_state->alpha = candidate_alpha;
-                try_push_state(ni, nj, nh, candidate_alpha);  // Check + push in one step
-            };
-
-            if (i < seq1.length() && j <= seq2.length()) {                
-                propagate(i + 1, j, HStateType::INS1);
+            value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
+            if (nh == HStateType::ALN) {
+                edge_weight = LOG_MUL(edge_weight, get_match_score(i, j));
             }
 
-            if (i <= seq1.length() && j < seq2.length()) {
-                propagate(i, j + 1, HStateType::INS2);
+            const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
+            if (candidate_alpha <= next_state->alpha) {
+                return;  // alpha is already better and beta stays the same
             }
 
-            const bool end_check = (i == seq1.length() && j == seq2.length());
-            if ((i < seq1.length() && j < seq2.length()) || end_check) {
-                propagate(i + 1, j + 1, HStateType::ALN);
-            }
+            next_state->alpha = candidate_alpha;
+            try_push_state(ni, nj, nh, candidate_alpha);  // Check + push in one step
+        };
+
+        if (i < seq1.length() && j <= seq2.length()) {                
+            propagate(i + 1, j, HStateType::INS1);
+        }
+
+        if (i <= seq1.length() && j < seq2.length()) {
+            propagate(i, j + 1, HStateType::INS2);
+        }
+
+        const bool end_check = (i == seq1.length() && j == seq2.length());
+        if ((i < seq1.length() && j < seq2.length()) || end_check) {
+            propagate(i + 1, j + 1, HStateType::ALN);
         }
     }
 
@@ -171,6 +184,7 @@ void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_
         value_type priority;  // -LOG_MUL(alpha, beta) for A* heuristic
         int i;
         int j;
+        HStateType h;         // state type we arrived in at (i, j)
     };
 
     struct EntryCompare {
@@ -180,13 +194,16 @@ void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_
     };
 
     using Heap = std::priority_queue<HeapEntry, std::vector<HeapEntry>, EntryCompare>;
-    using Key = std::pair<int, int>;
+    using Key = std::tuple<int, int, HStateType>;
+    struct KeyHash {
+        size_t operator()(const Key& k) const {
+            return static_cast<size_t>(std::get<0>(k)) * 131 + static_cast<size_t>(std::get<1>(k)) * 13 + static_cast<size_t>(std::get<2>(k));
+        }
+    };
 
     Heap frontier;
-    // Track the best (lowest) priority seen so far for each (i, j).
-    // This emulates decrease-key behavior: only the best entry for a key is considered;
-    // worse duplicates become stale and are skipped when popped.
-    std::unordered_map<Key, value_type, PairHash> best_priority;
+    // Best priority seen for each (i, j, h). Lazy dedup: worse duplicates skipped when popped.
+    std::unordered_map<Key, value_type, KeyHash> best_priority;
 
     const int dest_seq1 = seq1.length() + 1;
     const int dest_seq2 = seq2.length() + 1;
@@ -201,11 +218,11 @@ void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_
             priority = -alpha;  // No heuristic available
         }
 
-        const Key key{i, j};
+        const Key key{i, j, h};
         auto it = best_priority.find(key);
         if (it == best_priority.end() || priority < it->second) {
             best_priority[key] = priority;
-            frontier.push({priority, i, j});
+            frontier.push({priority, i, j, h});
         }
     };
 
@@ -221,8 +238,9 @@ void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_
 
         const int i = top.i;
         const int j = top.j;
-        const Key key{i, j};
-        // Skip stale entries that are not the current best for this (i, j)
+        const HStateType h = top.h;
+        const Key key{i, j, h};
+        // Skip stale entries: not the current best for this (i, j, h)
         auto best_it = best_priority.find(key);
         if (best_it != best_priority.end() && top.priority > best_it->second) {
             continue;
@@ -236,52 +254,50 @@ void LinearAlignmentInterface<T>::compute_inside_Astar_lazy(const bool use_lazy_
             break;
         }
 
-        // Process all three state types at (i, j)
-        for (const HStateType h : hstate_types) {
-            auto& beam = get_beams(h);
-            auto it = beam[s].find({i, j});
-            if (it == beam[s].end()) {
-                continue;
+        // Process only the state type we arrived in (h) at (i, j)
+        auto& beam = get_beams(h);
+        auto it = beam[s].find({i, j});
+        if (it == beam[s].end()) {
+            continue;
+        }
+
+        HState& state = it->second;
+
+        auto propagate = [&](int ni, int nj, HStateType nh) {
+            if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
+                return;
             }
 
-            HState& state = it->second;
-
-            auto propagate = [&](int ni, int nj, HStateType nh) {
-                if (ni < 0 || nj < 0 || ni > dest_seq1 || nj > dest_seq2) {
-                    return;
-                }
-
-                HState* next_state = check_state(nh, ni, nj);
-                if (!next_state) {
-                    return;
-                }
-
-                value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
-                if (nh == HStateType::ALN) {
-                    edge_weight = LOG_MUL(edge_weight, get_match_score(i, j));
-                }
-
-                const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
-                if (candidate_alpha <= next_state->alpha) {
-                    return;  // alpha is already better and beta stays the same
-                }
-
-                next_state->alpha = candidate_alpha;
-                push_state(ni, nj, nh, candidate_alpha);
-            };
-
-            if (i < seq1.length() && j <= seq2.length()) {
-                propagate(i + 1, j, HStateType::INS1);
+            HState* next_state = check_state_AStar(nh, ni, nj);
+            if (!next_state) {
+                return;
             }
 
-            if (i <= seq1.length() && j < seq2.length()) {
-                propagate(i, j + 1, HStateType::INS2);
+            value_type edge_weight = get_trans_emit_prob(ni, nj, nh, h);
+            if (nh == HStateType::ALN) {
+                edge_weight = LOG_MUL(edge_weight, get_match_score(i, j));
             }
 
-            const bool end_check = (i == seq1.length() && j == seq2.length());
-            if ((i < seq1.length() && j < seq2.length()) || end_check) {
-                propagate(i + 1, j + 1, HStateType::ALN);
+            const value_type candidate_alpha = LOG_MUL(state.alpha, edge_weight);
+            if (candidate_alpha <= next_state->alpha) {
+                return;  // alpha is already better and beta stays the same
             }
+
+            next_state->alpha = candidate_alpha;
+            push_state(ni, nj, nh, candidate_alpha);
+        };
+
+        if (i < seq1.length() && j <= seq2.length()) {
+            propagate(i + 1, j, HStateType::INS1);
+        }
+
+        if (i <= seq1.length() && j < seq2.length()) {
+            propagate(i, j + 1, HStateType::INS2);
+        }
+
+        const bool end_check = (i == seq1.length() && j == seq2.length());
+        if ((i < seq1.length() && j < seq2.length()) || end_check) {
+            propagate(i + 1, j + 1, HStateType::ALN);
         }
     }
 

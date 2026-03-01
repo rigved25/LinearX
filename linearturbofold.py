@@ -20,6 +20,9 @@ def run_linearturbofold(msa_file, out_dir, args):
         str(int(args.verbose)),
         str(int(args.save_logs)),
         str(int(args.save_probs)),
+        str(args.alignment_threshold),
+        str(args.folding_threshold),
+        str(args.max_marginal_pruning_threshold),
     ]
 
     print("[Executing] " + " ".join(cmd))
@@ -62,6 +65,13 @@ def main():
                         help="Save execution logs (default: False)")
     parser.add_argument("--save-probs", "-sp", action="store_true", default=False,
                         help="Save BPP and coincidence probabilities (default: False)")
+
+    parser.add_argument("--alignment-threshold", "-at", type=float, default=9.91152,
+                        help="Alignment pruning threshold (default: 9.91152, same as DEVIATION_THRESHOLD)")
+    parser.add_argument("--folding-threshold", "-ft", type=float, default=19.82304,
+                        help="Folding pruning threshold (default: 19.82304, 2 * DEVIATION_THRESHOLD)")
+    parser.add_argument("--max-marginal-pruning-threshold", "-mmpt", type=float, default=9.91152,
+                        help="Max-marginal / BEST outside pruning threshold for grid search (default: 9.91152)")
 
     args = parser.parse_args()
 

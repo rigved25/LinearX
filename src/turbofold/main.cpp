@@ -6,11 +6,12 @@
 #include <linearx/turbofold/linear_turbofold.hpp>
 
 int main(int argc, char* argv[]) {
-    if (argc != 12) {
+    if (argc != 15) {
         std::cerr << "Usage: " << argv[0]
                   << " <msa_file_path> <out_dir> <energy_model> <num_iterations> "
                      "<use_lazy_outside> <restrict_search> <astar_viterbi> <max_marginal> "
-                     "<verbose> <save_logs> <save_probs>\n";
+                     "<verbose> <save_logs> <save_probs> "
+                     "<alignment_threshold> <folding_threshold> <max_marginal_pruning_threshold>\n";
         return EXIT_FAILURE;
     }
 
@@ -25,6 +26,9 @@ int main(int argc, char* argv[]) {
     bool verbose = std::stoi(argv[9]) != 0;
     bool save_logs = std::stoi(argv[10]) != 0;
     bool save_probs = std::stoi(argv[11]) != 0;
+    float alignment_threshold = std::stof(argv[12]);
+    float folding_threshold = std::stof(argv[13]);
+    float max_marginal_pruning_threshold = std::stof(argv[14]);
 
     std::cerr << "Arguments:\n";
     std::cerr << "  msa_file_path: " << msa_file_path << "\n";
@@ -38,14 +42,18 @@ int main(int argc, char* argv[]) {
     std::cerr << "  verbose: " << verbose << "\n";
     std::cerr << "  save_logs: " << save_logs << "\n";
     std::cerr << "  save_probs: " << save_probs << "\n";
+    std::cerr << "  alignment_threshold: " << alignment_threshold << "\n";
+    std::cerr << "  folding_threshold: " << folding_threshold << "\n";
+    std::cerr << "  max_marginal_pruning_threshold: " << max_marginal_pruning_threshold << "\n";
 
     try {
         MultiSeq ms;
         ms.read_fasta(msa_file_path, linearx::utils::VIENNA_NUC_ENCODING_SCHEME);
         EnergyModel energy_model(energy_model_choice == 0 ? EnergyParamsType::VIENNA : EnergyParamsType::BL_STAR);
-        LinearTurbofold ltf(ms, energy_model, 100, 100, 
-                           linearx::constants::limits::DEVIATION_THRESHOLD,
-                           2 * linearx::constants::limits::DEVIATION_THRESHOLD,
+        LinearTurbofold ltf(ms, energy_model, 100, 100,
+                           alignment_threshold,
+                           folding_threshold,
+                           max_marginal_pruning_threshold,
                            0.3, 0.3, 3, false, 1.0, 0.8, 0.5,
                            num_itr, verbose, save_logs, save_probs, out_dir);
         ltf.run(use_lazy_outside, restrict_search, astar_viterbi, max_marginal);

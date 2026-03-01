@@ -18,9 +18,12 @@ struct ProbAccm {
     std::vector<value_type> dwnstrm;
 };
 
-inline std::unordered_map<char, int> VIENNA_NUC_ENCODING_SCHEME = {{'N', 0}, {'A', 1}, {'C', 2}, {'G', 3}, {'U', 4},
-                                                                   {'-', 5}, {'n', 0}, {'a', 1}, {'c', 2}, {'g', 3},
-                                                                   {'u', 4}, {'.', 5}};  // Vienna encoding scheme
+// Vienna encoding scheme
+// Treat DNA 'T'/'t' the same as RNA 'U'/'u' so that DNA inputs are accepted.
+inline std::unordered_map<char, int> VIENNA_NUC_ENCODING_SCHEME = {
+    {'N', 0}, {'A', 1}, {'C', 2}, {'G', 3}, {'U', 4}, {'T', 4}, {'-', 5},
+    {'n', 0}, {'a', 1}, {'c', 2}, {'g', 3}, {'u', 4}, {'t', 4}, {'.', 5}
+};
 
 // used for hashing a pair of integers
 struct PairHash {

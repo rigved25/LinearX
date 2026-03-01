@@ -26,6 +26,7 @@ class LinearTurbofold {
     const unsigned folding_beam_size;
     const float alignment_pruning_threshold;
     const float folding_pruning_threshold;
+    const float max_marginal_pruning_threshold;
     const float lambda;  // extrinsic information weight (contribution relative to intrinsic information)
     const float threshknot_threshold;
     const float min_helix_size;
@@ -50,6 +51,7 @@ class LinearTurbofold {
                     const unsigned folding_beam_size = 100,
                     const float alignment_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                     const float folding_pruning_threshold = 2 * linearx::constants::limits::DEVIATION_THRESHOLD,
+                    const float max_marginal_pruning_threshold = linearx::constants::limits::DEVIATION_THRESHOLD,
                     const float lambda = 0.3, const float threshknot_threshold = 0.3, const float min_helix_size = 3,
                     const bool allow_sharp_turn = false, const float alpha1 = 1.0, const float alpha2 = 0.8,
                     const float alpha3 = 0.5, const int num_itr = 3, const bool verbose_output = false,
@@ -198,9 +200,14 @@ class TurboPartition final : public LinearPartitionInterface<TurboPartition> {
 class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
    private:
     const LinearTurbofold& turbofold;
+    // Saved partition-mode beams (used for restrict_search / lazy outside across iterations)
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestALN;
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestINS1;
     std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_bestINS2;
+    // Saved BEST/Viterbi-mode beams, used by both max-marginal pruning and A* Viterbi heuristic.
+    std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_viterbi_bestALN;
+    std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_viterbi_bestINS1;
+    std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>> saved_viterbi_bestINS2;
     value_type total_inside_alignment = linearx::math::LOG_ZERO;
 
    public:
@@ -211,6 +218,8 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
 
     // void reset_saved_beams(const unsigned beam_size);
     void save_partition_function(const bool move);
+    // Save BEST/Viterbi-mode beams into the generic viterbi store (for max-marginal + A*).
+    void save_best_beams(const bool move);
 
     void save_partition_function_old(const bool move);
     
@@ -243,13 +252,31 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
         return nullptr;
     }
 
+    HState* get_saved_viterbi_state(const HStateType type, const int i, const int j) noexcept {
+        std::vector<std::unordered_map<std::pair<int, int>, HState, linearx::utils::PairHash>>* beams = nullptr;
+        switch (type) {
+            case ALN: beams = &saved_viterbi_bestALN; break;
+            case INS1: beams = &saved_viterbi_bestINS1; break;
+            case INS2: beams = &saved_viterbi_bestINS2; break;
+            default: beams = &saved_viterbi_bestALN; break;
+        }
+        const int s = i + j;
+        if (beams->empty() || s >= static_cast<int>(beams->size())) {
+            return nullptr;
+        }
+        auto& beam = (*beams)[s];
+        const std::pair<int, int> key = {i, j};
+        const auto it = beam.find(key);
+        if (it != beam.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
     HState* check_state(const HStateType type, const int i, const int j) {
+
         if (turbofold.max_marginal_ && turbofold.curr_itr == 1) {
-            // Filter partition mode using BEST outside results.
-            // Since LHS_best < LHS_partition, we CANNOT use LHS_best > -threshold to filter.
-            // Instead, just check if the state was visited during BEST outside (has valid beta).
-            // The BEST outside threshold already does the pruning.
-            const HState* state = TurboAlignment::get_saved_state(type, i, j);
+            HState* state = TurboAlignment::get_saved_viterbi_state(type, i, j);
             if (!state || state->beta <= linearx::math::LOG_ZERO) {
                 return nullptr;
             }
@@ -268,30 +295,32 @@ class TurboAlignment final : public LinearAlignmentInterface<TurboAlignment> {
                     total_inside_alignment) <= -turbofold.alignment_pruning_threshold) {
                 return nullptr;
             }
-            
         }
 
         return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
     }
 
     HState* check_state_AStar(const HStateType type, const int i, const int j) {
-        if(turbofold.curr_itr > 1){
-            if (turbofold.use_lazy_outside_ || turbofold.restrict_search_) {
-                HState* state = TurboAlignment::get_saved_state(type, i, j);
-                if (!state) {
-                    return nullptr;
-                }
+        // Anyways this is always true
+        // if(turbofold.curr_itr > 1)
 
-                // With AStar: make lazy outside work irrespective of posterior pruning
-                if (turbofold.use_lazy_outside_ && state->beta <= linearx::math::LOG_ZERO) {
-                    return nullptr;
-                }
-                if (turbofold.restrict_search_ && LOG_DIV(LOG_MUL(state->alpha, state->beta),
-                        total_inside_alignment) <= -turbofold.alignment_pruning_threshold) {
-                    return nullptr;
-                }
-            }            
+        // Always save the last iteration beams and use them for heuristics
+        HState* state = TurboAlignment::get_saved_viterbi_state(type, i, j);
+        if (!state) {
+            return nullptr;
         }
+
+        // // whenever we use the beam from last itr beta^+
+        // if(!turbofold.restrict_search_) {
+        //     if (state->beta <= linearx::math::LOG_ZERO) {
+        //         return nullptr;
+        //     }
+        // }
+        // else if ((LOG_DIV(LOG_MUL(state->alpha, state->beta),
+        //         total_inside_alignment) <= -turbofold.alignment_pruning_threshold)) {
+        //     return nullptr;
+        // }
+        
         return LinearAlignmentInterface<TurboAlignment>::get_state(type, i, j, true);
     }
 

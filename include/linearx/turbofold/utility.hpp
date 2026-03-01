@@ -17,6 +17,7 @@ struct TurboFoldLog {
     bool max_marginal;
     float alignment_pruning_threshold;
     float folding_pruning_threshold;
+    float max_marginal_pruning_threshold;
     std::vector<std::pair<const Sequence*, const Structure*>> seqs_strucs;
     std::vector<std::vector<AlignmentLog>> aln_logs;  // aln_logs[iteration][pair_index]
     std::vector<std::vector<PartitionLog>> pf_logs;   // pf_logs[iteration][sequence_index]
@@ -33,14 +34,15 @@ struct TurboFoldLog {
     value_type msa_total_time;         // Total MSA time
 
     TurboFoldLog(const int num_iterations, bool use_lazy_outside, bool restrict_search, bool astar_viterbi, bool max_marginal,
-                 float alignment_pruning_threshold, float folding_pruning_threshold)
+                 float alignment_pruning_threshold, float folding_pruning_threshold, float max_marginal_pruning_threshold)
         : num_iterations(num_iterations),
           use_lazy_outside(use_lazy_outside),
           restrict_search(restrict_search),
           astar_viterbi(astar_viterbi),
           max_marginal(max_marginal),
           alignment_pruning_threshold(alignment_pruning_threshold),
-          folding_pruning_threshold(folding_pruning_threshold) {
+          folding_pruning_threshold(folding_pruning_threshold),
+          max_marginal_pruning_threshold(max_marginal_pruning_threshold) {
         aln_logs.resize(num_iterations + 2);  // +2 to account for extra MSA iteration
         pf_logs.resize(num_iterations + 1);
         aln_itr_exec_times.resize(num_iterations + 2);  // +2 to account for extra MSA iteration
@@ -176,6 +178,7 @@ struct TurboFoldLog {
         summary << "max_marginal: " << max_marginal << "\n";
         summary << "alignment_pruning_threshold: " << alignment_pruning_threshold << "\n";
         summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
+        summary << "max_marginal_pruning_threshold: " << max_marginal_pruning_threshold << "\n";
 
         summary << "aln_itr_exec_times (ms): ";
         for (const auto& t : aln_itr_exec_times) summary << t << " ";

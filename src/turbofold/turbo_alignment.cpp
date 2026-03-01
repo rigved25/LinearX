@@ -39,6 +39,24 @@ void TurboAlignment::save_partition_function(const bool move) {
     }
 }
 
+void TurboAlignment::save_best_beams(const bool move) {
+    if (seq_len_sum > linearx::constants::alignment::SAVE_SWAP_THRESHOLD) {
+        std::swap(bestALN, saved_viterbi_bestALN);
+        std::swap(bestINS1, saved_viterbi_bestINS1);
+        std::swap(bestINS2, saved_viterbi_bestINS2);
+    } else {
+        if (move) {
+            saved_viterbi_bestALN = std::move(bestALN);
+            saved_viterbi_bestINS1 = std::move(bestINS1);
+            saved_viterbi_bestINS2 = std::move(bestINS2);
+        } else {
+            saved_viterbi_bestALN = bestALN;
+            saved_viterbi_bestINS1 = bestINS1;
+            saved_viterbi_bestINS2 = bestINS2;
+        }
+    }
+}
+
 void TurboAlignment::save_partition_function_old(const bool move) {
     // if move is true, the original beam data will be cleared
     // reset_saved_beams(run_beam_size_);
