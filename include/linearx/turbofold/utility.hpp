@@ -1,6 +1,7 @@
 // linearx/turbofold/utility.hpp
 #pragma once
 
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <linearx/alignment/utility.hpp>
@@ -8,6 +9,7 @@
 #include <linearx/sequence/structure.hpp>
 #include <linearx/sequence/sequence.hpp>
 #include <stdexcept>
+#include <vector>
 
 struct TurboFoldLog {
     int num_iterations;
@@ -80,19 +82,65 @@ struct TurboFoldLog {
     inline void save_logs(const std::string& out_dir) {
         std::filesystem::create_directories(out_dir);
 
-        // --- log directories
+        // --- log directories (create first so logs/ appears immediately)
         std::string aln_log_dir = out_dir + "/logs/alignment";
         std::string pf_log_dir = out_dir + "/logs/partition";
         std::filesystem::create_directories(aln_log_dir);
         std::filesystem::create_directories(pf_log_dir);
 
+        fprintf(stderr, "[LinearTurboFold] Saving logs to %s/logs/ ...\n", out_dir.c_str());
+
+        // Compute total time once (used by summary)
+        itrs_exec_time = 0.0;
+        for (const auto& t : aln_itr_exec_times) itrs_exec_time += t;
+        for (const auto& t : pf_itr_exec_times) itrs_exec_time += t;
+        itrs_exec_time += msa_total_time;
+
+        // --- write summary first so logs/ has a file immediately
+        std::ofstream summary(out_dir + "/logs/log.txt");
+        if (!summary) {
+            throw std::runtime_error("Failed to open summary log file for writing: " + out_dir + "/logs/log.txt");
+        }
+        summary << "num_iterations: " << num_iterations << "\n";
+        summary << "use_lazy_outside: " << use_lazy_outside << "\n";
+        summary << "restrict_search: " << restrict_search << "\n";
+        summary << "astar_viterbi: " << astar_viterbi << "\n";
+        summary << "max_marginal: " << max_marginal << "\n";
+        summary << "alignment_pruning_threshold: " << alignment_pruning_threshold << "\n";
+        summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
+        summary << "max_marginal_pruning_threshold: " << max_marginal_pruning_threshold << "\n";
+        summary << "aln_itr_exec_times (ms): ";
+        for (const auto& t : aln_itr_exec_times) summary << t << " ";
+        summary << "\n";
+        summary << "pf_itr_exec_times (ms): ";
+        for (const auto& t : pf_itr_exec_times) summary << t << " ";
+        summary << "\n";
+        summary << "itrs_exec_time (ms): " << itrs_exec_time << "\n";
+        summary << "msa_mea_calc_time (ms): " << msa_mea_calc_time << "\n";
+        summary << "msa_compute_trees_time (ms): " << msa_compute_trees_time << "\n";
+        summary << "msa_process_tree_time (ms): " << msa_process_tree_time << "\n";
+        summary << "msa_iterative_refine_time (ms): " << msa_iterative_refine_time << "\n";
+        summary << "msa_consistency_transform_time (ms): " << msa_consistency_transform_time << "\n";
+        summary << "msa_total_time (ms): " << msa_total_time << "\n";
+        summary.close();
+        fprintf(stderr, "[LinearTurboFold]   Wrote logs/log.txt\n");
+
+        // Larger buffer to reduce write syscalls (helps on NFS)
+        const size_t kLogBufferSize = 1024 * 1024;  // 1 MB
+        std::vector<char> log_buf(kLogBufferSize);
+
         // -- Alignment logs (skip itr 0, include extra MSA iteration at num_iterations+1)
-        for (int itr = 1; itr <= num_iterations + 1; ++itr) {
+        const int num_aln_itrs = num_iterations + 1;
+        for (int itr = 1; itr <= num_aln_itrs; ++itr) {
             if (aln_logs[itr].empty()) continue;  // skip if no alignment data for this iteration
-            
+
+            fprintf(stderr, "[LinearTurboFold]   Writing alignment logs itr %d/%d (%zu pairs) ...\n",
+                    itr, num_aln_itrs, aln_logs[itr].size());
+
             std::ofstream aln_log(aln_log_dir + "/itr_" + std::to_string(itr) + ".txt");
             if (!aln_log)
                 throw std::runtime_error("Failed to open alignment log file for iteration " + std::to_string(itr));
+            aln_log.rdbuf()->pubsetbuf(log_buf.data(), log_buf.size());
 
             aln_log << "=== Alignment Logs: Iteration " << itr << " ===\n\n";
             int pair_idx = 0;
@@ -137,9 +185,12 @@ struct TurboFoldLog {
 
         // -- Partition logs (always present, up to num_iterations)
         for (int itr = 0; itr <= num_iterations; ++itr) {
+            fprintf(stderr, "[LinearTurboFold]   Writing partition logs itr %d/%d ...\n", itr, num_iterations + 1);
+
             std::ofstream pf_log(pf_log_dir + "/itr_" + std::to_string(itr) + ".txt");
             if (!pf_log)
                 throw std::runtime_error("Failed to open partition log file for iteration " + std::to_string(itr));
+            pf_log.rdbuf()->pubsetbuf(log_buf.data(), log_buf.size());
 
             pf_log << "=== Partition Logs: Iteration " << itr << " ===\n\n";
             int seq_idx = 0;
@@ -160,42 +211,6 @@ struct TurboFoldLog {
             pf_log.close();
         }
 
-        itrs_exec_time = 0.0;
-        for (const auto& t : aln_itr_exec_times) itrs_exec_time += t;
-        for (const auto& t : pf_itr_exec_times) itrs_exec_time += t;
-        itrs_exec_time += msa_total_time;
-
-        // --- write top-level summary file
-        std::ofstream summary(out_dir + "/logs/log.txt");
-        if (!summary) {
-            throw std::runtime_error("Failed to open summary log file for writing: " + out_dir + "/logs/log.txt");
-        }
-
-        summary << "num_iterations: " << num_iterations << "\n";
-        summary << "use_lazy_outside: " << use_lazy_outside << "\n";
-        summary << "restrict_search: " << restrict_search << "\n";
-        summary << "astar_viterbi: " << astar_viterbi << "\n";
-        summary << "max_marginal: " << max_marginal << "\n";
-        summary << "alignment_pruning_threshold: " << alignment_pruning_threshold << "\n";
-        summary << "folding_pruning_threshold: " << folding_pruning_threshold << "\n";
-        summary << "max_marginal_pruning_threshold: " << max_marginal_pruning_threshold << "\n";
-
-        summary << "aln_itr_exec_times (ms): ";
-        for (const auto& t : aln_itr_exec_times) summary << t << " ";
-        summary << "\n";
-
-        summary << "pf_itr_exec_times (ms): ";
-        for (const auto& t : pf_itr_exec_times) summary << t << " ";
-        summary << "\n";
-
-        summary << "itrs_exec_time (ms): " << itrs_exec_time << "\n";
-
-        summary << "msa_mea_calc_time (ms): " << msa_mea_calc_time << "\n";
-        summary << "msa_compute_trees_time (ms): " << msa_compute_trees_time << "\n";
-        summary << "msa_process_tree_time (ms): " << msa_process_tree_time << "\n";
-        summary << "msa_iterative_refine_time (ms): " << msa_iterative_refine_time << "\n";
-        summary << "msa_consistency_transform_time (ms): " << msa_consistency_transform_time << "\n";
-        summary << "msa_total_time (ms): " << msa_total_time << "\n";
-        summary.close();
+        fprintf(stderr, "[LinearTurboFold] Logs saved.\n");
     }
 };

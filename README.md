@@ -9,6 +9,12 @@ Currently included programs:
 
 ---
 
+## Abstract
+
+The COVID-19 pandemic demonstrated how critical it is to characterize RNA virus genomes rapidly, and the ongoing emergence of new pathogens and variants demands that the necessary tools be ready well before the next outbreak. Comparative sequence analysis of homologous RNA sequences can simultaneously predict conserved secondary structures and multiple sequence alignments that serve as robust targets for variant-proof diagnostics and therapeutics. Existing methods, however, face a tradeoff between accuracy and computational cost. LinearTurboFold addresses this by applying beam search pruning to achieve linear-time joint folding and alignment, yet its runtime remains a bottleneck for long sequences and grows nearly quadratically with the number of input homologs. Here, we introduce LinearTurboFold II, which incorporates four complementary optimizations—Lazy Outside, Posterior Pruning, A-Star Viterbi, and Max-Marginal Pruning—to accelerate the algorithm while preserving its probabilistic framework. On the RNAStrAlign dataset, LinearTurboFold II's runtime advantage grows with the number of homologs, reaching ∼15-fold speedup with fifty homologs of the 16S family (n ≈ 1500 nt), while achieving improved overall structure prediction and alignment accuracy. For a group of five SARS-CoV-2 genomes (n ≈ 30,000 nt) LinearTurboFold II is roughly 75% faster than LinearTurboFold. These results show that principled search-space reduction across iterations and passes can yield large efficiency gains without sacrificing accuracy, and that the same ideas apply to other probabilistic dynamic programming models in computational biology. LinearTurboFold II is therefore a practical tool for genomic surveillance, RNA-targeted therapeutic design, and preparedness for future pandemics.
+
+---
+
 ## Features
 
 ### LinearPartition

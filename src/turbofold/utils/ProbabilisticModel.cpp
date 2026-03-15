@@ -1356,7 +1356,7 @@ pair<MultiSeq*, value_type> ProbabilisticModel::LinearAlignAlignments (MultiSeq*
     // Choose the alignment routine depending on the "cosmetic" gap penalties used
     unordered_map<int, value_type>* posterior_matrix = LinearMultiAlnResults(align1, align2, posterior, 0.01f);
 
-    pair<string*, value_type> alignment = LinearComputeAlignmentDijkstra(hmmBeam, align1->at(0).length(), align2->at(0).length(), posterior_matrix);
+    pair<string*, value_type> alignment = LinearComputeAlignment(hmmBeam, align1->at(0).length(), align2->at(0).length(), posterior_matrix);
     delete[] posterior_matrix;
 
     fprintf(stderr, "Alignment: %s\n", alignment.first->c_str());
