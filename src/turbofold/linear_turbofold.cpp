@@ -144,7 +144,12 @@ value_type LinearTurbofold::get_extrinsic_info(const Sequence& x, const int i, c
 
 void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
     auto start_time = std::chrono::high_resolution_clock::now();
-    for (TurboAlignment& aln : alns) {
+    const int num_alns = static_cast<int>(alns.size());
+
+    // Parallelize alignment over independent sequence pairs
+    #pragma omp parallel for schedule(dynamic) if(num_alns > 1)
+    for (int aln_idx = 0; aln_idx < num_alns; ++aln_idx) {
+        TurboAlignment& aln = alns[aln_idx];
 
         // VITERBI MODE
         const int k1 = aln.seq1.id;
@@ -250,7 +255,10 @@ void LinearTurbofold::run_phmm_alignment(TurboFoldLog& log){
         aln.reset_beams(alignment_beam_size);
         t1 = std::chrono::high_resolution_clock::now();
         aln.log.partition_reset_beams_time = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+    }
 
+    // Collect logs serially to avoid races on log.aln_logs
+    for (TurboAlignment& aln : alns) {
         log.aln_logs[curr_itr].emplace_back(aln.log);
     }
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -368,18 +376,30 @@ void LinearTurbofold::run(const bool use_lazy_outside, const bool restrict_searc
 
         // fold step
         auto start_time = std::chrono::high_resolution_clock::now();
-        for (TurboPartition& pf : pfs) {
+        const int num_pfs = static_cast<int>(pfs.size());
+
+        // Parallelize per-sequence partition function computations
+        #pragma omp parallel for schedule(dynamic) if(num_pfs > 1)
+        for (int pf_idx = 0; pf_idx < num_pfs; ++pf_idx) {
+            TurboPartition& pf = pfs[pf_idx];
             pf.compute_inside(Mode::PARTITION_INSIDE, folding_beam_size, verbose_output_);
             pf.compute_outside(use_lazy_outside_, folding_pruning_threshold, verbose_output_);
             reset_beam_vector(pf.extinfo_cache, pf.seq_length, folding_beam_size);  // clear extrinsic info cache
         }
-        for (TurboPartition& pf : pfs) {
+
+        #pragma omp parallel for schedule(dynamic) if(num_pfs > 1)
+        for (int pf_idx = 0; pf_idx < num_pfs; ++pf_idx) {
+            TurboPartition& pf = pfs[pf_idx];
             pf.compute_bpp_matrix(folding_beam_size);
             pf.calc_prob_accm();
             if (restrict_search_ && curr_itr > -1 && curr_itr < num_itr_) {
                 pf.save_partition_function(true, folding_beam_size);
             }
             pf.reset_beams(folding_beam_size);
+        }
+
+        // Collect per-sequence logs serially
+        for (TurboPartition& pf : pfs) {
             log.pf_logs[curr_itr].emplace_back(pf.log);
         }
         auto end_time = std::chrono::high_resolution_clock::now();

@@ -27,8 +27,22 @@ def run_linearturbofold(msa_file, out_dir, args):
 
     print("[Executing] " + " ".join(cmd))
 
+    # Control OpenMP parallelism. If the user has explicitly set OMP_NUM_THREADS
+    # in their environment, respect it. Otherwise:
+    #   - with --parallel/-parallel: use all available cores
+    #   - without --parallel: force single-threaded execution.
+    env = os.environ.copy()
+    if "OMP_NUM_THREADS" not in env:
+        if args.parallel:
+            try:
+                env["OMP_NUM_THREADS"] = str(os.cpu_count() or 1)
+            except Exception:
+                env["OMP_NUM_THREADS"] = "1"
+        else:
+            env["OMP_NUM_THREADS"] = "1"
+
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as e:
         print(f"[Error] LinearTurboFold failed with code {e.returncode}")
         sys.exit(e.returncode)
@@ -65,6 +79,9 @@ def main():
                         help="Save execution logs (default: False)")
     parser.add_argument("--save-probs", "-sp", action="store_true", default=False,
                         help="Save BPP and coincidence probabilities (default: False)")
+
+    parser.add_argument("--parallel", "-parallel", action="store_true", default=False,
+                        help="Enable OpenMP-based parallel execution inside LinearTurboFold (default: False)")
 
     parser.add_argument("--alignment-threshold", "-at", type=float, default=9.91152,
                         help="Alignment pruning threshold (default: 9.91152, same as DEVIATION_THRESHOLD)")

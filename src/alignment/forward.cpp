@@ -328,58 +328,98 @@ void LinearAlignmentInterface<T>::compute_inside(const unsigned beam_size, bool 
         if (verbose_output) {
             linearx::utils::io::showProgressBar(s, seq_len_sum);
         }
+
+        // Prune once per incoming state type (serial).
         for (const HStateType h : hstate_types) {
-            vector<unordered_map<pair<int, int>, HState, PairHash>>& beam = get_beams(h);
+            auto& beam = get_beams(h);
             state_pruned += beam_prune(beam[s]);
-            for (auto& item : beam[s]) {
-                const int i = item.first.first;
-                const int j = item.first.second;
-                HState& state = item.second;
+        }
 
-                // INS1
-                if (i < seq1.length() && j <= seq2.length()) {
-                    if constexpr (mode == Mode::BEST) {
-                        const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                        HState& next_state = bestINS1[s + 1][{i + 1, j}];
-                        next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
-                    } else {
-                        HState* next_state = check_state(HStateType::INS1, i + 1, j);
-                        if (next_state) {
-                            const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
-                            AlnEdge(&state, new_score).update_state_alpha(*next_state);
+        // Now the two update passes can run concurrently:
+        // - INS1/INS2 write into layer (s+1)
+        // - ALN writes into layer (s+2)
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            {
+                for (const HStateType h : hstate_types) {
+                    auto& beam = get_beams(h);
+                    for (auto& item : beam[s]) {
+                        const int i = item.first.first;
+                        const int j = item.first.second;
+                        HState& state = item.second;
+
+                        // INS1
+                        if (i < seq1.length() && j <= seq2.length()) {
+                            if constexpr (mode == Mode::BEST) {
+                                const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                                HState& next_state = bestINS1[s + 1][{i + 1, j}];
+                                next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
+                            } else {
+                                HState* next_state = check_state(HStateType::INS1, i + 1, j);
+                                if (next_state) {
+                                    const value_type new_score = get_trans_emit_prob(i + 1, j, HStateType::INS1, h);
+                                    AlnEdge(&state, new_score).update_state_alpha(*next_state);
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                // INS2
-                if (i <= seq1.length() && j < seq2.length()) {
-                    if constexpr (mode == Mode::BEST) {
-                        const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                        HState& next_state = bestINS2[s + 1][{i, j + 1}];
-                        next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
-                    } else {
-                        HState* next_state = check_state(HStateType::INS2, i, j + 1);
-                        if (next_state) {
-                            const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
-                            AlnEdge(&state, new_score).update_state_alpha(*next_state);
+            #pragma omp section
+            {
+                for (const HStateType h : hstate_types) {
+                    auto& beam = get_beams(h);
+                    for (auto& item : beam[s]) {
+                        const int i = item.first.first;
+                        const int j = item.first.second;
+                        HState& state = item.second;
+
+                        // INS2
+                        if (i <= seq1.length() && j < seq2.length()) {
+                            if constexpr (mode == Mode::BEST) {
+                                const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                                HState& next_state = bestINS2[s + 1][{i, j + 1}];
+                                next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
+                            } else {
+                                HState* next_state = check_state(HStateType::INS2, i, j + 1);
+                                if (next_state) {
+                                    const value_type new_score = get_trans_emit_prob(i, j + 1, HStateType::INS2, h);
+                                    AlnEdge(&state, new_score).update_state_alpha(*next_state);
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                // ALN
-                const bool end_check = (i == seq1.length() && j == seq2.length());
-                if ((i < seq1.length() && j < seq2.length() || end_check)) {
-                    if constexpr (mode == Mode::BEST) {
-                        value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                        new_score = LOG_MUL(new_score, get_match_score(i, j));
-                        HState& next_state = bestALN[s + 2][{i + 1, j + 1}];
-                        next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
-                    } else {
-                        HState* next_state = check_state(HStateType::ALN, i + 1, j + 1);
-                        if (next_state) {
-                            value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
-                            new_score = LOG_MUL(new_score, get_match_score(i, j));
-                            AlnEdge(&state, new_score).update_state_alpha(*next_state);
+            
+            #pragma omp section
+            {
+                for (const HStateType h : hstate_types) {
+                    auto& beam = get_beams(h);
+                    for (auto& item : beam[s]) {
+                        const int i = item.first.first;
+                        const int j = item.first.second;
+                        HState& state = item.second;
+
+                        // ALN
+                        const bool end_check = (i == seq1.length() && j == seq2.length());
+                        if ((i < seq1.length() && j < seq2.length() || end_check)) {
+                            if constexpr (mode == Mode::BEST) {
+                                value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                                new_score = LOG_MUL(new_score, get_match_score(i, j));
+                                HState& next_state = bestALN[s + 2][{i + 1, j + 1}];
+                                next_state.alpha = max(next_state.alpha, LOG_MUL(state.alpha, new_score));
+                            } else {
+                                HState* next_state = check_state(HStateType::ALN, i + 1, j + 1);
+                                if (next_state) {
+                                    value_type new_score = get_trans_emit_prob(i + 1, j + 1, HStateType::ALN, h);
+                                    new_score = LOG_MUL(new_score, get_match_score(i, j));
+                                    AlnEdge(&state, new_score).update_state_alpha(*next_state);
+                                }
+                            }
                         }
                     }
                 }
